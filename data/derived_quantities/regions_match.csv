@@ -1,0 +1,15 @@
+region,a,b,c
+alaska_NA,CentralAK,SEAK,BeringSea
+british_columbia,BCWC,,
+california_NA,BCWC,,
+canada_NA,BCWC,,
+usa_NA,BCWC,,
+washington_NA,BCWC,,
+oregon_NA,BCWC,,
+pacific_northwest,BCWC,,
+unknown_NA,,,
+se_alaka,SEAK,BeringSea,
+BCWC,BCWC,,
+BeringSea,BeringSea,,
+CentralAK,CentralAK,,
+SEAK,SEAK,,

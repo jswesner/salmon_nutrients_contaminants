@@ -30,14 +30,6 @@ d_short <- d %>% filter(year >= 1976) %>%
 
 saveRDS(d_short, file = "data/d_short.rds")
 
-
-d_short %>% 
-  ggplot(aes(x = year, y = y_1000, color = species_location)) + 
-  geom_point() +
-  geom_line() +
-  facet_wrap(~location)
-
-
 # Gamma regression model -------------------------------------------------
 
 # Fit data prior to 1976. Use posteriors from this model as priors
@@ -81,33 +73,7 @@ coefs_salmon1 <- fixef(gam_salmon1) %>% as_tibble() %>%
 gam_salmon2 <- readRDS("models/gam_salmon2.rds")
 
 
-test2 <- plot(conditional_effects(gam_salmon2, effects = "year:species_location", method = "fitted", 
-                                  re_formula = NULL), points = T)
-
-
-# plot
-test2$`year:species_location` +
-  facet_wrap(~species_location) +
-  NULL
-
-# posteriors
-
-conditional_posts_fitted <- function(fit, effects, conditions = NULL, re_formula = NA){
-  library(brms)
-  library(tidyverse)
-  library(janitor)
-  list_of_data <- conditional_effects(fit, effects, conditions, re_formula)[[1]]
-  new_names <- list_of_data %>%
-    select(-names(fit$data[1])) %>%
-    select(-cond__, -effect1__, -estimate__, -se__, -lower__, -upper__) %>%
-    remove_empty("cols")
-
-  as_tibble(t(fitted(fit, newdata = list_of_data, re_formula, summary = FALSE))) %>%
-    cbind(new_names) %>%
-    pivot_longer(cols = contains("V"), names_to = "iter") %>%
-    mutate(iter = parse_number(iter))
-}
-
+# extract posteriors
 gam_salmon_posts <- conditional_posts_fitted(fit = gam_salmon2,
                                             effects = "species_location",
                                             re_formula = NULL,

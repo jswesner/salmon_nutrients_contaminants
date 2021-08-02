@@ -1,0 +1,36 @@
+---
+title: "Salmon contaminant workflow"
+date: "3/9/2021"
+output: pdf_document
+---
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(tidyverse)
+library(ggthemes)
+library(here)
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, fig.cap = "Estimate of mercury exported in migrating salmon among species and regions."}
+median_hg_plot <- readRDS(file = here("plots/median_hg_plot.rds"))
+median_hg_plot + scale_fill_colorblind() + theme_classic()
+```
+
+# What we've got so far
+
+Fig. 1 shows the current model estimate of mercury flux in salmon. It is derived from two models. First, we modeled salmon population sizes using separate Bayesian state-space models for each combination of species and location using data from Ruggerone et al. (2018) (Figure 2). Second, we modeled the concentrations of mercury (ng/kg ww) in salmon among regions using data compiled from literature estimates using a Bayesian generalized linear model with a Gamma likelihood (Figure 3). We then converted concentrations per kg to concentrations per individual by multiplying the model results (i.e. posterior) by the mean mass of an individual fish.
+
+To combine estimates from the two models, we multiplied the posterior distribution of mercury concentrations by three scenarios of salmon population sizes - low, median, and high. These corresponded to the 12.5, 50, and 88.5 quantiles of the posterior for each species by location combination. Only the 50% quantile is shown in Fig. 1.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, fig.cap = "Salmon population sizes over time. Dots are raw data from Ruggerone et al. (2018), shading and line is the median and 95% Bayesian posterior CrI)."}
+escapement_statespace <- readRDS(here("plots/escapement_statespace.rds"))
+hg_conc <- readRDS(here("plots/hg_ngkgww_plot.rds"))
+
+escapement_statespace + labs(title = "Salmon Escapement")
+
+```
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, fig.cap = "Mercury concentrations in salmon. Densities are posterior distributions of mercury concentrations estimated from literature data."}
+
+hg_conc + labs(title = "Salmon Hg")
+```
+

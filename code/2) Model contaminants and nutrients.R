@@ -11,42 +11,7 @@ library(ggridges)
 #load contaminant data
 nut_cont <- readRDS("data/nut_cont.rds")
 
-
-
-# Functions ---------------------------------------------------------------
-
-conditional_posts_fitted <- function(fit, effects, conditions = NULL, re_formula = NA){
-  list_of_data <- conditional_effects(fit, effects, conditions)[[1]]
-  col_i <- which(colnames(list_of_data) == names(fit$data[1])) - 1
-  new_names <- list_of_data[(1:col_i)]
-  
-  as_tibble(t(fitted(fit, newdata = list_of_data, re_formula, summary = FALSE))) %>%
-    cbind(new_names) %>%
-    pivot_longer(cols = contains("V"), names_to = "iter") %>%
-    mutate(iter = parse_number(iter))
-} 
-
-sim_gamma_priors <- function(prior_intercept = NULL, prior_b = NULL,
-                             prior_sd = NULL, prior_shape = NULL) {
-  tibble(chinook = prior_b,
-         chum = prior_b,
-         pink = prior_b,
-         sd = prior_sd,
-         shape = prior_shape) %>% 
-    pivot_longer(cols = c(-shape, -sd), names_to = "species") %>% 
-    mutate(exp_value = exp(value),
-           exp_valuerand = exp(value + rnorm(nrow(.),0, sd)),
-           scale = exp_value/shape,
-           prior_simdata = rgamma(nrow(.), shape = shape, scale = scale)) %>% 
-    select(species, exp_value, exp_valuerand, prior_simdata) %>% 
-    pivot_longer(cols = c(exp_value, exp_valuerand, prior_simdata)) %>% 
-    ggplot(aes(x = species, y = value)) + 
-    geom_violin(aes(group = species)) +
-    facet_wrap(~name) +
-    NULL
-}
-
-
+source("code/functions.R")
 
 # Hg ----------------------------------------------------------------------
 
@@ -64,11 +29,6 @@ hg_data <- nut_cont %>%
                                    TRUE ~ original_concentration*0.7),
          concentration = concentration*1000000,
          concentration_units = "ug/kg")
-
-hg_data %>% 
-  ggplot(aes(x = species, y = concentration, color = reorder(region, concentration))) +
-  geom_point(position = position_dodge(width = 0.2)) + 
-  scale_y_log10()
 
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
@@ -118,11 +78,6 @@ dha_data <- nut_cont %>%
   filter(grepl("DHA", fa_class)) %>% 
   distinct() 
 
-dha_data %>% 
-  ggplot(aes(x = species, y = concentration, color = reorder(region, concentration))) +
-  geom_point(position = position_dodge(width = 0.2)) + 
-  scale_y_log10()
-
 #check priors
 #Sprague, M., Dick, J. R., & Tocher, D. R. (2016). Impact of sustainable feeds on omega-3 long-chain fatty acid 
 #levels in farmed Atlantic salmon, 2006–2015. Scientific reports, 6(1), 1-9.
@@ -152,8 +107,6 @@ dha_model <- brm(concentration ~ 0 + species + (1|authors) + (1|region),
 saveRDS(dha_model, file = "models/dha_model.rds")
 dha_model <- readRDS("models/dha_model.rds")
 
-plot(conditional_effects(dha_model), points = T)
-
 #extract posteriors
 
 dha_posts <- conditional_posts_fitted(dha_model, effects = "species") %>% 
@@ -174,11 +127,6 @@ epa_data <- nut_cont %>%
   mutate(concentration = concentration/10) %>% 
   filter(grepl("EPA", fa_class)) %>% 
   distinct() 
-
-epa_data %>% 
-  ggplot(aes(x = species, y = concentration, color = reorder(region, concentration))) +
-  geom_point(position = position_dodge(width = 0.2)) + 
-  scale_y_log10()
 
 #check priors
 #Sprague, M., Dick, J. R., & Tocher, D. R. (2016). Impact of sustainable feeds on omega-3 long-chain fatty acid 
@@ -208,8 +156,6 @@ epa_model <- brm(concentration ~ 0 + species + (1|authors) + (1|region),
 
 saveRDS(epa_model, file = "models/epa_model.rds")
 epa_model <- readRDS("models/epa_model.rds")
-
-plot(conditional_effects(epa_model), points = T)
 
 #extract posteriors
 
@@ -258,8 +204,7 @@ saveRDS(nit_model, file = "models/nit_model.rds")
 
 nit_model <- readRDS("models/nit_model.rds")
 
-print(nit_model)
-
+# extract posteriors
 nit_posts <- posterior_samples(nit_model) %>% 
   mutate(g_kg_N = exp(b_Intercept),
          iter = 1:nrow(.)) %>% 
@@ -303,19 +248,17 @@ phos_model <- brm(concentration ~ 1,
                  prior = c(prior(normal(1, 0.25), class = "Intercept"),
                            prior(gamma(4, 2), class = "shape")))
 
-print(phos_model)
-
 saveRDS(phos_model, file = "models/phos_model.rds")
 phos_model <- readRDS("models/phos_model.rds")
 
 
+# extract posteriors
 phos_posts <- posterior_samples(phos_model) %>% 
   mutate(g_kg_ww = exp(b_Intercept),
          iter = 1:nrow(.)) %>% 
   expand_grid(species = unique(phos_data$species)) %>% mutate(chemical = "P")
 
 saveRDS(phos_posts, file = "posteriors/phos_posts.rds")
-
 
 
 # PCB ----------------------------------------------------------------------
@@ -366,16 +309,9 @@ sim_gamma_priors(prior_b = prior_b,
 # saveRDS(pcb_model, file = "models/pcb_model.rds")
 pcb_model <- readRDS("models/pcb_model.rds")
 
-
-plot(conditional_effects(pcb_model), points = T)
-
 #extract posteriors
 pcb_posts <- conditional_posts_fitted(pcb_model, effects = "species") %>%
   rename(ug_kg_ww = value) %>% mutate(chemical = "PCBs")
-
-# #add individual mass data
-# pcb_posts_perind <- pcb_posts %>% left_join(fish_mass) %>% 
-#   mutate(ug_per_ind = ng_per_kg*mean_kg/1000)
 
 saveRDS(pcb_posts, file = "posteriors/pcb_posts.RDS")
 
@@ -429,10 +365,6 @@ plot_prior_pbde +
 pbde_model <- readRDS("models/pbde_model.rds")
 
 
-plot(conditional_effects(pbde_model), points = T)
-
-
-
 #extract posteriors
 
 pbde_posts <- conditional_posts_fitted(pbde_model, effects = "species") %>%
@@ -456,11 +388,6 @@ ddt_data <- nut_cont %>%
   filter(grepl("DDT", chemical)) %>% 
   mutate(concentration = concentration*1e+6,
          concentration_units = "ug_kg")
-
-
-ddt_data %>% 
-  ggplot(aes(x = tissue, y = concentration)) + 
-  geom_point()
 
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
@@ -491,9 +418,6 @@ ddt_model <- brm(concentration ~ 0 + species + (1|authors) + (1|region),
 
 saveRDS(ddt_model, file = "models/ddt_model.rds")
 ddt_model <- readRDS("models/ddt_model.rds")
-
-
-plot(conditional_effects(ddt_model), points = T)
 
 
 #extract posteriors

@@ -35,7 +35,9 @@ compare_df_cols(nutrients_only, contaminants_only)
 
 nut_cont <- bind_rows(contaminants_only, nutrients_only) %>% 
   mutate(region = case_when(is.na(region) ~ "Unknown",
-                            TRUE ~ region)) %>% 
+                            TRUE ~ region),
+         chemical = case_when(chemical == "PCBS" ~ "PCBs",
+                              TRUE ~ chemical)) %>% 
   filter(region != "Russia" & region != "United Kingdom")
 
 saveRDS(nut_cont, file = "data/nut_cont.rds")

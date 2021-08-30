@@ -8,16 +8,8 @@ library(janitor)
 library(ggridges)
 library(viridis)
 library(egg)
-
+source("code/functions.R")
 theme_set(theme_default())
-
-get_posts <- function(model){
-  posterior_samples(model) %>% 
-    mutate(iter = 1:nrow(.)) %>% 
-    clean_names() %>% 
-    as_tibble() %>% 
-    mutate(chems_units = model$chems_units)
-}
 
 # region data to match salmon biomass with chemical concentrations
 regions <- read_csv("data/derived_quantities/regions_match.csv") %>% 
@@ -30,7 +22,6 @@ region_concentrations <- readRDS(file = "data/derived_quantities/region_concentr
 
 # 1) Load models -------------------------------------------------------------
 
-gam_salmon2 <- readRDS("models/gam_salmon2.rds")
 hg_model <- readRDS("models/hg_model.rds") 
 pcb_model <- readRDS("models/pcb_model.rds")
 nit_model <- readRDS("models/nit_model.rds") 

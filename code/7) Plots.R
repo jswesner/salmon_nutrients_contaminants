@@ -17,9 +17,6 @@ region_concentrations <- readRDS(file = "data/derived_quantities/region_concentr
 gam_salmon_posts <- readRDS("posteriors/gam_salmon_posts.rds") # Salmon escapement in kg wet mass
 
 # Salmon escapement time series -------------------------------------------
-
-gam_salmon_posts <- readRDS(file = "posteriors/gam_salmon_posts.rds")
-
 #raw data
 d_short <- readRDS("data/d_short.rds") %>% 
   separate(species, c("species", "family"))
@@ -41,7 +38,7 @@ d_region_toplot <- d_short %>% select(year, species, location, y) %>%
 
 #posterior predictions - estimate total salmon mass for species. Sum over locations
 salmon_mass <- gam_salmon_posts %>% 
-  select(-metric_tons, -value, -species_location, -family) %>% 
+  select(-metric_tons, -value) %>% 
   #calculate total Hg and kg 
   pivot_wider(names_from = species, values_from = kg) %>% 
   mutate(Total = Chinook + Chum + Coho + Pink + Sockeye) %>% 
@@ -55,9 +52,9 @@ salmon_mass_region_toplot <- salmon_mass %>%
   mutate(`All Regions` = BCWC + BeringSea + CentralAK + SEAK) %>% 
   pivot_longer(cols = c(-iter, -species, -year), names_to = "location", values_to = "metric_tons") %>% 
   group_by(species, year, location) %>% 
-  summarize(low = quantile(metric_tons, probs = 0.05),
+  summarize(low = quantile(metric_tons, probs = 0.025),
             med = median(metric_tons),
-            upper = quantile(metric_tons, probs = 0.95),
+            upper = quantile(metric_tons, probs = 0.975),
             low50 = quantile(metric_tons, probs = 0.25),
             upper50 = quantile(metric_tons, probs = 0.75)) %>% 
   mutate(species = as.factor(str_trim(species)),
@@ -137,7 +134,7 @@ ggsave(escapement_plot, file = "plots/escapement_plot.jpg", dpi = 400, width = 6
 # summarize and wrangle posteriors
 summary_species_combined <- flux_predictions %>%
   ungroup() %>%
-  group_by(year, species, chemical, units, iter) %>% 
+  group_by(year, species, chemical, iter) %>% 
   summarize(total = sum(g_flux/1000)) %>% 
   group_by(year, chemical, species) %>% 
   summarize(median = median(total),

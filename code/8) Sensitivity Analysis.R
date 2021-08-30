@@ -9,6 +9,7 @@ library(ggridges)
 library(viridis)
 library(egg)
 library(ggalt)
+library(broom)
 
 theme_set(theme_default())
 
@@ -22,76 +23,70 @@ chum_dha_epa <- region_concentrations %>% filter(chemical == "DHA" |chemical == 
   mutate(species = "Chum")
 
 # combine region and chum
-region_concentrations_withchum <- bind_rows(region_concentrations, chum_dha_epa)
+region_concentrations_withchum <- bind_rows(region_concentrations, chum_dha_epa) %>% 
+  group_by(chemical) %>% 
+  mutate(region_conc_median = median(region_conc),
+         region_conc_low = quantile(region_conc, probs = 0.125),
+         region_conc_high = quantile(region_conc, probs = 1-0.125)) 
 
 # load posteriors
-gam_salmon_posts <- readRDS("posteriors/gam_salmon_posts.rds") # Salmon escapement in kg wet mass
+gam_salmon_posts <- readRDS("posteriors/gam_salmon_posts.rds") %>% 
+  mutate(kg_median = median(kg),
+         kg_low = quantile(kg, probs = 0.125),
+         kg_high = quantile(kg, probs = 1-0.125))
 
-# calculate flux with different levels of uncertainty
+# calculate flux with different levels of uncertainty --------------------------------------------------------
 n_iter = 300
+
 flux_all_uncertainty <- gam_salmon_posts %>% filter(iter <= n_iter) %>% 
-  group_by(location, species, year) %>% 
   right_join(region_concentrations_withchum %>%  filter(iter <= n_iter)) %>% 
-  mutate(g_flux = region_conc*kg) %>% 
+  mutate(g_flux_all = region_conc*kg,
+         g_flux_median_conc = region_conc_median*kg,
+         g_flux_low75_conc = region_conc_low*kg,
+         g_flux_high75_conc = region_conc_high*kg,
+         g_flux_median_kg = region_conc*kg_median,
+         g_flux_low75_kg = region_conc*kg_low,
+         g_flux_high75_kg = region_conc*kg_high) %>% 
   select(species, location, year, iter, chemical, units, contains("g_flux")) %>% 
-  pivot_wider(names_from = species, values_from = g_flux) %>% 
+  pivot_longer(cols = contains("g_flux")) %>% 
+  pivot_wider(names_from = species, values_from = value) %>% 
   mutate(All = Chinook + Chum + Coho + Pink + Sockeye) %>% 
   pivot_longer(cols = c(Chinook, Chum, Coho, Pink, Sockeye, All), names_to = "species", values_to = "g_flux") %>% 
-  select(-units) %>% 
-  mutate(uncertainty_source = "Escapement + Concentrations")
+  select(-units) 
 
-flux_uncertainty_is_chem <- gam_salmon_posts %>% filter(iter <= n_iter) %>% 
-  group_by(location, species, year) %>% 
-  summarize(kg_median = median(kg)) %>% 
-  right_join(region_concentrations_withchum %>%  filter(iter <= n_iter)) %>% 
-  mutate(g_flux = region_conc*kg_median) %>% 
-  select(species, location, year, iter, chemical, units, contains("g_flux")) %>% 
-  pivot_wider(names_from = species, values_from = g_flux) %>% 
-  mutate(All = Chinook + Chum + Coho + Pink + Sockeye) %>% 
-  pivot_longer(cols = c(Chinook, Chum, Coho, Pink, Sockeye, All), names_to = "species", values_to = "g_flux") %>% 
-  select(-units) %>% 
-  mutate(uncertainty_source = "Chemical Concentrations")
 
-flux_uncertainty_is_escape <- gam_salmon_posts %>% filter(iter <= n_iter) %>% 
-  group_by(location, species, year) %>% 
-  left_join(region_concentrations_withchum %>%  filter(iter <= n_iter) %>% 
-              ungroup() %>% 
-              group_by(species, location, chemical, units) %>% 
-              summarize(region_conc_median = median(region_conc))) %>% 
-  mutate(g_flux = region_conc_median*kg) %>% 
-  select(species, location, year, iter, chemical, units, contains("g_flux")) %>% 
-  pivot_wider(names_from = species, values_from = g_flux) %>% 
-  mutate(All = Chinook + Chum + Coho + Pink + Sockeye) %>% 
-  pivot_longer(cols = c(Chinook, Chum, Coho, Pink, Sockeye, All), names_to = "species", values_to = "g_flux") %>% 
-  select(-units) %>%
-  mutate(uncertainty_source = "Salmon Escapement")
-
-cumulative_compare <- bind_rows(flux_all_uncertainty, flux_uncertainty_is_chem, flux_uncertainty_is_escape) %>% 
-  # pivot_longer(cols = c(-location, -year, -iter, -chemical, -species)) %>% 
-  group_by(chemical, species, uncertainty_source, iter) %>% 
+cumulative_compare <- flux_all_uncertainty %>% 
+  group_by(chemical, species, name, iter) %>% 
   summarize(cumulative_flux = sum(g_flux/1000)) %>% 
   ungroup() %>% 
-  mutate(uncertainty_source = fct_relevel(uncertainty_source, "Escapement + Concentrations", "Chemical Concentrations")) %>% 
-  group_by(chemical, species, uncertainty_source) 
+  mutate(uncertainty_source = case_when(grepl("_kg", name) ~ "Chemical Concentrations",
+                                        grepl("_conc", name) ~ "Escapement",
+                                        TRUE ~ "Escapement + Concentrations")) %>% 
+  separate(name, c("units", "measure", "quantile", "source"))
 
-yearly_compare <- bind_rows(flux_all_uncertainty, flux_uncertainty_is_chem, flux_uncertainty_is_escape) %>% 
-  # pivot_longer(cols = c(-location, -year, -iter, -chemical, -species)) %>% 
-  group_by(chemical, species, year, uncertainty_source, iter) %>% 
+yearly_compare <- flux_all_uncertainty %>% 
+  group_by(chemical, species, year, name, iter) %>% 
   summarize(cumulative_flux = sum(g_flux/1000)) %>% 
   ungroup() %>% 
-  mutate(uncertainty_source = fct_relevel(uncertainty_source, "Escapement + Concentrations", "Chemical Concentrations")) %>% 
-  group_by(chemical, species, uncertainty_source) 
+  mutate(uncertainty_source = case_when(grepl("_kg", name) ~ "Chemical Concentrations",
+                                        grepl("_conc", name) ~ "Escapement",
+                                        TRUE ~ "Escapement + Concentrations")) %>% 
+  separate(name, c("units", "measure", "quantile", "source"))
 
 # plot
-cumulative_compare %>% 
-  # group_by(chemical, species, name) %>% 
-  # summarize(cumulative_flux_s = (cumulative_flux - mean(cumulative_flux))/sd(cumulative_flux)) %>% 
+oat_variance_partitioning <- cumulative_compare %>% 
   filter(species == "All") %>%
-  ggplot(aes(x = uncertainty_source, y = cumulative_flux)) + 
-  geom_boxplot(outlier.shape = NA) +
+  ggplot(aes(y = uncertainty_source, x = cumulative_flux, fill = quantile)) + 
+  geom_density_ridges(scale = 1) +
+  # geom_boxplot(outlier.shape = NA) +
   facet_wrap(~chemical, scales = "free_x", ncol = 2) +
-  coord_flip() +
-  scale_y_log10()
+  # coord_flip() +
+  scale_fill_grey() +
+  # scale_x_log10() +
+  NULL
+
+saveRDS(oat_variance_partitioning, file = "plots/oat_variance_partitioning.rds")
+ggsave(oat_variance_partitioning, file = "plots/oat_variance_partitioning.jpg", width = 6, height = 8)
 
 
 yearly_compare %>% 
@@ -106,7 +101,7 @@ yearly_compare %>%
   scale_fill_viridis_d()
 
 
-# Sensitivity via Dietze 2017 p141
+# Sensitivity via R2 Dietze 2017 p141 ------------------------------------------------------
 sens_data <- gam_salmon_posts %>% filter(iter <= 100) %>% 
   group_by(location, species, year) %>% 
   right_join(region_concentrations_withchum %>%  filter(iter <= 100)) %>% 
@@ -114,8 +109,7 @@ sens_data <- gam_salmon_posts %>% filter(iter <= 100) %>%
   mutate(g_flux = region_conc*kg,
          conc_c = (region_conc - mean(region_conc))/sd(region_conc),
          kg_c = (kg - mean(kg))/sd(kg),
-         g_flux_c = (g_flux - mean(g_flux))/sd(g_flux),
-         year_c = (year - max(year))) 
+         g_flux_c = (g_flux - mean(g_flux))/sd(g_flux)) 
 
 nested_sens <- sens_data %>% 
   nest(data = -chemical) %>% 
@@ -171,10 +165,3 @@ rel_importance <- nested_sens %>% unnest(glanced) %>%
 
 saveRDS(rel_importance, file = "plots/rel_importance.rds")
 ggsave(rel_importance, file = "plots/rel_importance.jpg", width = 6, height = 3)
-
-
-
-nut_cont <- readRDS("data/nut_cont.rds")
-nut_cont %>% 
-  group_by(chemical) %>% 
-  tally()

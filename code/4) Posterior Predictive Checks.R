@@ -1,7 +1,9 @@
 library(brms)
 library(ggridges)
+source("code/functions.R")
 
 # check models
+
 
 # 1) bring in models
 gam_salmon2 <- readRDS("models/gam_salmon2.rds")

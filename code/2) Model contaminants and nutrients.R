@@ -1,14 +1,12 @@
 library(tidyverse)
 library(brms)
-library(readxl)
-library(janitor)
-library(ggthemes)
+library(tidybayes)
 library(scales)
-library(ggridges)
+library(modelr)
 
 # model contaminant and nutrient concentrations in fish
 
-#load contaminant data
+#load data
 nut_cont <- readRDS("data/nut_cont.rds")
 
 source("code/functions.R")
@@ -18,49 +16,48 @@ source("code/functions.R")
 #data prep: check for duplicates
 nut_cont %>% 
   filter(grepl("Hg", chemical)) %>% 
-  group_by(specific_location, concentration, n, species, region, data_collection_period) %>% 
+  group_by(specific_location, mean_concentration_standardized, n, species, region, data_collection_period) %>% 
   filter(n>1)
 
 hg_data <- nut_cont %>% 
   filter(grepl("Hg", chemical)) %>% 
-  mutate(concentration = case_when(tissue == "Whole Body" ~ concentration,
-                                   TRUE ~ concentration*0.7),
-         original_concentration = case_when(tissue == "Whole Body" ~ original_concentration,
-                                   TRUE ~ original_concentration*0.7),
-         concentration = concentration*1000000,
-         concentration_units = "ug/kg")
+  mutate(mean_concentration_standardized = case_when(tissue == "Whole Body" ~ mean_concentration_standardized,
+                                   TRUE ~ mean_concentration_standardized*0.7))
 
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
 #NOTE - Model uses a no-intercept formula, so all groups get the same prior
-prior_b = rnorm(1000, 4, 1)
+prior_b = rnorm(1000, -5.5, 2)
 prior_sd = rexp(1000, 2)
 prior_shape = rgamma(1000, 5, 3)
 
 sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
                  prior_shape = prior_shape) +
-  scale_y_log10()
+  scale_y_log10(labels = comma, breaks = c(1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1)) 
 
-# prior generates ranges from the literature of ~ 0 to 100 ug/kg, e.g. https://www.sciencedirect.com/science/article/pii/S0048969718343055 
+# prior generates ranges from the literature of ~ 0 to 0.1 mg/kg, e.g. https://www.sciencedirect.com/science/article/pii/S0048969718343055 
 
 # fit model
-# hg_model <- brm(concentration ~ 0 + species + (1|authors) + (1|region),
-#                 family = Gamma(link = "log"),
-#                 data = hg_data,
-#                 prior = c(prior(normal(4, 1), class = "b"),
-#                           prior(exponential(1), class = "sd"),
-#                           prior(gamma(5, 3), class = "shape")))
-# 
-# saveRDS(hg_model, file = "models/hg_model.rds")
-hg_model <- readRDS("models/hg_model.rds")
+hg_model <- brm(mean_concentration_standardized ~ 0 + species + (1|authors) + (1|region),
+                family = Gamma(link = "log"),
+                data = hg_data,
+                prior = c(prior(normal(-5.5, 2), class = "b"),
+                          prior(exponential(2), class = "sd"),
+                          prior(gamma(5, 3), class = "shape")),
+                cores = 4, 
+                file = "models/hg_model.rds",
+                file_refit = "on_change")
+
 
 plot(conditional_effects(hg_model), points = T)
 
 #extract posteriors
 
-hg_posts <- conditional_posts_fitted(hg_model, effects = "species") %>% 
-  rename(ug_kg_ww = value) %>% mutate(chemical = "Hg")
+hg_posts <- hg_model$data %>% 
+  data_grid(species) %>% 
+  add_epred_draws(hg_model, ndraws = 1000, re_formula = NA) %>%
+  mutate(chemical = "Hg")
 
 saveRDS(hg_posts, file = "posteriors/hg_posts.rds")
 
@@ -69,48 +66,52 @@ saveRDS(hg_posts, file = "posteriors/hg_posts.rds")
 
 #data prep: check for duplicates
 nut_cont %>% 
-  filter(grepl("DHA", fa_class)) %>% 
-  group_by(specific_location, concentration, n, species, region, data_collection_period) %>% 
+  filter(grepl("DHA", chemical)) %>% 
+  group_by(specific_location, mean_concentration_standardized, n, species, region, data_collection_period) %>% 
   filter(n>1) 
 
 dha_data <- nut_cont %>% 
-  mutate(concentration = concentration/10) %>% 
-  filter(grepl("DHA", fa_class)) %>% 
+  filter(grepl("DHA", chemical)) %>% 
   distinct() 
 
 #check priors
 #Sprague, M., Dick, J. R., & Tocher, D. R. (2016). Impact of sustainable feeds on omega-3 long-chain fatty acid 
 #levels in farmed Atlantic salmon, 2006–2015. Scientific reports, 6(1), 1-9.
-#reported ~ 0.1 to 0.4 EPA + DHA g/kg ww. ! HALF IS DHA 
+#reported ~ 10000 EPA + DHA mg/kg ww. ! HALF IS DHA 
 
 #plot priors - only for a couple species, since all will be the same (same prior)
 #NOTE - Model uses a no-intercept formula, so all groups get the same prior
-prior_b = rnorm(1000, -4, 2)
-prior_sd = rexp(1000, 3)
+prior_b = rnorm(1000, 8.5, 2)
+prior_sd = rexp(1000, 2)
 prior_shape = rgamma(1000, 5, 3)
 
 sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
                  prior_shape = prior_shape) +
-  scale_y_log10(labels = comma)
+  scale_y_log10(labels = comma) +
+  geom_hline(yintercept = 5000)
 
 # prior generates ranges from the literature of ~ 0 to 100 ug/kg, e.g. https://www.sciencedirect.com/science/article/pii/S0048969718343055 
 
 # fit model
-dha_model <- brm(concentration ~ 0 + species + (1|authors) + (1|region),
+dha_model <- brm(mean_concentration_standardized ~ 0 + species + (1|authors) + (1|region),
                 family = Gamma(link = "log"),
                 data = dha_data,
-                prior = c(prior(normal(-4, 2), class = "b"),
-                          prior(exponential(3), class = "sd"),
-                          prior(gamma(5, 3), class = "shape")))
+                prior = c(prior(normal(8.5, 1), class = "b"),
+                          prior(exponential(2), class = "sd"),
+                          prior(gamma(5, 3), class = "shape")),
+                file = "models/dha_model.rds",
+                file_refit = "on_change",
+                cores = 4)
 
-saveRDS(dha_model, file = "models/dha_model.rds")
-dha_model <- readRDS("models/dha_model.rds")
+plot(conditional_effects(dha_model), points = T)
 
 #extract posteriors
 
-dha_posts <- conditional_posts_fitted(dha_model, effects = "species") %>% 
-  rename(g_kg_ww = value) %>% mutate(chemical = "DHA")
+dha_posts <- dha_model$data %>% 
+  data_grid(species) %>%
+  add_epred_draws(dha_model, re_formula = NA) %>% 
+  mutate(chemical = "DHA")
 
 saveRDS(dha_posts, file = "posteriors/dha_posts.rds")
 
@@ -120,22 +121,21 @@ saveRDS(dha_posts, file = "posteriors/dha_posts.rds")
 #data prep: check for duplicates
 nut_cont %>% 
   filter(grepl("EPA", fa_class)) %>% 
-  group_by(specific_location, concentration, n, species, region, data_collection_period) %>% 
+  group_by(specific_location, mean_concentration_standardized, n, species, region, data_collection_period) %>% 
   filter(n>1) 
 
 epa_data <- nut_cont %>% 
-  mutate(concentration = concentration/10) %>% 
-  filter(grepl("EPA", fa_class)) %>% 
+  filter(grepl("EPA", chemical)) %>% 
   distinct() 
 
 #check priors
 #Sprague, M., Dick, J. R., & Tocher, D. R. (2016). Impact of sustainable feeds on omega-3 long-chain fatty acid 
 #levels in farmed Atlantic salmon, 2006–2015. Scientific reports, 6(1), 1-9.
-#reported ~ 0.1 to 0.4 epa g/kg ww. ~ HALF IS EPA
+#reported ~ 5000 epa mg/kg ww. ~ HALF IS EPA
 
 #plot priors - only for a couple species, since all will be the same (same prior)
 #NOTE - Model uses a no-intercept formula, so all groups get the same prior
-prior_b = rnorm(1000, -4, 2)
+prior_b = rnorm(1000, 8.5, 1)
 prior_sd = rexp(1000, 3)
 prior_shape = rgamma(1000, 5, 3)
 
@@ -147,20 +147,24 @@ sim_gamma_priors(prior_b = prior_b,
 # prior generates ranges from the literature of ~ 0 to 100 ug/kg, e.g. https://www.sciencedirect.com/science/article/pii/S0048969718343055 
 
 # fit model
-epa_model <- brm(concentration ~ 0 + species + (1|authors) + (1|region),
+epa_model <- brm(mean_concentration_standardized ~ 0 + species + (1|authors) + (1|region),
                  family = Gamma(link = "log"),
                  data = epa_data,
-                 prior = c(prior(normal(-4, 2), class = "b"),
+                 prior = c(prior(normal(8.5,1), class = "b"),
                            prior(exponential(3), class = "sd"),
-                           prior(gamma(5, 3), class = "shape")))
+                           prior(gamma(5, 3), class = "shape")),
+                 file = "models/epa_model.rds",
+                 file_refit = "on_change",
+                 cores = 4)
 
-saveRDS(epa_model, file = "models/epa_model.rds")
-epa_model <- readRDS("models/epa_model.rds")
+plot(conditional_effects(epa_model), points = T)
 
 #extract posteriors
 
-epa_posts <- conditional_posts_fitted(epa_model, effects = "species") %>% 
-  rename(g_kg_ww = value) %>% mutate(chemical = "EPA")
+epa_posts <-  epa_model$data %>%
+  data_grid(species) %>% 
+  add_epred_draws(epa_model, re_formula = NA) %>% 
+  mutate(chemical = "EPA")
 
 saveRDS(epa_posts, file = "posteriors/epa_posts.rds")
 
@@ -170,18 +174,17 @@ saveRDS(epa_posts, file = "posteriors/epa_posts.rds")
 #check for duplicates
 nut_cont %>% 
   filter(grepl("%N", chemical)) %>% 
-  group_by(specific_location, concentration, n, species, region, data_collection_period) %>% 
+  group_by(specific_location, mean_concentration_standardized, n, species, region, data_collection_period) %>% 
   filter(n() >1)
 
 nit_data <- nut_cont %>% 
-  filter(grepl("%N", chemical)) %>% 
-  mutate(concentration = concentration*10) #convert g/100g to g/kg
+  filter(chemical == "N") 
 
 #check priors
 #plot priors - only for one species, since all will be the same (same prior)
-prior_b = rnorm(1000, 2, 1)
-prior_sd = rexp(1000, 2)
-prior_shape = rgamma(1000, 5, 3)
+prior_b = rnorm(1000, 10, .5)
+prior_sd = rexp(1000, 5)
+prior_shape = rgamma(1000, 10, 1)
 
 sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
@@ -191,72 +194,80 @@ sim_gamma_priors(prior_b = prior_b,
 
 
 
-# plot above generates some values above 75 g/kg N, but mostly lower than 10. 
+# plot above generates some values above 75000 mg/kg N, but mostly lower than that. 
 
 # fit model - no random effects b/c only 6 samples total
-nit_model <- brm(concentration ~ 1,
+nit_model <- brm(mean_concentration_standardized ~ 1,
                  family = Gamma(link = "log"),
                  data = nit_data,
-                 prior = c(prior(normal(2, 1), class = "Intercept"),
-                           prior(gamma(5, 3), class = "shape")))
+                 prior = c(prior(normal(10, 0.5), class = "Intercept"),
+                           prior(gamma(10, 1), class = "shape")),
+                 file = "models/nit_model.rds",
+                 file_refit = "on_change",
+                 cores = 4)
 
-saveRDS(nit_model, file = "models/nit_model.rds")
-
-nit_model <- readRDS("models/nit_model.rds")
 
 # extract posteriors
-nit_posts <- posterior_samples(nit_model) %>% 
-  mutate(g_kg_N = exp(b_Intercept),
-         iter = 1:nrow(.)) %>% 
-  expand_grid(species = unique(nit_data$species)) %>% mutate(chemical = "N")
+nit_posts <- nit_model$data %>% 
+  add_epred_draws(nit_model) %>% 
+  mutate(chemical = "N") %>% 
+  expand_grid(species = nit_data %>% filter(species != "All") %>% distinct(species) %>% pull)
+  
+nit_posts %>% 
+  ggplot(aes(x = species, y = .epred)) +
+  geom_violin() +
+  geom_point(data = nit_data %>% filter(species != "All"),
+             aes(y = mean_concentration_standardized))
 
 saveRDS(nit_posts, file = "posteriors/nit_posts.rds")
 
 # Phosphorous ----------------------------------------------------------------------
 
 #check for duplicates
-nut_cont %>% 
-  filter(grepl("%P", chemical)) %>% 
-  group_by(specific_location, concentration, n, species, region, data_collection_period) %>% 
-  filter(n() >1)
 
 phos_data <- nut_cont %>% 
-  filter(grepl("%P", chemical)) %>% 
-  mutate(concentration = concentration*10) #convert g/100g to g/kg
+  filter(chemical == "P") %>% 
+  distinct()
 
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
 
 #" Salmon molar N:P ratios range from 12:1 to 15:1 (Gende 2002
 # "Gende, S. M., Edwards, R. T., Willson, M. F., & Wipfli, M. S. (2002). Pacific salmon in aquatic and terrestrial ecosystems. BioScience, 52(10), 917-928."
-# Given the above ratios, 2-5 g/kg of P is typical for salmon.
+# Given the above ratios, 2000-5000 mg/kg of P is typical for salmon.
 
-prior_b = rnorm(1000, 1, 0.25)
+prior_b = rnorm(1000, 8, 0.5)
 prior_sd = rexp(1000, 8)
 prior_shape = rgamma(1000, 4, 2)
 
 sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
-                 prior_shape = prior_shape)
+                 prior_shape = prior_shape) +
+  scale_y_log10()
 
 
 
 # fit model
-phos_model <- brm(concentration ~ 1,
+phos_model <- brm(mean_concentration_standardized ~ 1,
                  family = Gamma(link = "log"),
                  data = phos_data,
-                 prior = c(prior(normal(1, 0.25), class = "Intercept"),
-                           prior(gamma(4, 2), class = "shape")))
-
-saveRDS(phos_model, file = "models/phos_model.rds")
-phos_model <- readRDS("models/phos_model.rds")
-
+                 prior = c(prior(normal(8, 0.5), class = "Intercept"),
+                           prior(gamma(4, 2), class = "shape")),
+                 file = "models/phos_model.rds",
+                 file_refit = "on_change",
+                 cores = 4)
 
 # extract posteriors
-phos_posts <- posterior_samples(phos_model) %>% 
-  mutate(g_kg_ww = exp(b_Intercept),
-         iter = 1:nrow(.)) %>% 
-  expand_grid(species = unique(phos_data$species)) %>% mutate(chemical = "P")
+phos_posts <- phos_model$data %>% 
+  add_epred_draws(phos_model) %>% 
+  mutate(chemical = "P") %>% 
+  expand_grid(species = nit_data %>% filter(species != "All") %>% distinct(species) %>% pull)
+
+phos_posts %>% 
+  ggplot(aes(x = species, y = .epred)) +
+  geom_violin() +
+  geom_point(data = phos_data %>% filter(species != "All"),
+             aes(y = mean_concentration_standardized))
 
 saveRDS(phos_posts, file = "posteriors/phos_posts.rds")
 
@@ -264,54 +275,48 @@ saveRDS(phos_posts, file = "posteriors/phos_posts.rds")
 # PCB ----------------------------------------------------------------------
 
 #data prep: check for duplicates
-nut_cont %>% 
-  filter(grepl("PCBs", chemical)) %>% 
-  group_by(specific_location, concentration, n, species, region, data_collection_period) %>% 
-  filter(n() >1) 
-
 pcb_data <- nut_cont %>% 
-  distinct(specific_location, authors, concentration, n, species, region, data_collection_period, tissue, concentration_units, chemical, original_concentration) %>% 
-  filter(grepl("PCB", chemical)) %>% 
-  filter(chemical != "PCB Cogener 153") %>% 
-  mutate(concentration = case_when(tissue == "Whole Body" ~ concentration,
-                                   TRUE ~ concentration*2.3),
-         concentration = concentration*1e+6,
-         concentration_units = "ug_kg",
-         original_concentration = case_when(tissue == "Whole Body" ~ original_concentration,
-                                            TRUE ~ original_concentration*2.3))
+  filter(chemical == "PCBs") %>% 
+  mutate(mean_concentration_standardized = case_when(tissue == "Whole Body" ~ mean_concentration_standardized,
+                                   TRUE ~ mean_concentration_standardized*2.3)) %>% 
+  distinct()
     
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
-prior_b = rnorm(1000, 3, 3)
+prior_b = rnorm(1000, -3, 3)
 prior_sd = rexp(1000, 2)
 prior_shape = rgamma(1000, 5, 2)
 
 sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
                  prior_shape = prior_shape) +
-  scale_y_log10(labels = comma, breaks = c(0, 1, 10, 100, 1000, 10000)) +
-  annotation_logticks()
+  scale_y_log10(labels = comma) +
+  annotation_logticks() +
+  geom_hline(yintercept = 0.045)
 
 
 #numbers above are consistent with Montory, M., Habit, E., Fernandez, P., Grimalt, J. O., & Barra, R. (2010). PCBs and PBDEs in wild Chinook salmon (Oncorhynchus tshawytscha) in the Northern Patagonia, Chile. Chemosphere, 78(10), 1193-1199.
-# 25-78 ng/g from Montroy et al. 2010 abstract. *NOTE ng/g is the same as ug/kg
+# 25-78 ng/g (e.g., 0.025 to 0.078 mg/kg) from Montroy et al. 2010 abstract. *NOTE ng/g is the same as ug/kg
 
 # fit model
-# pcb_model <- brm(concentration ~ 0 + species + (1|authors) + (1|region),
-#                  family = Gamma(link = "log"),
-#                  data = pcb_data,
-#                  prior = c(prior(normal(3, 3), class = "b"),
-#                            prior(exponential(2), class = "sd"),
-#                            prior(gamma(2, 2), class = "shape")),
-#                  sample_prior = T)
-# 
-# 
-# saveRDS(pcb_model, file = "models/pcb_model.rds")
-pcb_model <- readRDS("models/pcb_model.rds")
+pcb_model <- brm(mean_concentration_standardized ~ 0 + species + (1|authors) + (1|region),
+                 family = Gamma(link = "log"),
+                 data = pcb_data,
+                 prior = c(prior(normal(-3, 3), class = "b"),
+                           prior(exponential(2), class = "sd"),
+                           prior(gamma(5, 2), class = "shape")),
+                 sample_prior = T,
+                 file = "models/pcb_model.rds",
+                 file_refit = "on_change",
+                 cores = 4)
+
+plot(conditional_effects(pcb_model), points = T)
 
 #extract posteriors
-pcb_posts <- conditional_posts_fitted(pcb_model, effects = "species") %>%
-  rename(ug_kg_ww = value) %>% mutate(chemical = "PCBs")
+pcb_posts <- pcb_model$data %>% 
+  data_grid(species) %>% 
+  add_epred_draws(pcb_model, re_formula = NA) %>% 
+  mutate(chemical = "PCBs")
 
 saveRDS(pcb_posts, file = "posteriors/pcb_posts.RDS")
 
@@ -319,110 +324,100 @@ saveRDS(pcb_posts, file = "posteriors/pcb_posts.RDS")
 # PBDE ----------------------------------------------------------------------
 
 #data prep: check for duplicates
-nut_cont %>% 
-  filter(grepl("PBD", chemical)) %>% 
-  group_by(specific_location, concentration, n, species, region, data_collection_period) %>% 
-  filter(n() >1) 
 
 #correct for whole body, fillet with skin, and fillet without skin using Stone, D. (2006). Polybrominated diphenyl ethers and polychlorinated biphenyls in different tissue types from Chinook salmon 
 #(Oncorhynchus tshawytscha). Bulletin of environmental contamination and toxicology, 76(1), 148-154.
 
-pbde_data <- nut_cont %>% 
-  distinct(specific_location, authors, concentration, n, species, region, data_collection_period, tissue, concentration_units, chemical, original_concentration) %>% 
+pbde_data <- nut_cont %>%
   filter(grepl("PBD", chemical)) %>% 
-  mutate(concentration = concentration*1e+6,
-         concentration_units = "ug_kg",
-         concentration = case_when(tissue == "Fillet" ~ concentration*1.5,
-                                   tissue == "Fillet+Skin" ~ concentration*1.27,
-                                   TRUE ~ concentration))
+  mutate(mean_concentration_standardized = case_when(tissue == "Fillet" ~ mean_concentration_standardized*1.5,
+                                   tissue == "Fillet+Skin" ~ mean_concentration_standardized*1.27,
+                                   TRUE ~ mean_concentration_standardized))
 
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
-prior_b = rnorm(1000, 0, 1)
+prior_b = rnorm(1000, -7, 2)
 prior_sd = rexp(1000, 3)
-prior_shape = rgamma(1000, 2, 1)
+prior_shape = rgamma(1000, 5, 1)
 
-plot_prior_pbde <- sim_gamma_priors(prior_b = prior_b,
+sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
-                 prior_shape = prior_shape)
+                 prior_shape = prior_shape) +
+  scale_y_log10() +
+  geom_hline(yintercept = 0.0018)
 
-plot_prior_pbde +
-  ylim(0, 20)
 
 #numbers above are consistent with Stone, D. (2006). Polybrominated diphenyl ethers and polychlorinated biphenyls in different tissue types from Chinook salmon 
 #(Oncorhynchus tshawytscha). Bulletin of environmental contamination and toxicology, 76(1), 148-154. They found
-# ~ 1.5-2.3 ug/kg PBDEs in Chinook Salmon from Oregon.
+# ~ 1.5-2.3 ug/kg PBDEs (0.0015mg/kg to 0.0023 mg/kg) in Chinook Salmon from Oregon.
 
 # fit model
-# pbde_model <- brm(concentration ~ 0 + species + (1|authors) + (1|region),
-#                  family = Gamma(link = "log"),
-#                  data = pbde_data,
-#                  prior = c(prior(normal(0, 1), class = "b"),
-#                            prior(exponential(3), class = "sd"),
-#                            prior(gamma(2, 1), class = "shape")))
-# 
-# saveRDS(pbde_model, file = "models/pbde_model.rds")
-pbde_model <- readRDS("models/pbde_model.rds")
+pbde_model <- brm(mean_concentration_standardized ~ 0 + species + (1|authors) + (1|region),
+                 family = Gamma(link = "log"),
+                 data = pbde_data,
+                 prior = c(prior(normal(-7, 2), class = "b"),
+                           prior(exponential(3), class = "sd"),
+                           prior(gamma(5, 1), class = "shape")),
+                 file = "models/pbde_model.rds",
+                 file_refit = "on_change",
+                 cores = 4)
 
+plot(conditional_effects(pbde_model), points = T)
 
 #extract posteriors
 
-pbde_posts <- conditional_posts_fitted(pbde_model, effects = "species") %>%
-  rename(ug_kg_ww = value) %>% mutate(chemical = "PBDE")
+pbde_posts <- pbde_model$data %>% 
+  data_grid(species) %>% 
+  add_epred_draws(pbde_model, re_formula = NA) %>% 
+  mutate(chemical = "PBDE")
 
 saveRDS(pbde_posts, file = "posteriors/pbde_posts.RDS")
 
 # DDT ----------------------------------------------------------------------
 
 #data prep: check for duplicates
-nut_cont %>% 
-  filter(grepl("DDT", chemical)) %>% 
-  group_by(specific_location, concentration, n, species, region, data_collection_period) %>% 
-  filter(n() >1) 
 
 #correct for whole body, fillet with skin, and fillet without skin using Stone, D. (2006). Polybrominated diphenyl ethers and polychlorinated biphenyls in different tissue types from Chinook salmon 
 #(Oncorhynchus tshawytscha). Bulletin of environmental contamination and toxicology, 76(1), 148-154.
 
 ddt_data <- nut_cont %>% 
-  distinct(specific_location, authors, concentration, n, species, region, data_collection_period, tissue, concentration_units, chemical, original_concentration) %>% 
   filter(grepl("DDT", chemical)) %>% 
-  mutate(concentration = concentration*1e+6,
-         concentration_units = "ug_kg")
+  distinct()
 
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
-prior_b = rnorm(1000, 0, 2)
+prior_b = rnorm(1000, -7, 2)
 prior_sd = rexp(1000, 3)
-prior_shape = rgamma(1000, 2, 1)
+prior_shape = rgamma(1000, 5, 1)
 
-plot_prior_ddt <- sim_gamma_priors(prior_b = prior_b,
-                                    prior_sd = prior_sd,
-                                    prior_shape = prior_shape)
-
-plot_prior_ddt +
-  ylim(0, 20)
+sim_gamma_priors(prior_b = prior_b,
+                 prior_sd = prior_sd,
+                 prior_shape = prior_shape) +
+  scale_y_log10() +
+  geom_hline(yintercept = 0.0018)
 
 #numbers above are consistent with Stone, D. (2006). Polybrominated diphenyl ethers and polychlorinated biphenyls in different tissue types from Chinook salmon 
 #(Oncorhynchus tshawytscha). Bulletin of environmental contamination and toxicology, 76(1), 148-154. They found
-# ~ 1.5-2.3 ug/kg ddts in Chinook Salmon from Oregon.
+# ~ 1.5-2.3 ug/kg ddts (0.0015 to 0.0023 mg/kg) in Chinook Salmon from Oregon.
 
 # fit model
-ddt_model <- brm(concentration ~ 0 + species + (1|authors) + (1|region),
+ddt_model <- brm(mean_concentration_standardized ~ 0 + species + (1|authors) + (1|region),
                   family = Gamma(link = "log"),
                   data = ddt_data,
-                  prior = c(prior(normal(0, 2), class = "b"),
+                  prior = c(prior(normal(-7, 2), class = "b"),
                             prior(exponential(3), class = "sd"),
-                            prior(gamma(2, 1), class = "shape")))
+                            prior(gamma(5, 1), class = "shape")),
+                 file = "models/ddt_model.rds",
+                 file_refit = "on_change",
+                 cores = 4)
 
-
-
-saveRDS(ddt_model, file = "models/ddt_model.rds")
-ddt_model <- readRDS("models/ddt_model.rds")
-
+plot(conditional_effects(ddt_model), points = T)
 
 #extract posteriors
 
-ddt_posts <- conditional_posts_fitted(ddt_model, effects = "species") %>%
-  rename(ug_kg_ww = value) %>% mutate(chemical = "DDT")
+ddt_posts <- ddt_model$data %>% 
+  data_grid(species) %>% 
+  add_epred_draws(ddt_model, re_formula = NA) %>%
+  mutate(chemical = "DDT")
 
 saveRDS(ddt_posts, file = "posteriors/ddt_posts.RDS")

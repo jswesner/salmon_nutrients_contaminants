@@ -4,30 +4,24 @@ library(readxl)
 library(janitor)
 library(ggthemes)
 
-nutrients_only <- read_csv("data/contaminants_nutrients.csv") %>% 
+nutrients_only <- read_excel("data/raw_data/SalmonFlux_SubsidiesDatabase_09.22.21.xlsx", 
+                             sheet = "final nutrients") %>% 
   clean_names() %>% 
-  filter(tissue != "Liver",
-         type == "nutrient") %>% 
-  mutate(original_concentration = concentration,
-         concentration = case_when(concentration_units == "mg/kg ww" ~ concentration/1000,
-                                   concentration_units == "ng/g ww" ~ concentration/1000000,
-                                   TRUE ~ concentration),
-         original_concentration_units = concentration_units,
-         concentration_units = "g/kg ww")
+  filter(tissue != "Liver") %>% 
+  mutate(type = "nutrient") %>%
+  mutate(n = as.numeric(n)) %>% 
+  rename(chemical = nutrient)
 
 
 
-contaminants_only <- read_csv("data/contaminants_nutrients.csv") %>% 
+contaminants_only <- read_excel("data/raw_data/SalmonFlux_SubsidiesDatabase_09.22.21.xlsx", 
+                                                sheet = "final contaminants") %>% 
   clean_names() %>% 
-  filter(tissue != "Liver",
-         type == "contaminant") %>%
-  mutate(original_concentration = concentration,
-         concentration = case_when(concentration_units == "mg/kg ww" ~ concentration/1000,
-                                   concentration_units == "ng/g ww" ~ concentration/1000000,
-                                   TRUE ~ concentration),
-         original_concentration_units = concentration_units,
-         concentration_units = "g/kg ww",
-         sex = "NA")
+  filter(tissue != "Liver") %>% 
+  mutate(type = "contaminant") %>%
+  mutate(sex = "NA") %>% 
+  rename(chemical = contaminant) %>% 
+  mutate(chemical = case_when(grepl("Hg", chemical) ~ "Hg", TRUE ~ chemical))
 
 #compare columns and types
 compare_df_cols(nutrients_only, contaminants_only)
@@ -38,7 +32,10 @@ nut_cont <- bind_rows(contaminants_only, nutrients_only) %>%
                             TRUE ~ region),
          chemical = case_when(chemical == "PCBS" ~ "PCBs",
                               TRUE ~ chemical)) %>% 
-  filter(region != "Russia" & region != "United Kingdom")
+  filter(region != "Russia" & region != "United Kingdom") %>% 
+  select(-concentration) %>% 
+  rename(old_region = region,
+         region = manuscript_region)
 
 saveRDS(nut_cont, file = "data/nut_cont.rds")
 

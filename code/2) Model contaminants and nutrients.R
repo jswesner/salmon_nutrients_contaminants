@@ -172,11 +172,6 @@ saveRDS(epa_posts, file = "posteriors/epa_posts.rds")
 #****Assume values are for wet weight. Some derived from Ricker 1981, which reports 4-5 kg salmon size, which we assume is wet mass, but none state explicitly. 
 
 #check for duplicates
-nut_cont %>% 
-  filter(grepl("%N", chemical)) %>% 
-  group_by(specific_location, mean_concentration_standardized, n, species, region, data_collection_period) %>% 
-  filter(n() >1)
-
 nit_data <- nut_cont %>% 
   filter(chemical == "N") 
 
@@ -208,11 +203,16 @@ nit_model <- brm(mean_concentration_standardized ~ 1,
 
 
 # extract posteriors
-nit_posts <- nit_model$data %>% 
-  add_epred_draws(nit_model) %>% 
-  mutate(chemical = "N") %>% 
+
+
+# posterior extraction is slightly different code b/c there are no fixed effects in this model
+nit_posts <- as_draws_df(nit_model) %>% 
+  mutate(.draw = 1:nrow(.)) %>% 
+  mutate(.epred = exp(b_Intercept),
+         chemical = "N") %>% 
   expand_grid(species = nit_data %>% filter(species != "All") %>% distinct(species) %>% pull)
-  
+
+
 nit_posts %>% 
   ggplot(aes(x = species, y = .epred)) +
   geom_violin() +
@@ -258,10 +258,11 @@ phos_model <- brm(mean_concentration_standardized ~ 1,
                  cores = 4)
 
 # extract posteriors
-phos_posts <- phos_model$data %>% 
-  add_epred_draws(phos_model) %>% 
-  mutate(chemical = "P") %>% 
-  expand_grid(species = nit_data %>% filter(species != "All") %>% distinct(species) %>% pull)
+phos_posts <- as_draws_df(phos_model) %>% 
+  mutate(.draw = 1:nrow(.)) %>% 
+  mutate(.epred = exp(b_Intercept),
+         chemical = "P") %>% 
+  expand_grid(species = phos_data %>% filter(species != "All") %>% distinct(species) %>% pull)
 
 phos_posts %>% 
   ggplot(aes(x = species, y = .epred)) +

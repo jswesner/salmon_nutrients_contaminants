@@ -1,9 +1,9 @@
 library(brms)
+library(tidyverse)
 library(ggridges)
 source("code/functions.R")
 
 # check models
-
 
 # 1) bring in models
 gam_salmon2 <- readRDS("models/gam_salmon2.rds")
@@ -36,16 +36,16 @@ pp_check(phos_model, type = "boxplot") + scale_y_log10()
 
 nit_posts <- readRDS("posteriors/nit_posts.rds")
 nit_posts %>% 
-  filter(species == "All") %>% 
-  ggplot(aes(x = species, y = g_kg_N)) + 
+  ggplot(aes(x = species, y = .epred)) + 
   geom_boxplot(outlier.shape = NA) + 
   geom_jitter(data = nit_model$data %>%  as_tibble() %>% mutate(species = "All"),
-             aes(x = species, y = concentration))
+             aes(x = species, y = mean_concentration_standardized))
 
 phos_posts <- readRDS("posteriors/phos_posts.rds")
 phos_posts %>% 
-  filter(species == "All") %>% 
-  ggplot(aes(x = species, y = g_kg_ww)) + 
+  ggplot(aes(x = species, y = .epred)) + 
   geom_boxplot(outlier.shape = NA) + 
   geom_jitter(data = phos_model$data %>%  as_tibble() %>% mutate(species = "All"),
-              aes(x = species, y = concentration))
+              aes(x = species, y = mean_concentration_standardized))
+
+

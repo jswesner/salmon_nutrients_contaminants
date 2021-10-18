@@ -40,26 +40,38 @@ ggplot() +
 # raw data estimates of chemical flux
 chem_escape <- d %>% 
   filter(year > 1975) %>% 
-  group_by(location, year) %>%
+  group_by(location, year, species) %>%
   summarize(mean_kg = median(y_kg))
 
 mean_raw_contaminants <- nut_cont %>% group_by(chemical, species) %>% 
-  summarize(mean_mgkg = median(mean_concentration_standardized)) %>% 
-  expand_grid(year = unique(chem_escape$year),
-              location = unique(chem_escape$location))
+  summarize(mean_mgkg = median(mean_concentration_standardized))
 
 raw_flux <- chem_escape %>% left_join(mean_raw_contaminants) %>% 
   mutate(mg_chem = mean_kg*mean_mgkg,
-         kg_chem = mg_chem/1e6) 
+         kg_chem = mg_chem/1e6,
+         source = "raw data") %>% 
+  select(species, location, year, source, kg_chem, chemical)
 
-#cumulative raw chem
-raw_flux %>% group_by(chemical) %>% 
-  filter(species!= "All") %>% 
-  summarize(cumulative_raw = sum(kg_chem),
-            mean_annual_raw = mean(kg_chem)) %>% 
-  arrange(-cumulative_raw)
 
-summary_species_combined %>% group_by(chemical) %>% 
-  filter(species!= "All") %>% 
-  summarize(cumulative_modeled = sum(median),
-            mean_annual_modeled = mean(median))
+median_modeled_flux <- flux_predictions %>% 
+  ungroup() %>% 
+  group_by(species, location, year, chemical) %>% 
+  summarize(kg_chem = median(chem_flux_mg/1e6),
+            kg_chem_sd = sd(chem_flux_mg/1e6)) %>% 
+  mutate(source = "model") %>% 
+  select(species, location, year, source, kg_chem, chemical, kg_chem_sd) %>% 
+  mutate(chemical = case_when(chemical == "DDT" ~ "DDTs",
+                              chemical == "PBDE" ~ "PBDEs",
+                              TRUE ~ chemical))
+
+raw_modeled_flux <- bind_rows(raw_flux, median_modeled_flux)
+
+# check overlap of raw data esitmates to modeled estimates
+raw_modeled_flux %>% 
+  filter(species == "Pink") %>% 
+  ggplot(aes(x = year, y = kg_chem, fill = interaction(source, location)))  +
+  geom_ribbon(aes(ymin = kg_chem - kg_chem_sd, ymax = kg_chem + kg_chem_sd)) + 
+  geom_line() + 
+  facet_wrap(chemical~location, scales = "free_y", ncol = 4)
+
+

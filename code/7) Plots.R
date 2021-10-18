@@ -14,11 +14,27 @@ theme_set(theme_default())
 # load posteriors
 flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
 gam_salmon_posts <- readRDS("posteriors/gam_salmon_posts.rds") # Salmon escapement in kg wet mass
+all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") %>% 
+  mutate(chemical = case_when(chemical == "DDT" ~ "DDTs",
+                              chemical == "PBDE" ~ "PBDEs",
+                              TRUE ~ chemical)) %>% 
+  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+                          TRUE ~ "Contaminants"),
+         chemical = fct_relevel(chemical, "N", 
+                                "P", 
+                                "DHA", 
+                                "EPA",
+                                "Hg",
+                                "DDT")) # Salmon chemical concentrations mg kg wet mass
+
+# load raw data
+nut_cont <- readRDS("data/nut_cont.rds")   # nutrient and contaminant concentrations mg/kg
+d_short <- readRDS("data/d_short.rds") %>% 
+  separate(species, c("species", "family")) # salmon escapement after 1975
+
 
 # Salmon escapement time series -------------------------------------------
 #raw data
-d_short <- readRDS("data/d_short.rds") %>% 
-  separate(species, c("species", "family"))
 
 d_region_toplot <- d_short %>% dplyr::select(year, species, location, y) %>% 
   pivot_wider(names_from = location, values_from = y) %>% 
@@ -127,6 +143,71 @@ escapement_plot <- plot_grid(total_escapement,
 saveRDS(escapement_plot, file = "plots/escapement_plot.rds")
 ggsave(escapement_plot, file = "plots/escapement_plot.jpg", dpi = 400, width = 6, height = 8)
 
+
+
+# Chemical Concentrations -------------------------------------------------
+
+chem_concentrations <- all_chem_posts%>% 
+  mutate(chemical = case_when(chemical == "DDT" ~ "DDTs",
+                              chemical == "PBDE" ~ "PBDEs",
+                              TRUE ~ chemical)) %>% 
+  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+                          TRUE ~ "Contaminants"),
+         chemical = fct_relevel(chemical, "N",
+                                "DHA", 
+                                "EPA",
+                                "P",
+                                "Hg",
+                                "DDTs"),
+         type = fct_relevel(type, "Nutrients"),
+         species = fct_relevel(species, "Pink", "Sockeye", "Chum", "Chinook")) %>% 
+  ggplot(aes(x = chemical, y = .epred)) +
+  geom_boxplot(aes(fill = species),
+              alpha = 0.3,
+              outlier.shape = NA) +
+  scale_y_log10() +
+  scale_fill_colorblind() +
+  facet_wrap(~type, ncol = 1, scales = "free") +
+  geom_point(data = nut_cont %>% 
+               filter(species != "All") %>% 
+               mutate(chemical = fct_relevel(chemical, "N",
+                                             "DHA", 
+                                             "EPA",
+                                             "P",
+                                             "Hg",
+                                             "DDTs"),
+                      species = fct_relevel(species, "Pink", "Sockeye", "Chum", "Chinook"),
+                      type = case_when(type == "nutrient" ~ "Nutrients",
+                                       TRUE ~ "Contaminants"),
+                      type = fct_relevel(type, "Nutrients")),
+             position = position_dodge(width = 0.75), 
+             aes(y = mean_concentration_standardized, group = species),
+             size = 0.4) +
+  guides(fill = "none") +
+  labs(y = "Whole body concentrations (mg/kg ww)",
+       x = "Chemical") +
+  theme(text = element_text(size = 11),
+        plot.subtitle = element_text(size = 11))
+
+legend_escapement_conc <- get_legend(species_escapement + theme(legend.position = "top"))
+
+(escapement_plus_a <- plot_grid(total_escapement,
+                                species_escapement + guides(color = F, fill = F),
+                                chem_concentrations,
+                                ncol = 3,
+                                rel_widths = c(0.36, 0.43, 0.55)))
+
+
+(escapement_plus_concentrations_plot <- plot_grid(legend_escapement_conc,
+          escapement_plus_a,
+          ncol = 1,
+          rel_heights = c(0.1, 1)))
+
+
+ggsave(escapement_plus_concentrations_plot, file = "plots/escapement_plus_concentrations_plot.jpg",
+       dpi = 400, width = 6.5, height = 6, units = "in")
+
+
 # Flux Time Series --------------------------------------------------------
 
 # summarize and wrangle posteriors
@@ -154,8 +235,7 @@ summary_species_combined <- flux_predictions %>%
          units = "Kg")
 
 
-summary_all <- 
-  flux_predictions %>% 
+summary_all <- flux_predictions %>% 
   group_by(.draw, year, chemical) %>% 
   summarize(total = sum(mg_flux/1000000)) %>% 
   group_by(year, chemical) %>% 
@@ -435,90 +515,6 @@ mean_chem_plot_conts <- summary_location_combined_ave %>%
 
 saveRDS(mean_chem_plot, file = "plots/mean_chem_plot.rds")
 ggsave(mean_chem_plot, file = "plots/mean_chem_plot.jpg", dpi = 400, width = 6, height = 8)
-
-
-# Sum over years ---------------------------------------------------------------
-
-sum_over_all_years <- flux_predictions %>%
-  ungroup() %>%
-  group_by(chemical, .draw, species) %>% 
-  summarize(total = sum(mg_flux/1000000)) %>% 
-  mutate(units = "kg") %>% 
-  group_by(species, chemical, units) %>% 
-  summarize(mean = mean(total),
-            sd = sd(total), 
-            median = median(total),
-            low75 = quantile(total, probs = 0.125),
-            high75 = quantile(total, probs = 1-0.125),
-            low50 = quantile(total, probs = 0.25),
-            high50 = quantile(total, probs = 1-0.25)) %>% 
-  ungroup() %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants"),
-         chemical = fct_relevel(chemical, "N", 
-                                "P", 
-                                "DHA", 
-                                "EPA",
-                                "Hg",
-                                "DDT"),
-         group = case_when(species == "All" ~ "All",
-                           TRUE ~ "Species"))
-
-sum_by_species <- sum_over_all_years %>% 
-  select(species, chemical, units, mean, sd) %>% 
-  mutate(mean = case_when(mean <0.2 ~ round(mean, 3),
-                          TRUE ~ round(mean,0)),
-         sd = case_when(sd < 0.2 ~ round(sd, 3),
-                        TRUE ~ round(sd, 0))) %>% 
-  mutate(mean_sd = paste0(mean,  " \u00B1 ", sd)) %>% 
-  select(-mean, -sd) %>% 
-  pivot_wider(names_from = species, values_from = mean_sd) %>% 
-  arrange(chemical)
-
-write.csv(sum_by_species, file = "tables/sum_by_species.csv", row.names = F)
-
-# Average over years ---------------------------------------------------------------
-ave_over_all_years <- flux_predictions %>%
-  ungroup() %>% 
-  group_by(chemical, .draw, species) %>% 
-  summarize(total = mean(mg_flux/1000000/1000)) %>% # says "total", but function is mean. 
-  mutate(units = "metric tons") %>% 
-  group_by(species, chemical, units) %>% 
-  summarize(mean = mean(total),
-            sd = sd(total), 
-            median = median(total),
-            low75 = quantile(total, probs = 0.125),
-            high75 = quantile(total, probs = 1-0.125),
-            low50 = quantile(total, probs = 0.25),
-            high50 = quantile(total, probs = 1-0.25)) %>% 
-  ungroup() %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants"),
-         chemical = fct_relevel(chemical, "N", 
-                                "P", 
-                                "DHA", 
-                                "EPA",
-                                "Hg",
-                                "DDT"),
-         group = case_when(species == "All" ~ "All",
-                           TRUE ~ "Species"))
-
-ave_by_species <- ave_over_all_years %>% 
-  select(species, chemical, units, mean, sd) %>% 
-  mutate(mean = case_when(mean <0.2 ~ round(mean, 4),
-                          TRUE ~ round(mean,0)),
-         sd = case_when(sd < 0.2 ~ round(sd, 6),
-                        TRUE ~ round(sd, 0))) %>% 
-  mutate(mean_sd = paste0(mean,  " \u00B1 ", sd)) %>% 
-  select(-mean, -sd) %>% 
-  pivot_wider(names_from = species, values_from = mean_sd) %>% 
-  arrange(chemical)
-
-write.csv(ave_by_species, file = "tables/ave_by_species.csv", row.names = F)
-
-
-
-
 
 
 

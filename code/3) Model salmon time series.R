@@ -75,7 +75,8 @@ gam_salmon_posts <- gam_salmon2$data %>%
   add_epred_draws(gam_salmon2, re_formula = NULL, ndraws = 1000) %>% 
   mutate(metric_tons = .epred*10000,
          kg = metric_tons*1000) %>% 
-  separate(species_location, c("species", "location"))
+  separate(species_location, c("species", "location")) %>%  
+  select(species, location, year, .draw, kg, metric_tons) %>% ungroup() %>% select(-.row)
   
 saveRDS(gam_salmon_posts, file = "posteriors/gam_salmon_posts.rds")
 

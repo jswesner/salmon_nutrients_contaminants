@@ -12,6 +12,7 @@ rstan_options(auto_write = TRUE)
 
 # Load data ----------------------------------------------------------------
 
+
 d <- read_csv("data/salmon_metric_tons.csv") %>% 
   pivot_longer(cols = c(-units, -Year), names_to = "name", values_to = "y") %>% 
   separate(name, c("location", "species"), sep = "_", remove = F) %>% 
@@ -23,6 +24,7 @@ d <- read_csv("data/salmon_metric_tons.csv") %>%
   mutate(time = year - min(year) + 1) %>% 
   ungroup() %>% 
   mutate(y_10000 = y/10000)
+
 
 
 d_short <- d %>% filter(year >= 1976) %>% 

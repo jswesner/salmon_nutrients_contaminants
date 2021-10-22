@@ -49,7 +49,7 @@ all_chem_posts <- dha_posts %>% bind_rows(ddt_posts,
   mutate(units = "mg/kg ww") 
 
 
-saveRDS(all_chem_posts, file = "data/derived_quantities/all_chem_posts.rds")
+saveRDS(all_chem_posts, file = "posteriors/all_chem_posts.rds")
 
 
 

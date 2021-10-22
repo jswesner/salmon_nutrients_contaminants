@@ -169,7 +169,6 @@ epa_posts <-  epa_model$data %>%
 saveRDS(epa_posts, file = "posteriors/epa_posts.rds")
 
 # Nitrogen ----------------------------------------------------------------------
-#****Assume values are for wet weight. Some derived from Ricker 1981, which reports 4-5 kg salmon size, which we assume is wet mass, but none state explicitly. 
 
 #check for duplicates
 nit_data <- nut_cont %>% 
@@ -186,7 +185,6 @@ sim_gamma_priors(prior_b = prior_b,
                  prior_shape = prior_shape) +
   scale_y_log10() +
   annotation_logticks()
-
 
 
 # plot above generates some values above 75000 mg/kg N, but mostly lower than that. 
@@ -284,7 +282,7 @@ pcb_data <- nut_cont %>%
     
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
-prior_b = rnorm(1000, -3, 3)
+prior_b = rnorm(1000, -3.5, .5)
 prior_sd = rexp(1000, 2)
 prior_shape = rgamma(1000, 5, 2)
 
@@ -293,7 +291,9 @@ sim_gamma_priors(prior_b = prior_b,
                  prior_shape = prior_shape) +
   scale_y_log10(labels = comma) +
   annotation_logticks() +
-  geom_hline(yintercept = 0.045)
+  geom_hline(yintercept = c(0.025, 
+                            0.045,
+                            0.078))
 
 
 #numbers above are consistent with Montory, M., Habit, E., Fernandez, P., Grimalt, J. O., & Barra, R. (2010). PCBs and PBDEs in wild Chinook salmon (Oncorhynchus tshawytscha) in the Northern Patagonia, Chile. Chemosphere, 78(10), 1193-1199.
@@ -303,7 +303,7 @@ sim_gamma_priors(prior_b = prior_b,
 pcb_model <- brm(mean_concentration_standardized ~ 0 + species + (1|authors) + (1|region),
                  family = Gamma(link = "log"),
                  data = pcb_data,
-                 prior = c(prior(normal(-3, 3), class = "b"),
+                 prior = c(prior(normal(-3.5, 0.5), class = "b"),
                            prior(exponential(2), class = "sd"),
                            prior(gamma(5, 2), class = "shape")),
                  sample_prior = T,
@@ -378,16 +378,13 @@ saveRDS(pbde_posts, file = "posteriors/pbde_posts.RDS")
 
 #data prep: check for duplicates
 
-#correct for whole body, fillet with skin, and fillet without skin using Stone, D. (2006). Polybrominated diphenyl ethers and polychlorinated biphenyls in different tissue types from Chinook salmon 
-#(Oncorhynchus tshawytscha). Bulletin of environmental contamination and toxicology, 76(1), 148-154.
-
 ddt_data <- nut_cont %>% 
   filter(grepl("DDT", chemical)) %>% 
   distinct()
 
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
-prior_b = rnorm(1000, -7, 2)
+prior_b = rnorm(1000, -5.5, 2)
 prior_sd = rexp(1000, 3)
 prior_shape = rgamma(1000, 5, 1)
 
@@ -395,11 +392,9 @@ sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
                  prior_shape = prior_shape) +
   scale_y_log10() +
-  geom_hline(yintercept = 0.0018)
+  geom_hline(yintercept = 0.004)
 
-#numbers above are consistent with Stone, D. (2006). Polybrominated diphenyl ethers and polychlorinated biphenyls in different tissue types from Chinook salmon 
-#(Oncorhynchus tshawytscha). Bulletin of environmental contamination and toxicology, 76(1), 148-154. They found
-# ~ 1.5-2.3 ug/kg ddts (0.0015 to 0.0023 mg/kg) in Chinook Salmon from Oregon.
+# Consistent with ~0.004 mg/kg ww (4ppb) as in Anderson, R. B., & Everhart, W. H. (1966). Concentrations of DDT in landlocked salmon (Salmo salar) at Sebago Lake, Maine. Transactions of the American Fisheries Society, 95(2), 160-164.
 
 # fit model
 ddt_model <- brm(mean_concentration_standardized ~ 0 + species + (1|authors) + (1|region),

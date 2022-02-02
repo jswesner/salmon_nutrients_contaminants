@@ -292,196 +292,206 @@ summary_all <- flux_predictions %>%
 
 # make plots
 
-total_series <- summary_all %>% 
-  mutate(panel = "All")
-
-species_series <- summary_species_combined %>% 
-  rename(panel = species) %>% 
-  bind_rows(total_series) %>% 
-  mutate(group = "Species")
-
-location_series <- summary_location_combined %>% 
-  rename(panel = location) %>% 
-  bind_rows(total_series) %>% 
-  mutate(group = "Location") 
+range_1976_2015 <- summary_all %>% ungroup() %>%
+  filter(year == min(year) | year == max(year)) %>% 
+  select(year, median, chemical, type, group) %>% 
+  pivot_wider(names_from = year, values_from = median) %>% 
+  mutate(percentage_change = round((`2015`/`1976`*100),0),
+         year = 2016,
+         center = (`1976` + `2015`)/2,
+         change_text = paste0("+",percentage_change, "%")) 
 
 
-species_location_series <- species_series %>% bind_rows(location_series) %>% 
-  mutate(group = fct_relevel(group, "Species")) 
-
-
-
-
-library(ggrepel)
-
-a <- species_location_series %>% 
-  glimpse() %>% 
-  filter(type != "Contaminants" & group != "Location") %>% 
-  mutate(chemical = fct_relevel(chemical, "N", "DHA", "EPA"),
-         panel = fct_relevel(panel, "All", "Pink", "Sockeye", "Chum", "Coho")) %>% 
-  ggplot(aes(x = year, y = median, color = panel)) +
-  geom_linerange(aes(ymin = low75, ymax = high75), alpha = 0.5,
-                 size = .6) +
-  geom_point(size = 0.2) +
-  # geom_ribbon(aes(ymin = low50, ymax = high50), alpha = 0.8) +
-  # geom_line() + 
-  scale_color_viridis_d(direction = 1, option = 'A', end = 0.7) +
-  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 0.5) +
-  guides(color = "none",
-         fill = "none") +
-  labs(y = "Total Export (kg/y)",
-       subtitle = "Nutrients") +
-  facet_wrap(~ chemical, ncol = 4) +
-  scale_y_log10(labels = comma) +
-  scale_x_continuous(breaks = c(1975, 1995, 2015)) +
-  geom_text_repel(data = . %>% filter(year == max(year)) %>% 
-                    distinct(year, chemical, median, panel), 
-                  aes(x = 2015,
-                      y = median, 
-                      color = panel,
-                      label = panel),
-                  # color = "#FCFDBFFF",
-                  size = 2,
-                  nudge_x = 8,
-                  direction = "y",
-                  hjust = 0
-  ) +         
-  coord_cartesian(xlim = c(1975, 2030)) +
-  theme_default() +
+nutrients_total <- summary_all %>% ungroup() %>%
+  filter(group == "All" & type == "Nutrients") %>%
+  mutate(chemical = case_when(chemical == "N" ~ "a) N",
+                              chemical == "DHA" ~ "c) DHA",
+                              chemical == "EPA" ~ "e) EPA",
+                              TRUE ~ "g) P")) %>% 
+  ggplot(aes(x = year, y = median)) + 
+  geom_line() +
+  geom_ribbon(alpha = 0.2, aes(ymin = low75, ymax = high75)) +
+  geom_ribbon(alpha = 0.6, aes(ymin = low50, ymax = high50)) +
+  facet_wrap( ~ chemical, scales = "free_y", ncol = 1) +
+  labs(y = "Kg per year exported via salmon escapement",
+       # fill = "Species",
+       x = "Year",
+       subtitle = "Total Export (kg/y)",
+       title = "Nutrients") +
+  scale_y_continuous(labels = scientific) +
+  geom_segment(data = range_1976_2015 %>% 
+                 filter(group == "All" & type == "Nutrients") %>%
+                 mutate(chemical = case_when(chemical == "N" ~ "a) N",
+                                             chemical == "DHA" ~ "c) DHA",
+                                             chemical == "EPA" ~ "e) EPA",
+                                             TRUE ~ "g) P")), 
+                 aes(x = year, xend = year, y= `1976`, yend = `2015`)) +
+  geom_text(data = range_1976_2015 %>% 
+              filter(group == "All" & type == "Nutrients") %>%
+              mutate(chemical = case_when(chemical == "N" ~ "a) N",
+                                          chemical == "DHA" ~ "c) DHA",
+                                          chemical == "EPA" ~ "e) EPA",
+                                          TRUE ~ "g) P")),
+            aes(x = year + 5, y = center, label = change_text),
+            size = 3) +
+  theme(text = element_text(size = 11),
+        axis.title = element_text(size = 11),
+        legend.text = element_text(size = 11)) +
   theme(axis.title.x = element_blank(),
-        axis.text.x = element_blank()) +
-  NULL
+        plot.title = element_text(size = 11)) +
+  xlim(1976, 2025)
+  
+
+nutrients_species <- summary_species_combined %>% ungroup() %>%
+  filter(group != "All" & type == "Nutrients") %>%
+  mutate(chemical = case_when(chemical == "N" ~ "b) N",
+                              chemical == "DHA" ~ "d) DHA",
+                              chemical == "EPA" ~ "f) EPA",
+                              TRUE ~ "h) P")) %>%
+  mutate(species = fct_relevel(species, "Coho", "Chinook", "Chum", "Sockeye", "Pink")) %>% 
+  ggplot(aes(x = year, y = median, fill = species)) + 
+  geom_line() +
+  geom_ribbon(alpha = 0.2, aes(ymin = low75, ymax = high75)) +
+  geom_ribbon(alpha = 0.6, aes(ymin = low50, ymax = high50)) +
+  facet_wrap( ~ chemical, scales = "free_y", ncol = 1) +
+  labs(y = "Kg per year exported via salmon escapement",
+       fill = "Species",
+       x = "Year",
+       subtitle = "Export by Species (kg/y)",
+       title = "") +
+  scale_fill_viridis_d(direction = -1, option = 'A',
+                       guide = guide_legend(reverse = TRUE)) +
+  theme(text = element_text(size = 11),
+        axis.title = element_text(size = 11),
+        legend.text = element_text(size = 11)) +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 11)) +
+  scale_y_continuous(labels = scientific) +
+  NULL 
 
 
+nutrients_location <- summary_location_combined %>% ungroup() %>%
+  filter(type == "Nutrients") %>%
+  mutate(chemical = case_when(chemical == "N" ~ "b) N",
+                              chemical == "DHA" ~ "d) DHA",
+                              chemical == "EPA" ~ "f) EPA",
+                              TRUE ~ "h) P")) %>%
+  # mutate(location = fct_relevel(location, "BCWC", "SEAK")) %>%
+  ggplot(aes(x = year, y = median, fill = location)) +
+  # geom_ribbon(alpha = 0.8, aes(ymin = low75, ymax = high75)) +
+  geom_ribbon(alpha = 0.6, aes(ymin = low50, ymax = high50)) +
+  geom_line() +
+  facet_wrap( ~ chemical, scales = "free_y", ncol = 1) +
+  labs(y = "Kg per year exported via salmon escapement",
+       fill = "Location",
+       x = "Year",
+       subtitle = "Export by Location (kg/y)",
+       title = "") +
+  scale_fill_viridis_d(direction = 1, option = 'A',
+                       guide = guide_legend(reverse = TRUE)) +
+  theme(text = element_text(size = 11),
+        axis.title = element_text(size = 11),
+        legend.text = element_text(size = 11)) +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(size = 11)) +
+  scale_y_continuous(labels = comma) +
+  NULL 
 
-b <- species_location_series %>% 
-  glimpse() %>% 
-  filter(type == "Contaminants" & group == "Species") %>% 
-  mutate(chemical = fct_relevel(chemical, "PCBs", "Hg"),
-         panel = fct_relevel(panel, "All", "Pink", "Sockeye", "Chum", "Coho")) %>%  
-  ggplot(aes(x = year, y = median, color = panel)) +
-  geom_linerange(aes(ymin = low75, ymax = high75), alpha = 0.5,
-                 size = .5) +
-  geom_point(size = 0.2) +
-  # geom_ribbon(aes(ymin = low50, ymax = high50), alpha = 0.8) +
-  # geom_line() + 
-  scale_color_viridis_d(direction = 1, option = 'A', end = 0.7) +
-  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 0.5) +
-  guides(color = "none",
-         fill = "none") +
-  labs(y = "Total Export (kg/y)",
-       subtitle = "Contaminants") +
-  facet_wrap(~ chemical, ncol = 4) +
-  scale_y_log10(labels = comma) +
-  scale_x_continuous(breaks = c(1975, 1995, 2015)) +
-  geom_text_repel(data = . %>% filter(year == max(year)) %>% 
-                    distinct(year, chemical, median, panel), 
-                  aes(x = 2015,
-                      y = median, 
-                      color = panel,
-                      label = panel),
-                  size = 2,
-                  nudge_x = 8,
-                  direction = "y",
-                  hjust = 1
-  ) +         
-  coord_cartesian(xlim = c(1975, 2030)) +
-  theme_default() +
-  theme(axis.title.x = element_blank()) +
-  NULL
+contaminants_total <- summary_all %>% ungroup() %>%
+  filter(group == "All" & type != "Nutrients") %>%
+  mutate(chemical = case_when(chemical == "PCBs" ~ "i) PCBs",
+                              chemical == "Hg" ~ "k) Hg",
+                              chemical == "DDT" ~ "m) DDT",
+                              TRUE ~ "o) PBDEs")) %>%
+  ggplot(aes(x = year, y = median)) + 
+  geom_line() +
+  geom_ribbon(alpha = 0.2, aes(ymin = low75, ymax = high75)) +
+  geom_ribbon(alpha = 0.6, aes(ymin = low50, ymax = high50)) +
+  facet_wrap( ~ chemical, scales = "free_y", ncol = 1) +
+  labs(y = "Kg per year exported via salmon escapement",
+       # fill = "Species",
+       x = "Year",
+       # subtitle = "Total Export (kg/y)",
+       title = "Contaminants") +
+  scale_y_continuous(labels = scientific) +
+  xlim(1976, 2025) +
+  geom_segment(data = range_1976_2015 %>% 
+                 filter(group == "All" & type != "Nutrients") %>%
+                 mutate(chemical = case_when(chemical == "PCBs" ~ "i) PCBs",
+                                             chemical == "Hg" ~ "k) Hg",
+                                             chemical == "DDT" ~ "m) DDT",
+                                             TRUE ~ "o) PBDEs")), 
+               aes(x = year, xend = year, y= `1976`, yend = `2015`)) +
+  geom_text(data = range_1976_2015 %>% 
+              filter(group == "All" & type != "Nutrients") %>%
+              mutate(chemical = case_when(chemical == "PCBs" ~ "i) PCBs",
+                                          chemical == "Hg" ~ "k) Hg",
+                                          chemical == "DDT" ~ "m) DDT",
+                                          TRUE ~ "o) PBDEs")),
+            aes(x = year + 5, y = center, label = change_text),
+            size = 3) +
+  theme(text = element_text(size = 11),
+        axis.title = element_text(size = 11),
+        legend.text = element_text(size = 11),
+        plot.title = element_text(size = 11)) 
 
+contaminants_species <- summary_species_combined %>% ungroup() %>%
+  filter(group != "All" & type != "Nutrients") %>%
+  mutate(chemical = case_when(chemical == "PCBs" ~ "j) PCBs",
+                              chemical == "Hg" ~ "l) Hg",
+                              chemical == "DDT" ~ "n) DDT",
+                              TRUE ~ "p) PBDEs")) %>%
+  mutate(species = fct_relevel(species, "Coho", "Chinook", "Chum", "Sockeye", "Pink")) %>% 
+  ggplot(aes(x = year, y = median, fill = species)) + 
+  geom_line() +
+  geom_ribbon(alpha = 0.2, aes(ymin = low75, ymax = high75)) +
+  geom_ribbon(alpha = 0.6, aes(ymin = low50, ymax = high50)) +
+  facet_wrap( ~ chemical, scales = "free_y", ncol = 1) +
+  labs(y = "Kg per year exported via salmon escapement",
+       fill = "Species",
+       x = "Year",
+       # subtitle = "Export by Species (kg/y)",
+       title = "") +
+  scale_fill_viridis_d(direction = -1, option = 'A',
+                       guide = guide_legend(reverse = TRUE,
+                                            override.aes = list(alpha = 1,
+                                                                size = 5))) +
+  theme(text = element_text(size = 11),
+        axis.title = element_text(size = 11),
+        legend.text = element_text(size = 11)) +
+  theme(axis.title.y = element_blank(),
+        # axis.title.x = element_blank(),
+        plot.title = element_text(size = 11)) +
+  scale_y_continuous(labels = scientific) +
+  NULL 
 
-c <- species_location_series %>% 
-  glimpse() %>% 
-  filter(type != "Contaminants" & group == "Location") %>% 
-  mutate(chemical = fct_relevel(chemical, "N", "DHA", "EPA")) %>% 
-  mutate(panel = case_when(panel == "BeringSea" ~ "BS",
-                           panel == "CentralAK" ~ "CAK",
-                           TRUE ~ panel),
-         panel = fct_relevel(panel, "All", "BCWC", "SEAK", "CAK", "BS")) %>% 
-  ggplot(aes(x = year, y = median, color = panel)) +
-  geom_linerange(aes(ymin = low75, ymax = high75), alpha = 0.5,
-                 size = .5) +
-  geom_point(size = 0.2) +
-  # geom_ribbon(aes(ymin = low50, ymax = high50), alpha = 0.8) +
-  # geom_line() + 
-  scale_color_viridis_d(direction = 1, option = 'D', end = 0.9) +
-  scale_fill_viridis_d(direction = 1, option = 'D', alpha = 0.5) +
-  guides(color = "none",
-         fill = "none") +
-  labs(y = "Total Export (kg/y)",
-       subtitle = "") +
-  facet_wrap(~ chemical, ncol = 4) +
-  scale_y_log10(breaks = c(1e5, 1e6, 1e7), labels = comma) +
-  scale_x_continuous(breaks = c(1975, 1995, 2015)) +
-  geom_text_repel(data = . %>% filter(year == max(year))  %>% 
-                    distinct(year, chemical, median, panel), 
-                  aes(x = 2015,
-                      y = median, 
-                      color = panel,
-                      label = panel),
-                  size = 2,
-                  nudge_x = 8,
-                  direction = "y",
-                  hjust = 1
-  ) +         
-  coord_cartesian(xlim = c(1975, 2030)) +
-  theme_default() +
-  theme(axis.title.x = element_blank()) +
-  NULL
+species_legend <- get_legend(contaminants_species + 
+                               theme(legend.text = element_text(size = 10),
+                                     legend.title = element_text(size = 10)))
 
+totals_all <- plot_grid(nutrients_total + guides(fill = F), 
+                        contaminants_total + guides(fill = F),
+                        align = "v",
+                        ncol = 1)
 
-d <- species_location_series %>% 
-  glimpse() %>% 
-  filter(type == "Contaminants" & group == "Location") %>% 
-  mutate(chemical = fct_relevel(chemical, "PCBs", "Hg")) %>%
-  mutate(panel = case_when(panel == "BeringSea" ~ "BS",
-                           panel == "CentralAK" ~ "CAK",
-                           TRUE ~ panel),
-         panel = fct_relevel(panel, "All", "BCWC", "SEAK", "CAK", "BS")) %>% 
-  ggplot(aes(x = year, y = median, color = panel)) +
-  geom_linerange(aes(ymin = low75, ymax = high75), alpha = 0.5,
-                 size = .5) +
-  geom_point(size = 0.2) +
-  # geom_ribbon(aes(ymin = low50, ymax = high50), alpha = 0.8) +
-  # geom_line() + 
-  scale_color_viridis_d(direction = 1, option = 'D', end = 0.9) +
-  scale_fill_viridis_d(direction = 1, option = 'D', alpha = 0.5) +
-  guides(color = "none",
-         fill = "none") +
-  labs(y = "Total Export (kg/y)",
-       subtitle = "") +
-  facet_wrap(~ chemical, ncol = 4) +
-  scale_y_log10(labels = comma) +
-  scale_x_continuous(breaks = c(1975, 1995, 2015)) +
-  geom_text_repel(data = . %>% filter(year == max(year)) %>% 
-                    distinct(year, chemical, median, panel), 
-                  aes(x = 2015,
-                      y = median,
-                      color = panel,
-                      label = panel),
-                  size = 2,
-                  nudge_x = 8,
-                  direction = "y",
-                  hjust = 1
-  ) +         
-  coord_cartesian(xlim = c(1975, 2030)) +
-  theme_default() +
-  theme(axis.title.x = element_blank()) +
-  NULL
+species_all <- plot_grid(nutrients_species + guides(fill = F) + guides(fill = F) +
+                                     labs(y = ""), 
+                         contaminants_species + guides(fill = F),
+                         align = "v",
+                         ncol = 1)
 
-
-flux_fig_time <- plot_grid(a,
-          c,
-          b,
-          d, 
-          ncol = 1,
-          align = "v")
-
+flux_fig_time <- plot_grid(totals_all,
+                           species_all,
+                           species_legend,
+                           ncol = 3,
+                           rel_widths = c(0.17, 0.15, 0.1))
 
 
 saveRDS(flux_fig_time, file = "plots/flux_fig_time.rds")
-ggsave(flux_fig_time, file = "plots/flux_fig_time.jpg", dpi = 500, width = 8, height = 9)
+ggsave(flux_fig_time, file = "plots/flux_fig_time.jpg", dpi = 500, width = 6, height = 9)
+
 
 
 

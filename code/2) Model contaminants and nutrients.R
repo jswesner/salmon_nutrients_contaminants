@@ -34,8 +34,10 @@ prior_shape = rgamma(1000, 5, 3)
 sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
                  prior_shape = prior_shape) +
-  scale_y_log10(labels = comma, breaks = c(1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1)) 
-
+  scale_y_log10(labels = comma, breaks = c(1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1)) +
+  geom_hline(yintercept = c(0.03, 0.018, 0.059, 0.028, 0.015, 0.028, 0.108, 0.056,
+                            0.05))
+# Prior ranges are for 
 # prior generates ranges from the literature of ~ 0 to 0.1 mg/kg, e.g. https://www.sciencedirect.com/science/article/pii/S0048969718343055 
 
 # fit model
@@ -81,7 +83,7 @@ dha_data <- nut_cont %>%
 
 #plot priors - only for a couple species, since all will be the same (same prior)
 #NOTE - Model uses a no-intercept formula, so all groups get the same prior
-prior_b = rnorm(1000, 8.5, 2)
+prior_b = rnorm(1000, 8.5, 1)
 prior_sd = rexp(1000, 2)
 prior_shape = rgamma(1000, 5, 3)
 

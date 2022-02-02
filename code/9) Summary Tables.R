@@ -1,7 +1,66 @@
 library(tidyverse)
+library(janitor)
 
 
 
+# escapement --------------------------------------------------------------
+
+#load escapement
+
+# millions
+fish_escapement <- read_csv("data/raw_data/fish_escapement.csv") %>% clean_names() %>% 
+  pivot_longer(cols = c(-year, -metric, -source)) %>% 
+  mutate(species = case_when(grepl("pink", name) ~ "Pink",
+                             grepl("chum", name) ~ "Chum",
+                             grepl("sockeye", name) ~ "Sockeye",
+                             grepl("chinook", name) ~ "Chinook",
+                             TRUE ~ "Coho"),
+         location = case_when(grepl("bering", name) ~ "Bering Sea",
+                              grepl("central", name) ~ "Central Alaska",
+                              grepl("seak", name) ~ "Southeast Alaska",
+                              grepl("bc_wc", name) ~ "BCWC"))
+
+
+# metric tons wet
+salmon_mass <- readRDS("posteriors/derived_quantities/salmon_mass.rds")
+
+
+# mean annual escapement (millions of fish)
+mean_annual_escapement_millions <- fish_escapement %>% filter(year >= 1976) %>% # only after 1976
+  select(year, value, species, location) %>%
+  pivot_wider(names_from = location, values_from = value) %>% # add totals for region and species
+  rowwise() %>% 
+  mutate(region_total = sum(c_across(-c(1:2)))) %>% 
+  ungroup() %>% 
+  pivot_longer(cols = c(-year, -species), names_to = "location") %>% 
+  pivot_wider(names_from = species, values_from = value) %>% 
+  rowwise() %>% 
+  mutate(species_total = sum(c_across(-c(1:2)))) %>% 
+  pivot_longer(cols = c(-year, -location), names_to = "species") %>% 
+  group_by(location, species) %>% 
+  summarize(mean = mean(value)) %>% 
+  pivot_wider(names_from = species, values_from = mean) 
+
+write_csv(mean_annual_escapement_millions, file = "tables/mean_annual_escape.csv")
+
+# mean annual metric tons escapement
+salmon_mass %>% 
+  group_by(species, .draw, year) %>%
+  summarize(total_mt = sum(metric_tons)) %>% 
+  pivot_wider(names_from = species, values_from = total_mt) %>% 
+  pivot_longer(cols = c(-.draw, -Total, -year)) %>% 
+  mutate(proportion = value/Total) %>% 
+  group_by(name, .draw) %>% 
+  summarize(mean_mt = mean(value),
+            mean_proportion = mean(proportion)) %>% 
+  group_by(name) %>% 
+  summarize(mean_mt = mean(mean_mt),
+            mean_proportion = mean(mean_proportion))
+
+
+
+
+# chemical flux -----------------------------------------------------------
 # load posteriors
 flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
 gam_salmon_posts <- readRDS("posteriors/gam_salmon_posts.rds") # Salmon escapement in kg wet mass
@@ -16,12 +75,11 @@ all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") %>%
                                 "DHA", 
                                 "EPA",
                                 "Hg",
-                                "DDT")) # Salmon chemical concentrations mg kg wet mass
+                                "DDTs")) # Salmon chemical concentrations mg kg wet mass
 
 chem_species_prop <- readRDS("posteriors/chem_species_prop.rds")
 
 # biomass_chem_medians
-
 biomass_chem_medians <- all_chem_posts %>%
   pivot_wider(names_from = species, values_from = .epred) %>% 
   mutate(sumfish_meanchem = (Chinook + Chum + Coho + Pink + Sockeye)/5) %>% # mean chem concentrations across species
@@ -31,7 +89,7 @@ biomass_chem_medians <- all_chem_posts %>%
   summarize(median_chem_mgkg = median(.epred)) %>% 
   pivot_wider(names_from = chemical, values_from = median_chem_mgkg) %>% 
   right_join(gam_salmon_posts %>%
-               dplyr::(-kg) %>% 
+               dplyr::select(-kg) %>% 
                pivot_wider(names_from = species, values_from = metric_tons) %>% 
                mutate(sumfish_meanchem = (Chinook + Chum + Coho + Pink + Sockeye)) %>% # mean chem concentrations across species
                pivot_longer(cols = c(-.draw, -location, -year),
@@ -40,15 +98,15 @@ biomass_chem_medians <- all_chem_posts %>%
                summarize(total_mt = sum(metric_tons)) %>%  # total for species per year - summed across regions
                group_by(species) %>% 
                summarize(median_mt = median(total_mt)) %>% # median averaged across years
-               dplyr::(species, median_mt, everything())) %>% 
-  dplyr::(species, median_mt, N, P, DHA, EPA, Hg, everything()) %>% 
+               dplyr::select(species, median_mt, everything())) %>% 
+  dplyr::select(species, median_mt, N, P, DHA, EPA, Hg, everything()) %>% 
   arrange(median_mt)
 
 
 write_csv(biomass_chem_medians, file = "tables/biomass_chem_medians.csv")
 
 
-# chemical flux -----------------------------------------------------------
+
 
 flux_with_all <- flux_predictions %>% 
   ungroup() %>% 
@@ -135,3 +193,32 @@ flux_predictions %>%
   mutate(total = Chinook + Chum + Coho + Pink + Sockeye,
          prop = Chinook/total) %>% 
   print(n = Inf)
+
+
+# proportions
+chem_species_prop <- flux_predictions %>% 
+  # filter(.draw <= 2) %>% 
+  select(species, location, year, .draw, mg_flux, chemical) %>% 
+  pivot_wider(names_from = species, values_from = mg_flux) %>% 
+  mutate(All = Chinook + Chum + Coho + Pink + Sockeye) %>% 
+  pivot_longer(cols = c(Chinook, Chum, Coho, Pink, Sockeye), names_to = "species") %>% 
+  mutate(proportion = value/All)
+
+
+chem_species_prop %>% 
+  # filter(chemical == "PCBs") %>% 
+  # filter(species == "Pink") %>% 
+  group_by(year, species, .draw, chemical) %>% 
+  summarize(all = sum(All/1e+9),   #convert mg to metric tons
+            species_mt = sum(value/1e+9),
+            proportion = species_mt/all) %>% 
+  group_by(.draw, chemical, species) %>% 
+  summarize(mean_prop = mean(proportion),
+            mean_mt = mean(species_mt)) %>% 
+  group_by(chemical, species) %>% 
+  summarize(mean_prop = mean(mean_prop),
+            mean_mt = mean(mean_mt)) %>% 
+  # pivot_wider(names_from = species, values_from = mean_prop) %>% 
+  print(n = Inf)
+
+

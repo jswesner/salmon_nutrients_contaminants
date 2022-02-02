@@ -51,11 +51,6 @@ gam_salmon1 <- brm(y_10000 ~ s(year, by = species_location) + (1|species_locatio
                    cores = 4)
 
 
-fixef(gam_salmon1) %>% as_tibble() %>% 
-  mutate(parameter = rownames(fixef(gam_salmon1))) %>% 
-  ggplot(aes(x = reorder(parameter, Estimate), y = Estimate, ymin = Q2.5, ymax = Q97.5)) + 
-  geom_pointrange() +
-  coord_flip()
 
 # plot(conditional_effects(gam_salmon1), points = T)
 

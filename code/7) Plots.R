@@ -412,8 +412,10 @@ c <- species_location_series %>%
   labs(y = "Total Export (kg/y)",
        subtitle = "") +
   facet_wrap(~ chemical, ncol = 4) +
-  scale_y_log10(breaks = c(1e5, 1e6, 1e7), labels = comma) +
-  scale_x_continuous(breaks = c(1975, 1995, 2015)) +
+  scale_y_log10(breaks = c(1e5, 1e6, 1e7), labels = comma,
+                limits = c(1e5, 1.5e7)) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015),
+                     limits = c(1975, 2030)) +
   geom_text_repel(data = . %>% filter(year == max(year))  %>% 
                     distinct(year, chemical, median, panel), 
                   aes(x = 2015,
@@ -425,7 +427,6 @@ c <- species_location_series %>%
                   direction = "y",
                   hjust = 1
   ) +         
-  coord_cartesian(xlim = c(1975, 2030)) +
   theme_default() +
   theme(axis.title.x = element_blank()) +
   NULL

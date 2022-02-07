@@ -221,4 +221,32 @@ chem_species_prop %>%
   # pivot_wider(names_from = species, values_from = mean_prop) %>% 
   print(n = Inf)
 
+# total biotransport
+change_1976_2015 <- flux_predictions %>% 
+  filter(year == 1976 | year ==2015) %>% 
+  mutate(kg_flux = mg_flux/1e6) %>% 
+  select(year, chemical, .draw, kg_flux, location) %>% 
+  pivot_wider(names_from = chemical, values_from = kg_flux) %>% 
+  mutate(All = DHA + DDT + Hg + PCBs + N + P + PBDE + EPA) %>% 
+  pivot_longer(cols = c(-location, -species, -year, -.draw)) %>% 
+  pivot_wider(values_from = value, names_from = location) %>% 
+  mutate(All = BCWC + BeringSea + CentralAK + SEAK) %>% 
+  pivot_longer(cols = c(-species, -year, -.draw, -name),
+               names_to = "location", values_to = "kg_year") %>% 
+  group_by(year, .draw, name, location) %>% 
+  summarize(biotransport = sum(kg_year)) %>% 
+  pivot_wider(names_from = year, values_from = biotransport) %>% 
+  mutate(change = `2015` - `1976`,
+         percent_change = `2015`/`1976`) %>% 
+  group_by(name, location) %>% 
+  summarize(kg_yr = median(change),
+            percent_diff = median(percent_change)) %>% 
+  pivot_longer(cols = c(kg_yr, percent_diff), names_to = "metric") %>% 
+  unite(col = "loc_metric", location:metric, sep = "_") %>% 
+  pivot_wider(names_from = loc_metric, values_from = value) %>% 
+  arrange(-All_kg_yr)
 
+write_csv(change_1976_2015, file = "tables/change_1976_2015.csv")  
+  
+
+         

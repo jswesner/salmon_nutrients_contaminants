@@ -223,71 +223,76 @@ ggsave(escapement_plus_concentrations_plot, file = "plots/escapement_plus_concen
 # Flux Time Series --------------------------------------------------------
 
 # summarize and wrangle posteriors
-summary_species_combined <- flux_predictions %>%
-  ungroup() %>%
-  group_by(year, species, chemical, .draw) %>% 
-  summarize(total = sum(mg_flux/1000000)) %>% 
-  group_by(year, chemical, species) %>% 
-  summarize(median = median(total),
-            low75 = quantile(total, probs = 0.125),
-            high75 = quantile(total, probs = 1-0.125),
-            low50 = quantile(total, probs = 0.25),
-            high50 = quantile(total, probs = 1-0.25)) %>% 
-  ungroup() %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants"),
-         chemical = fct_relevel(chemical, "N", 
-                                "P", 
-                                "DHA", 
-                                "EPA",
-                                "Hg",
-                                "DDT"),
-         group = case_when(species == "All" ~ "All",
-                           TRUE ~ "Species"),
-         units = "Kg")
 
-summary_location_combined <- flux_predictions %>%
-  ungroup() %>%
-  group_by(year, location, chemical, .draw) %>% 
-  summarize(total = sum(mg_flux/1000000)) %>% 
-  group_by(year, chemical, location) %>% 
-  summarize(median = median(total),
-            low75 = quantile(total, probs = 0.125),
-            high75 = quantile(total, probs = 1-0.125),
-            low50 = quantile(total, probs = 0.25),
-            high50 = quantile(total, probs = 1-0.25)) %>% 
-  ungroup() %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants"),
-         chemical = fct_relevel(chemical, "N", 
-                                "P", 
-                                "DHA", 
-                                "EPA",
-                                "Hg",
-                                "DDT"),
-         units = "Kg")
+summary_species_combined <- readRDS(file = "posteriors/derived_quantities/summary_species_combined.rds")
+summary_location_combined <- readRDS(file = "posteriors/derived_quantities/summary_location_combined.rds")
+summary_all <- readRDS(file = "posteriors/derived_quantities/summary_all.rds")
 
-
-summary_all <- flux_predictions %>% 
-  group_by(.draw, year, chemical) %>% 
-  summarize(total = sum(mg_flux/1000000)) %>% 
-  group_by(year, chemical) %>% 
-  summarize(median = median(total),
-            low75 = quantile(total, probs = 0.125),
-            high75 = quantile(total, probs = 1-0.125),
-            low50 = quantile(total, probs = 0.25),
-            high50 = quantile(total, probs = 1-0.25)) %>% 
-  ungroup() %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants"),
-         chemical = fct_relevel(chemical, "N", 
-                                "P", 
-                                "DHA", 
-                                "EPA",
-                                "Hg",
-                                "DDT"),
-         group = "All",
-         units = "Kg")
+# summary_species_combined <- flux_predictions %>%
+#   ungroup() %>%
+#   group_by(year, species, chemical, .draw) %>% 
+#   summarize(total = sum(mg_flux/1000000)) %>% 
+#   group_by(year, chemical, species) %>% 
+#   summarize(median = median(total),
+#             low75 = quantile(total, probs = 0.125),
+#             high75 = quantile(total, probs = 1-0.125),
+#             low50 = quantile(total, probs = 0.25),
+#             high50 = quantile(total, probs = 1-0.25)) %>% 
+#   ungroup() %>% 
+#   mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+#                           TRUE ~ "Contaminants"),
+#          chemical = fct_relevel(chemical, "N", 
+#                                 "P", 
+#                                 "DHA", 
+#                                 "EPA",
+#                                 "Hg",
+#                                 "DDT"),
+#          group = case_when(species == "All" ~ "All",
+#                            TRUE ~ "Species"),
+#          units = "Kg")
+# 
+# summary_location_combined <- flux_predictions %>%
+#   ungroup() %>%
+#   group_by(year, location, chemical, .draw) %>% 
+#   summarize(total = sum(mg_flux/1000000)) %>% 
+#   group_by(year, chemical, location) %>% 
+#   summarize(median = median(total),
+#             low75 = quantile(total, probs = 0.125),
+#             high75 = quantile(total, probs = 1-0.125),
+#             low50 = quantile(total, probs = 0.25),
+#             high50 = quantile(total, probs = 1-0.25)) %>% 
+#   ungroup() %>% 
+#   mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+#                           TRUE ~ "Contaminants"),
+#          chemical = fct_relevel(chemical, "N", 
+#                                 "P", 
+#                                 "DHA", 
+#                                 "EPA",
+#                                 "Hg",
+#                                 "DDT"),
+#          units = "Kg")
+# 
+# 
+# summary_all <- flux_predictions %>% 
+#   group_by(.draw, year, chemical) %>% 
+#   summarize(total = sum(mg_flux/1000000)) %>% 
+#   group_by(year, chemical) %>% 
+#   summarize(median = median(total),
+#             low75 = quantile(total, probs = 0.125),
+#             high75 = quantile(total, probs = 1-0.125),
+#             low50 = quantile(total, probs = 0.25),
+#             high50 = quantile(total, probs = 1-0.25)) %>% 
+#   ungroup() %>% 
+#   mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+#                           TRUE ~ "Contaminants"),
+#          chemical = fct_relevel(chemical, "N", 
+#                                 "P", 
+#                                 "DHA", 
+#                                 "EPA",
+#                                 "Hg",
+#                                 "DDT"),
+#          group = "All",
+#          units = "Kg")
 
 
 # make plots
@@ -318,7 +323,7 @@ a <- species_location_series %>%
   glimpse() %>% 
   filter(type != "Contaminants" & group != "Location") %>% 
   mutate(chemical = fct_relevel(chemical, "N", "DHA", "EPA"),
-         panel = fct_relevel(panel, "All", "Pink", "Sockeye", "Chum", "Coho")) %>% 
+         panel = fct_relevel(panel, "All", "Pink", "Sockeye", "Chum", "Chinook")) %>% 
   ggplot(aes(x = year, y = median, color = panel)) +
   geom_linerange(aes(ymin = low75, ymax = high75), alpha = 0.5,
                  size = .6) +
@@ -358,7 +363,7 @@ b <- species_location_series %>%
   glimpse() %>% 
   filter(type == "Contaminants" & group == "Species") %>% 
   mutate(chemical = fct_relevel(chemical, "PCBs", "Hg"),
-         panel = fct_relevel(panel, "All", "Pink", "Sockeye", "Chum", "Coho")) %>%  
+         panel = fct_relevel(panel, "All", "Pink", "Sockeye", "Chum", "Chinook")) %>%  
   ggplot(aes(x = year, y = median, color = panel)) +
   geom_linerange(aes(ymin = low75, ymax = high75), alpha = 0.5,
                  size = .5) +
@@ -609,16 +614,88 @@ saveRDS(mean_chem_plot, file = "plots/mean_chem_plot.rds")
 ggsave(mean_chem_plot, file = "plots/mean_chem_plot.jpg", dpi = 400, width = 6, height = 8)
 
 
+# Species proportional contaminant/nutrient --------------------------------------
+chem_species_prop_nutcon <- readRDS("posteriors/derived_quantities/chem_species_prop_nutcon.rds")
+
+# chem_species_prop_nutcont <- flux_predictions %>% 
+#   filter(.draw <= 500) %>%
+#   select(species, location, year, .draw, mg_flux, chemical) %>% 
+#   mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+#                           TRUE ~ "Contaminants")) %>% 
+#   group_by(species, year, .draw, type) %>% 
+#   summarize(mg_flux = sum(mg_flux)) %>% 
+#   pivot_wider(names_from = species, values_from = mg_flux) %>% 
+#   mutate(All = Chinook + Chum + Coho + Pink + Sockeye) %>% 
+#   pivot_longer(cols = c(Chinook, Chum, Coho, Pink, Sockeye), names_to = "species") %>% 
+#   mutate(proportion = value/All)
+# 
+# chem_species_prop_summary_nutcont <- chem_species_prop_nutcont %>% 
+#   ungroup() %>%
+#   group_by(type, year, species) %>% 
+#   mutate(total = proportion) %>% 
+#   summarize(median = median(total),
+#             low75 = quantile(total, probs = 0.125),
+#             high75 = quantile(total, probs = 1-0.125),
+#             low50 = quantile(total, probs = 0.25),
+#             high50 = quantile(total, probs = 1-0.25)) %>% 
+#   ungroup() 
+
+
+chem_species_total_summary_nutcont <- chem_species_prop_nutcont %>% 
+  ungroup() %>%
+  group_by(species, year, type) %>% 
+  mutate(total = value) %>% 
+  summarize(median = median(total),
+            low75 = quantile(total, probs = 0.125),
+            high75 = quantile(total, probs = 1-0.125),
+            low50 = quantile(total, probs = 0.25),
+            high50 = quantile(total, probs = 1-0.25)) %>% 
+  ungroup() %>% 
+  mutate(group = case_when(species == "All" ~ "All",
+                           TRUE ~ "Species"),
+         units = "Kg") %>%
+  mutate(species = fct_relevel(species, "Coho", "Chinook", "Chum", "Sockeye", "Pink"),
+         type = fct_relevel(type, "Contaminants"))
+
+(proportion_contributions_species_nutcont <- tag_facet(chem_species_total_summary_nutcont %>% 
+                                                 ggplot(aes(x = year, y = median)) + 
+                                                 geom_area(position = "fill", aes(fill = species)) +
+                                                 facet_wrap( ~type, nrow = 1) +
+                                                   scale_fill_viridis_d(direction = -1, option = 'A', alpha = 1,
+                                                                        begin = 0.15, end = 0.7)  +
+                                                 scale_x_continuous(breaks = c(1980, 1995, 2010)) +
+                                                 scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1)) +
+                                                 coord_cartesian(ylim = c(0, 1.1)) +
+                                                 labs(y = "Median proportional contributions to\nnutrient and contaminant flux",
+                                                      fill = "Species",
+                                                      x = "Year") +
+                                                 geom_text(data = chem_species_total_summary_nutcont %>% distinct(type, type, species = NA),
+                                                           aes(x = 1975 + 12, y = 1.08, label = type),
+                                                           size = 2.5) +
+                                                 theme(text = element_text(size = 12),
+                                                       axis.title = element_text(size = 11),
+                                                       legend.text = element_text(size = 11),
+                                                       strip.text = element_blank(),
+                                                       strip.background = element_blank(),
+                                                       panel.spacing = unit(0.2, "lines")),
+                                               size = 3))
+
+
+saveRDS(proportion_contributions_species_nutcont, file = "plots/proportion_contributions_species_nutcont.rds")  
+ggsave(proportion_contributions_species_nutcont, file = "plots/proportion_contributions_species_nutcont.jpg",
+       dpi = 400, width = 7, height = 3)
+
 
 # Species proportional contributions --------------------------------------
+chem_species_prop <- readRDS("posteriors/derived_quantities/chem_species_prop.rds")
 
-chem_species_prop <- flux_predictions %>% 
-  filter(.draw <= 500) %>%
-  select(species, location, year, .draw, mg_flux, chemical) %>% 
-  pivot_wider(names_from = species, values_from = mg_flux) %>% 
-  mutate(All = Chinook + Chum + Coho + Pink + Sockeye) %>% 
-  pivot_longer(cols = c(Chinook, Chum, Coho, Pink, Sockeye), names_to = "species") %>% 
-  mutate(proportion = value/All)
+# chem_species_prop <- flux_predictions %>% 
+#   filter(.draw <= 500) %>%
+#   select(species, location, year, .draw, mg_flux, chemical) %>% 
+#   pivot_wider(names_from = species, values_from = mg_flux) %>% 
+#   mutate(All = Chinook + Chum + Coho + Pink + Sockeye) %>% 
+#   pivot_longer(cols = c(Chinook, Chum, Coho, Pink, Sockeye), names_to = "species") %>% 
+#   mutate(proportion = value/All)
 
 chem_species_prop_summary <- chem_species_prop %>% 
   ungroup() %>%
@@ -673,7 +750,8 @@ chem_species_total_summary <- chem_species_prop %>%
   ggplot(aes(x = year, y = median)) + 
   geom_area(position = "fill", aes(fill = species)) +
   facet_wrap( ~chemical, nrow = 2) +
-  scale_fill_grey(start = 0.9, end = 0.2) +
+    scale_fill_viridis_d(direction = -1, option = 'A', alpha = 1,
+                         begin = 0.15, end = 0.7) +
   scale_x_continuous(breaks = c(1980, 1995, 2010)) +
   scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   coord_cartesian(ylim = c(0, 1.1)) +
@@ -696,6 +774,94 @@ saveRDS(proportion_contributions_species, file = "plots/proportion_contributions
 ggsave(proportion_contributions_species, file = "plots/proportion_contributions_species.jpg",
        dpi = 400, width = 7, height = 3)
 
+
+# Regional proportional contributions --------------------------------------
+
+chem_region_prop <- readRDS("posteriors/derived_quantities/chem_region_prop.rds")
+
+# chem_region_prop <- flux_predictions %>% 
+#   filter(.draw <= 500) %>%
+#   select(species, location, year, .draw, mg_flux, chemical) %>% 
+#   pivot_wider(names_from = location, values_from = mg_flux) %>% 
+#   mutate(All = BeringSea + BCWC + CentralAK + SEAK) %>% 
+#   pivot_longer(cols = c(BeringSea, BCWC, CentralAK, SEAK), names_to = "region") %>% 
+#   mutate(proportion = value/All)
+
+chem_region_prop_summary <- chem_region_prop %>% 
+  ungroup() %>%
+  group_by(chemical, year, region) %>% 
+  mutate(total = proportion) %>% 
+  summarize(median = median(total),
+            low75 = quantile(total, probs = 0.125),
+            high75 = quantile(total, probs = 1-0.125),
+            low50 = quantile(total, probs = 0.25),
+            high50 = quantile(total, probs = 1-0.25)) %>% 
+  ungroup() %>% 
+  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+                          TRUE ~ "Contaminants"),
+         chemical = fct_relevel(chemical, "N", 
+                                "P", 
+                                "DHA", 
+                                "EPA",
+                                "Hg",
+                                "DDT"),
+         group = case_when(region == "All" ~ "All",
+                           TRUE ~ "Region"),
+         units = "Kg")
+
+
+chem_region_total_summary <- chem_region_prop %>% 
+  ungroup() %>%
+  group_by(chemical, year, region) %>% 
+  mutate(total = value) %>% 
+  summarize(median = median(total),
+            low75 = quantile(total, probs = 0.125),
+            high75 = quantile(total, probs = 1-0.125),
+            low50 = quantile(total, probs = 0.25),
+            high50 = quantile(total, probs = 1-0.25)) %>% 
+  ungroup() %>% 
+  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+                          TRUE ~ "Contaminants"),
+         chemical = case_when(chemical == "PCBS" ~ "PCBs",
+                              TRUE ~ chemical),
+         chemical = fct_relevel(chemical, "N", 
+                                "P", 
+                                "DHA", 
+                                "EPA",
+                                "Hg",
+                                "DDT"),
+         group = case_when(region == "All" ~ "All",
+                           TRUE ~ "Region"),
+         units = "Kg") %>%
+  mutate(region = fct_relevel(region, "BeringSea", "BCWC", "CentralAK", "SEAK"),
+         type = fct_relevel(type, "Contaminants"))
+
+(proportion_contributions_region <- tag_facet(chem_region_total_summary %>% 
+                                                 ggplot(aes(x = year, y = median)) + 
+                                                 geom_area(position = "fill", aes(fill = region)) +
+                                                 facet_wrap( ~chemical, nrow = 2) +
+                                                 scale_fill_grey(start = 0.9, end = 0.2) +
+                                                 scale_x_continuous(breaks = c(1980, 1995, 2010)) +
+                                                 scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1)) +
+                                                 coord_cartesian(ylim = c(0, 1.1)) +
+                                                 labs(y = "Median proportional contributions to\nnutrient and contaminant flux",
+                                                      fill = "Region",
+                                                      x = "Year") +
+                                                 geom_text(data = chem_species_total_summary %>% distinct(chemical, type, region = NA),
+                                                           aes(x = 1975 + 12, y = 1.08, label = chemical),
+                                                           size = 2.5) +
+                                                 theme(text = element_text(size = 11),
+                                                       axis.title = element_text(size = 11),
+                                                       legend.text = element_text(size = 11),
+                                                       strip.text = element_blank(),
+                                                       strip.background = element_blank(),
+                                                       panel.spacing = unit(0.2, "lines")),
+                                               size = 3))
+
+
+saveRDS(proportion_contributions_region, file = "plots/proportion_contributions_region.rds")  
+ggsave(proportion_contributions_region, file = "plots/proportion_contributions_region.jpg",
+       dpi = 400, width = 7, height = 3)
 
 # Species proportional contributions by region --------------------------------------
 
@@ -768,8 +934,8 @@ write_csv(chem_species_location_total_summary, file = "data/derived_quantities/c
     ggplot(aes(x = year, y = median)) + 
     geom_area(position = "fill", aes(fill = species)) +
     facet_grid(chemical ~ location) +
-    # scale_fill_grey(start = 0.9, end = 0.2) +
-  scale_fill_viridis_d(direction = -1, option = "A") +
+    scale_fill_viridis_d(direction = -1, option = 'A', alpha = 1,
+                         begin = 0.15, end = 0.7) +
     scale_x_continuous(breaks = c(1980, 1995, 2010)) +
     scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1)) +
     coord_cartesian(ylim = c(0, 1.1)) +
@@ -781,7 +947,8 @@ write_csv(chem_species_location_total_summary, file = "data/derived_quantities/c
           legend.text = element_text(size = 11),
           # strip.text = element_blank(),
           # strip.background = element_blank(),
-          panel.spacing = unit(0.2, "lines")))
+          panel.spacing = unit(0.2, "lines")) 
+  )
 
 
 saveRDS(proportion_contributions_species_locations, file = "plots/proportion_contributions_species_locations.rds")  
@@ -793,16 +960,20 @@ ggsave(proportion_contributions_species_locations, file = "plots/proportion_cont
 # Proportional differences ------------------------------------------------
 
 # proportions
-species_props <- flux_predictions %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants")) %>% 
-  group_by(species, year, type, .draw) %>% 
-  summarize(species_flux = sum(mg_flux)) %>% 
-  group_by(year, .draw, type) %>% 
-  mutate(total_flux = sum(species_flux),
-         species_prop = species_flux/total_flux) %>% 
-  group_by(species, year, type, .draw) %>% 
-  summarize(median_prop = median(species_prop))
+# species_props <- flux_predictions %>% 
+#   mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+#                           TRUE ~ "Contaminants")) %>% 
+#   group_by(species, year, type, .draw) %>% 
+#   summarize(species_flux = sum(mg_flux)) %>% 
+#   group_by(year, .draw, type) %>% 
+#   mutate(total_flux = sum(species_flux),
+#          species_prop = species_flux/total_flux) %>% 
+#   group_by(species, year, type, .draw) %>% 
+#   summarize(median_prop = median(species_prop))
+# saveRDS(species_props, file = "posteriors/derived_quantities/species_props.rds")
+
+species_props <- readRDS("posteriors/derived_quantities/species_props.rds")
+
 
 # check that it adds to ~ 1 (approximately because it is a sum of medians)
 species_props %>% 
@@ -810,6 +981,9 @@ species_props %>%
   summarize(sum = sum(median_prop))
 
 # plot
+text_to_add <- tibble(x = -0.02, y = 0.5, 
+                      label = "<-- More contaminants         More nutrients -->")
+
 (prop_differences <- species_props %>% 
   pivot_wider(names_from = type, values_from = median_prop) %>% 
   ungroup() %>% 
@@ -817,21 +991,25 @@ species_props %>%
          species = fct_relevel(species, "Chinook", "Coho", "Sockeye", "Chum")) %>% 
   group_by(species, year) %>% 
   mutate(mean_difference = median(cont_minus_nut)) %>% 
-  ggplot(aes(x = cont_minus_nut, y = species, group = interaction(species, year), 
-             color = mean_difference)) + 
-  geom_density_ridges(fill = NA, scale = 1, size = 0.2) +
+  ggplot(aes(x = cont_minus_nut, y = species)) + 
+  geom_density_ridges(fill = NA, scale = 1, size = 0.2,
+                      aes(group = interaction(species, year), 
+                          color = year)) +
+    # scale_color_brewer(type = "div") +
   scale_color_viridis(option = "E",
                       direction = -1) +
   geom_vline(xintercept = 0) + 
   xlim(-0.3, 0.3) +
   labs(y = "", 
-       x = "Proportion of nutrients minus proportion of contaminants",
-       subtitle = "       <-- More contaminants         More nutrients -->     ") +
-  guides(color = "none") +
+       color = "Year",
+       x = "Proportion of nutrients minus proportion of contaminants") +
+    geom_text(data = text_to_add, aes(x = x, y = y, label = label),
+              size = 3) +
+  # guides(color = "none") +
   NULL)
 
 
-ggsave(prop_differences, file = "plots/prop_differences.jpg", dpi = 400, width = 5, height = 5)
+ggsave(prop_differences, file = "plots/prop_differences.jpg", dpi = 400, width = 6, height = 5)
 
 
 

@@ -22,7 +22,7 @@ nut_cont %>%
 hg_data <- nut_cont %>% 
   filter(grepl("Hg", chemical)) %>% 
   mutate(mean_concentration_standardized = case_when(tissue == "Whole Body" ~ mean_concentration_standardized,
-                                   TRUE ~ mean_concentration_standardized*0.7))
+                                   TRUE ~ mean_concentration_standardized*0.74))
 
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
@@ -192,11 +192,12 @@ sim_gamma_priors(prior_b = prior_b,
 # plot above generates some values above 75000 mg/kg N, but mostly lower than that. 
 
 # fit model - no random effects b/c only 6 samples total
-nit_model <- brm(mean_concentration_standardized ~ 1,
+nit_model <- brm(mean_concentration_standardized ~ 1 + (1|authors) + (1|region),
                  family = Gamma(link = "log"),
                  data = nit_data,
                  prior = c(prior(normal(10, 0.5), class = "Intercept"),
-                           prior(gamma(10, 1), class = "shape")),
+                           prior(gamma(10, 1), class = "shape"),
+                           prior(exponential(5), class = "sd")),
                  file = "models/nit_model.rds",
                  file_refit = "on_change",
                  cores = 4)
@@ -248,14 +249,15 @@ sim_gamma_priors(prior_b = prior_b,
 
 
 # fit model
-phos_model <- brm(mean_concentration_standardized ~ 1,
-                 family = Gamma(link = "log"),
-                 data = phos_data,
-                 prior = c(prior(normal(8, 0.5), class = "Intercept"),
-                           prior(gamma(4, 2), class = "shape")),
-                 file = "models/phos_model.rds",
-                 file_refit = "on_change",
-                 cores = 4)
+phos_model <- brm(mean_concentration_standardized ~ 1 + (1|authors) + (1|region),
+                  family = Gamma(link = "log"),
+                  data = phos_data,
+                  prior = c(prior(normal(8, 0.5), class = "Intercept"),
+                            prior(gamma(4, 2), class = "shape"),
+                            prior(exponential(8), class = "sd")),
+                  file = "models/phos_model.rds",
+                  file_refit = "on_change",
+                  cores = 4)
 
 # extract posteriors
 phos_posts <- as_draws_df(phos_model) %>% 
@@ -382,7 +384,10 @@ saveRDS(pbde_posts, file = "posteriors/pbde_posts.RDS")
 
 ddt_data <- nut_cont %>% 
   filter(grepl("DDT", chemical)) %>% 
-  distinct()
+  distinct() %>% 
+  mutate(mean_concentration_standardized = case_when(tissue == "Fillet" ~ mean_concentration_standardized*1.66,
+                                                     tissue == "Fillet+Skin" ~ mean_concentration_standardized*1.66,
+                                                     TRUE ~ mean_concentration_standardized))
 
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)

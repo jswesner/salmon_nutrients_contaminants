@@ -26,7 +26,7 @@ fish_escapement <- read_csv("data/raw_data/fish_escapement.csv") %>%
   mutate(location = str_replace(location, " ", ""),
          location = str_replace(location, "/", ""))
 
-fish_mass_kgww <- read_csv("data/raw_data/fish_mass_kgww.csv") %>%
+fish_mass_kgww <- read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.csv") %>%
   pivot_longer(cols = -c(Year, units, Source), values_to = "kg_ww_individual") %>% 
   clean_names() %>% 
   separate(name, c("location", "species"), sep = "_") %>% 
@@ -41,17 +41,17 @@ flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds")
 
 
 year_summaries <- flux_predictions %>% 
-  group_by(type, species, location, chemical, year) %>% 
+  group_by(species, location, chemical, year) %>% 
   summarize(median = median(mg_flux),
             lower = quantile(mg_flux, probs = 0.05),
             upper = quantile(mg_flux, probs = 0.95))
 
 year_summaries %>% 
-  filter(species == "All") %>% 
+  # filter(species == "All") %>% 
   ggplot(aes(x = year, y = median, ymin = lower, ymax = upper,
              fill = location)) +
   geom_ribbon() +
-  facet_grid(chemical ~ type, scales = "free")
+  facet_wrap(~chemical, scales = "free")
 
 
 # Sensitivity via R2 Dietze 2017 p141 ------------------------------------------------------
@@ -69,7 +69,8 @@ sens_data <- flux_predictions %>%
          mg_flux_c = (mg_flux - mean(mg_flux))/sd(mg_flux),
          year_c = (year - mean(year))/sd(year)) 
   
-
+# fit linear models with flux estimates as response and mass, escapement abundance, and chem concentration as
+# predictors. Replicates for flux are monte carlo replicates.
 nested_sens <- sens_data %>% 
   nest(data = c(-chemical)) %>% 
   mutate(mg_multivariate = map(data, ~lm(mg_flux_c ~ millions_c*year_c + kg_ind_c*year_c + 
@@ -84,6 +85,8 @@ detach("package:relaimpo", unload = TRUE)
 detach("package:ggalt", unload = T)
 
 saveRDS(nested_sens, file = "models/nested_sens.rds")
+
+nested_sens <- readRDS(file = "models/nested_sens.rds")
 
 nested_sens$rel_imp
 

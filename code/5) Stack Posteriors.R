@@ -7,7 +7,6 @@ library(scales)
 library(janitor)
 library(ggridges)
 library(viridis)
-library(egg)
 source("code/functions.R")
 theme_set(theme_default())
 

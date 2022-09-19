@@ -1,0 +1,33 @@
+Authors,Publication Year,Data Collection Period,Species,Region,Manuscript Region,Specific Location,n,Sample Type,Nutrient,Concentration,Concentration units,Mean concentration_standardized,Concentration units_standardized,Tissue,Notes,DOI or Link,data_source
+Larkin and Slaney 1997,1997,N/A,All,British Columbia,BC/WC,Fraser River,NA,NA,N,3.04,% body weight or g/100g bw,30400,mg/kg ww,whole fish,,doi:10.1577/1548-8446(1997)022<0016:IOTIMN>2.0.CO;2,Brandt et al. 202x
+USDA database,N/A,N/A,Sockeye,USA,All,NA,NA,NA,N,3.56,% body weight or g/100g bw,35600,mg/kg ww,muscle,N derived from protein data using https://norganics.com/index-2/calculation-pages/convert-protein-to-nitrogen/,https://fdc.nal.usda.gov/index.html,Brandt et al. 202x
+USDA database,N/A,N/A,Coho,USA,All,NA,NA,NA,N,3.46,% body weight or g/100g bw,34600,mg/kg ww,muscle,N derived from protein data using https://norganics.com/index-2/calculation-pages/convert-protein-to-nitrogen/,https://fdc.nal.usda.gov/index.html,Brandt et al. 202x
+USDA database,N/A,N/A,Chinook,USA,All,NA,NA,NA,N,3.19,% body weight or g/100g bw,31900,mg/kg ww,muscle,N derived from protein data using https://norganics.com/index-2/calculation-pages/convert-protein-to-nitrogen/,https://fdc.nal.usda.gov/index.html,Brandt et al. 202x
+USDA database,N/A,N/A,Pink,USA,All,NA,NA,NA,N,3.28,% body weight or g/100g bw,32800,mg/kg ww,muscle,N derived from protein data using https://norganics.com/index-2/calculation-pages/convert-protein-to-nitrogen/,https://fdc.nal.usda.gov/index.html,Brandt et al. 202x
+USDA database,N/A,N/A,Chum,USA,All,NA,NA,NA,N,3.22,% body weight or g/100g bw,32200,mg/kg ww,muscle,N derived from protein data using https://norganics.com/index-2/calculation-pages/convert-protein-to-nitrogen/,https://fdc.nal.usda.gov/index.html,Brandt et al. 202x
+Donaldson 1967,1967,N/A,Sockeye,Alaska,AK,NA,NA,NA,P,0.38,% body weight or g/100g bw,3800,mg/kg ww,muscle,,https://www.proquest.com/docview/302302466?pq-origsite=gscholar&fromopenview=true,Brandt et al. 202x
+Larkin and Slaney 1997,1997,N/A,All,British Columbia,BC/WC,Fraser River,NA,NA,P,0.36,% body weight or g/100g bw,3600,mg/kg ww,whole fish,,doi:10.1577/1548-8446(1997)022<0016:IOTIMN>2.0.CO;2,Brandt et al. 202x
+USDA database,N/A,N/A,Sockeye,USA,All,NA,NA,NA,P,0.257,% body weight or g/100g bw,2570,mg/kg ww,muscle,,https://fdc.nal.usda.gov/index.html,Brandt et al. 202x
+USDA database,N/A,N/A,Coho,USA,All,NA,NA,NA,P,0.262,% body weight or g/100g bw,2620,mg/kg ww,muscle,,https://fdc.nal.usda.gov/index.html,Brandt et al. 202x
+USDA database,N/A,N/A,Chinook,USA,All,NA,NA,NA,P,0.289,% body weight or g/100g bw,2890,mg/kg ww,muscle,,https://fdc.nal.usda.gov/index.html,Brandt et al. 202x
+USDA database,N/A,N/A,Pink,USA,All,NA,NA,NA,P,0.261,% body weight or g/100g bw,2610,mg/kg ww,muscle,,https://fdc.nal.usda.gov/index.html,Brandt et al. 202x
+USDA database,N/A,N/A,Chum,USA,All,NA,NA,NA,P,0.283,% body weight or g/100g bw,2830,mg/kg ww,muscle,,https://fdc.nal.usda.gov/index.html,Brandt et al. 202x
+Helland et al. 2005,2005,,Atlantic Salmon,lab,,,,,P,,,4278,mg/kg ww,whole fish,parr,,other
+Vielma et al. 2000,2000,,Rainbow Trout,,,,,,P,,,3321,mg/kg ww,whole fish,parr,,other
+Lyle and Elliot,1998,,Atlantic Salmon,,,,,,P,0.47,% body weight or g/100g bw,4700,mg/kg ww,whole fish,adults,,other
+Lyle and Elliot,1998,,Sea Trout,,,,,,P,0.47,% body weight or g/100g bw,4700,mg/kg ww,whole fish,adults,,other
+Lyle and Elliot,1998,,Atlantic Salmon,,,,,,N,3,% body weight or g/100g bw,30000,mg/kg ww,whole fish,adults,,other
+Lyle and Elliot,1998,,Sea Trout,,,,,,N,3,% body weight or g/100g bw,30000,mg/kg ww,whole fish,adults,,other
+Ramsmeyer 2011,2011,,60 species,,,,,,N,3.6,% body weight or g/100g bw,36000,mg/kg ww,whole fish,adults,,other
+Groves 1970,1970,,Sockeye,,,,,,N,2.9,% body weight or g/100g bw,29000,mg/kg ww,whole fish,parr,/ estimated from crude protein by dividing crude protein by 6.25 (via methods in Ramsmeyer 2011,other
+Ebel et al. 2015,2015,,Atlantic Salmon,,,,,,P,0.37,% body weight or g/100g bw,3700,mg/kg ww,whole fish,adults,,other
+Storebakken et al. 2000,2000,,Atlantic Salmon,,,,,,P,,,4700,mg/kg ww,whole fish,,,other
+Storebakken et al. 2000,2000,,Atlantic Salmon,,,,,,N,,,30080,mg/kg ww,whole fish,,converted from crude protein/6.25,other
+Gende et al. 2004,2004,2000,Chum,USA,SEAK,Bear Creek,NA,NA,P,,,5101.522843,mg/kg ww,whole fish,males/table 1,,Brandt et al. 202x
+Gende et al. 2004,2004,2000,Chum,USA,SEAK,Bear Creek,NA,NA,P,,,4492.307692,mg/kg ww,whole fish,females/table1,,Brandt et al. 202x
+Gende et al. 2004,2004,2000,Pink,USA,SEAK,Bear Creek,NA,NA,P,,,5092.02454,mg/kg ww,whole fish,males/table 1,,Brandt et al. 202x
+Gende et al. 2004,2004,2000,Pink,USA,SEAK,Bear Creek,NA,NA,P,,,4295.302013,mg/kg ww,whole fish,females/table1,,Brandt et al. 202x
+Gende et al. 2004,2004,2000,Chum,USA,SEAK,Bear Creek,NA,NA,N,,,32994.92386,mg/kg ww,whole fish,males/table 1,,Brandt et al. 202x
+Gende et al. 2004,2004,2000,Chum,USA,SEAK,Bear Creek,NA,NA,N,,,32923.07692,mg/kg ww,whole fish,females/table1,,Brandt et al. 202x
+Gende et al. 2004,2004,2000,Pink,USA,SEAK,Bear Creek,NA,NA,N,,,31901.84049,mg/kg ww,whole fish,males/table 1,,Brandt et al. 202x
+Gende et al. 2004,2004,2000,Pink,USA,SEAK,Bear Creek,NA,NA,N,,,32885.90604,mg/kg ww,whole fish,females/table1,,Brandt et al. 202x

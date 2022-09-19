@@ -10,7 +10,7 @@ library(viridis)
 
 # load posteriors
 gam_salmon_posts <- readRDS("posteriors/gam_salmon_posts.rds")  # Salmon escapement in kg wet mass
-all_chem_posts <- readRDS(file = "data/derived_quantities/all_chem_posts.rds") %>% ungroup()
+all_chem_posts <- readRDS(file = "posteriors/all_chem_posts.rds") %>% ungroup()
 
 
 # Simulate flux from posteriors

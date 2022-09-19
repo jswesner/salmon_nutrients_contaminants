@@ -1,0 +1,11 @@
+chem,prior_concentration_mean,units,reference
+N,30000,mg/kg ww in an individual fish,Lyle and Elliot 1998
+DHA,5000,mg/kg ww in an individual fish,"Sprague, M., Dick, J. R., & Tocher, D. R. (2016). Impact of sustainable feeds on omega-3 long-chain fatty acid 
+levels in farmed Atlantic salmon, 2006–2015. Scientific reports, 6(1), 1-9."
+EPA,5000,mg/kg ww in an individual fish,"Sprague, M., Dick, J. R., & Tocher, D. R. (2016). Impact of sustainable feeds on omega-3 long-chain fatty acid 
+levels in farmed Atlantic salmon, 2006–2015. Scientific reports, 6(1), 1-9."
+P,4000,mg/kg ww in an individual fish,Helland et al. 2005
+Hg,0.05,mg/kg ww in an individual fish,https://www.sciencedirect.com/science/article/pii/S0048969718343055
+PCBs,0.045,mg/kg ww in an individual fish,"Montory, M., Habit, E., Fernandez, P., Grimalt, J. O., & Barra, R. (2010). PCBs and PBDEs in wild Chinook salmon (Oncorhynchus tshawytscha) in the Northern Patagonia, Chile. Chemosphere, 78(10), 1193-1199."
+PBDEs,0.0018,mg/kg ww in an individual fish,"Montory, M., Habit, E., Fernandez, P., Grimalt, J. O., & Barra, R. (2010). PCBs and PBDEs in wild Chinook salmon (Oncorhynchus tshawytscha) in the Northern Patagonia, Chile. Chemosphere, 78(10), 1193-1199."
+DDT,0.004,mg/kg ww in an individual fish,"Anderson, R. B., & Everhart, W. H. (1966). Concentrations of DDT in landlocked salmon (Salmo salar) at Sebago Lake, Maine. Transactions of the American Fisheries Society, 95(2), 160-164."

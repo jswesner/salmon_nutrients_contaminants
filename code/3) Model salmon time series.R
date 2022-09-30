@@ -1,6 +1,7 @@
 library(tidyverse)
 library(tidybayes)
 library(brms)
+library(rstan)
 library(bayesplot)
 library(ggthemes)
 library(janitor)
@@ -11,20 +12,53 @@ source("code/functions.R")
 rstan_options(auto_write = TRUE)
 
 # Load data ----------------------------------------------------------------
+millions_fish = fish_escapement <- read_csv("data/raw_data/fish_escapement.csv") %>% clean_names() %>% 
+  pivot_longer(cols = c(-year, -metric, -source)) %>% 
+  mutate(species = case_when(grepl("pink", name) ~ "Pink",
+                             grepl("chum", name) ~ "Chum",
+                             grepl("sockeye", name) ~ "Sockeye",
+                             grepl("chinook", name) ~ "Chinook",
+                             TRUE ~ "Coho"),
+         location = case_when(grepl("bering", name) ~ "BeringSea",
+                              grepl("central", name) ~ "CentralAK",
+                              grepl("seak", name) ~ "SEAK",
+                              grepl("bc_wc", name) ~ "BCWC")) %>% 
+  select(year, name, value) %>% 
+  rename(millions_of_fish = value)
 
-
-d <- read_csv("data/salmon_metric_tons.csv") %>% 
-  pivot_longer(cols = c(-units, -Year), names_to = "name", values_to = "y") %>% 
-  separate(name, c("location", "species"), sep = "_", remove = F) %>% 
-  separate(species, c("species", "family")) %>% 
-  mutate(location = str_replace(location, " ", "")) %>% 
+kg_ind_fish = read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.csv") %>% 
   clean_names() %>% 
+  pivot_longer(cols = -c(year, units, source)) %>% 
+  select(year, name, value) %>% 
+  rename(kg_ind = value)
+
+
+escapement_mt = left_join(millions_fish, kg_ind_fish) %>% 
+  mutate(kg_escape = kg_ind*millions_of_fish*1e6,
+         mt_escape = kg_escape/1000) %>% 
+  mutate(location = case_when(grepl("bering", name) ~ "BeringSea",
+                              grepl("central", name) ~ "CentralAK",
+                              grepl("seak", name) ~ "SEAK",
+                              TRUE ~ "BCWC")) %>% 
+  mutate(species = case_when(grepl("pink", name) ~ "Pink",
+                             grepl("chum", name) ~ "Chum",
+                             grepl("sockeye", name) ~ "Sockeye",
+                             grepl("coho", name) ~ "Coho",
+                             TRUE ~ "Chinook")) %>% 
+  select(-name) 
+
+d = escapement_mt %>% 
+  select(year, species, location, mt_escape) %>% 
+  clean_names() %>% 
+  mutate(y = mt_escape) %>% 
   drop_na(y) %>% 
-  group_by(name) %>% 
+  group_by(species, location) %>% 
   mutate(time = year - min(year) + 1) %>% 
   ungroup() %>% 
   mutate(y_10000 = y/10000)
 
+
+write_csv(d, file = "data/raw_data/salmon_metric_tons")
 
 
 d_short <- d %>% filter(year >= 1976) %>% 

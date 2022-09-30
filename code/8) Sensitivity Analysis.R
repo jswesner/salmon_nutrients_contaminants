@@ -154,5 +154,5 @@ rel_importance <- lmg %>%
   # theme(legend.position = "top") +
   NULL
   
-saveRDS(rel_importance, file = "plots/rel_importance.rds")
-ggsave(rel_importance, file = "plots/rel_importance.jpg", width = 7, height = 3)
+saveRDS(rel_importance, file = "plots/ms_plots/rel_importance.rds")
+ggsave(rel_importance, file = "plots/ms_plots/rel_importance.jpg", width = 7, height = 3)

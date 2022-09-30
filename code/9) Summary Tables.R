@@ -1,6 +1,7 @@
-library(tidyverse)
 library(janitor)
 library(tidybayes)
+detach("package:tidyverse") # ensures that maked functions will default to tidyverse first
+library("tidyverse")
 
 # escapement --------------------------------------------------------------
 
@@ -26,7 +27,8 @@ salmon_mass <- readRDS("posteriors/derived_quantities/salmon_mass.rds")
 
 
 # mean annual escapement (millions of fish)
-mean_annual_escapement_millions <- fish_escapement %>% filter(year >= 1976) %>% # only after 1976
+mean_annual_escapement_millions <- fish_escapement %>% 
+  filter(year >= 1976) %>% # only after 1976
   select(year, value, species, location) %>%
   pivot_wider(names_from = location, values_from = value) %>% # add totals for region and species
   rowwise() %>% 
@@ -41,7 +43,17 @@ mean_annual_escapement_millions <- fish_escapement %>% filter(year >= 1976) %>% 
   summarize(mean = mean(value)) %>% 
   pivot_wider(names_from = species, values_from = mean) 
 
-write_csv(mean_annual_escapement_millions, file = "tables/mean_annual_escape.csv")
+write_csv(mean_annual_escapement_millions, file = "tables/ms_tables/tbl1_mean_annual_escape.csv")
+
+# mean annual metric tons escapement by regions
+
+mean_escape_mass = salmon_mass %>% 
+  group_by(location, species) %>% 
+  summarize(median = median(metric_tons)) %>% 
+  pivot_wider(names_from = species, values_from = median) %>%
+  adorn_totals("row") 
+
+write_csv(mean_escape_mass, file = "tables/ms_tables/tbl1_mean_escape_mass.csv")
 
 # mean annual metric tons escapement
 salmon_mass %>% 
@@ -96,6 +108,16 @@ all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") %>%
                                 "DDTs")) # Salmon chemical concentrations mg kg wet mass
 
 chem_species_prop <- readRDS("posteriors/chem_species_prop.rds")
+
+
+mean_subsidy_concentration = all_chem_posts %>% 
+  group_by(species, chemical, type, units) %>% 
+  median_qi(.epred) %>% 
+  select(species, chemical, .epred) %>% 
+  pivot_wider(names_from = species, values_from = .epred)
+
+write_csv(mean_subsidy_concentration, file = "tables/ms_tables/tbl8_mean_subsidy_concentration.csv")
+
 
 chem_species_prop %>% 
   filter(year == 1976 | year == 2015) %>%
@@ -196,6 +218,8 @@ mean_sd_annual_flux <- flux_with_all  %>%
                            TRUE ~ "Kg/y"),
          summary = "Average Annual")
 
+write_csv(mean_sd_annual_flux, file = "tables/ms_tables/tbl2_mean_sd_annual_flux.csv")
+
 cumulative_sd_annual_flux <- flux_with_all  %>% 
   group_by(species, chemical, type) %>% 
   mutate(value = case_when(type == "Contaminants" ~ total_kg,
@@ -217,6 +241,8 @@ cumulative_sd_annual_flux <- flux_with_all  %>%
   mutate(units = case_when(type == "Nutrients" ~ "MT", 
                            TRUE ~ "Kg"),
          summary = "Cumulative")
+
+write_csv(cumulative_sd_annual_flux, file = "tables/ms_tables/tbl3_cumulative_sd_annual_flux.csv")
 
 mean_cumulative_flux <-
   bind_rows(mean_sd_annual_flux, cumulative_sd_annual_flux)
@@ -301,7 +327,7 @@ change_1976_2015 <- flux_predictions %>%
   pivot_wider(names_from = loc_metric, values_from = value) %>% 
   arrange(-All_kg_yr)
 
-write_csv(change_1976_2015, file = "tables/change_1976_2015.csv")  
+write_csv(change_1976_2015, file = "tables/ms_tables/tbl7_change_1976_2015.csv")  
   
 # total biotransport by species
 change_1976_2015_species <- flux_predictions %>% 
@@ -322,14 +348,14 @@ change_1976_2015_species <- flux_predictions %>%
             percent_diff = median(percent_change)-1) %>% 
   pivot_longer(cols = c(kg_yr, percent_diff), names_to = "metric") %>% 
   unite(col = "loc_metric", c(location,metric), sep = "_") %>% 
-  pivot_wider(names_from = loc_metric, values_from = value) 
+  pivot_wider(names_from = loc_metric, values_from = value)
 
-write_csv(change_1976_2015_species, file = "tables/change_1976_2015_species.csv")  
+write_csv(change_1976_2015_species, file = "tables/ms_tables/tbl6_change_1976_2015_species.csv")  
 
 
 
 # median annual flux total biotransport (contaminants + nutrients)
-flux_predictions %>% 
+mean_total_biotransport = flux_predictions %>% 
   # filter(year == 1976 | year ==2015) %>% 
   mutate(kg_flux = mg_flux/1e6) %>% 
   dplyr::select(year, chemical, .draw, kg_flux, location) %>% 
@@ -343,6 +369,9 @@ flux_predictions %>%
   summarize(median = median(kg_year)) %>% 
   group_by(location) %>% 
   summarize(median_annual_flux = median(median))
+
+
+write_csv(mean_total_biotransport, file = "tables/ms_tables/tbl4_mean_total_biotransport.csv")
 
 
 # proportional contribution to median annual flux
@@ -364,7 +393,7 @@ prop_contribution_annual <- flux_predictions %>%
   group_by(location, species) %>% 
   summarize(median = median(median))
 
-write_csv(prop_contribution_annual, file = "tables/prop_contribution_annual.csv")  
+write_csv(prop_contribution_annual, file = "tables/ms_tables/tbl4_prop_contribution_annual.csv")  
 
 # change in size, escapement abundance, and escapement biomass
 fish_mass_kgww_of_individual_fish <- read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.csv") %>% 
@@ -381,6 +410,7 @@ escape_change_mill <- fish_escapement %>%
   mutate(diff = `2015` - `1976`) %>% 
   select(species, name, diff) %>% 
   pivot_wider(names_from = name, values_from = diff) %>% 
+  adorn_totals(where = "row") %>% 
   mutate(`40 year change` = "Escapement (millions)")
 
 
@@ -423,14 +453,20 @@ escape_change_metric_tons <- gam_salmon_posts %>%
   group_by(species, name) %>% 
   summarize(diff = median(value)) %>% 
   pivot_wider(names_from = name, values_from = diff) %>% 
+  adorn_totals(where = "row") %>% 
   mutate(`40 year change` = "Escapement (MT wet)")
 
 
 all_change <- bind_rows(escape_change_metric_tons, escape_change_mill, escape_change_size) %>% 
   select(species, `40 year change`, overall, everything()) %>% 
-  arrange(species, desc(`40 year change`))
+  mutate(order = case_when(`40 year change` == "Size (kg wet)" ~ 1,
+                           `40 year change` == "Escapement (millions)" ~ 2,
+                           TRUE ~ 3)) %>% 
+  arrange(species, order) %>% 
+  select(species, `40 year change`, overall, BeringSea, CentralAK, SEAK, BCWC) 
 
-write_csv(all_change, file = "tables/all_change.csv")
+
+write_csv(all_change, file = "tables/ms_tables/tbl5_all_change.csv")
 
 
 
@@ -473,7 +509,7 @@ biotransport_potential_grams_per_individual <- all_chem_posts %>%
   pivot_wider(names_from = species, values_from = mean_grams_per_fish)
 
 
-write_csv(biotransport_potential_grams_per_individual, file = "tables/biotransport_potential_grams_per_individual.csv")
+write_csv(biotransport_potential_grams_per_individual, file = "tables/ms_tables/tbl8_biotransport_potential_grams_per_individual.csv")
 
 
 
@@ -492,6 +528,26 @@ ratio_summaries = species_ind_average %>%
 
 write_csv(ratio_summaries, file = "tables/ratio_summaries.csv")
 
+
+mean_kg_per_species = read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.csv") %>% 
+  clean_names() %>% 
+  pivot_longer(cols = -c(year, units, source)) %>% 
+  select(year, name, value) %>% 
+  filter(year >= 1976) %>% 
+  mutate(location = case_when(grepl("bering", name) ~ "BeringSea",
+                              grepl("central", name) ~ "CentralAK",
+                              grepl("seak", name) ~ "SEAK",
+                              TRUE ~ "BCWC")) %>% 
+  mutate(species = case_when(grepl("pink", name) ~ "Pink",
+                             grepl("chum", name) ~ "Chum",
+                             grepl("sockeye", name) ~ "Sockeye",
+                             grepl("coho", name) ~ "Coho",
+                             TRUE ~ "Chinook")) %>% 
+  select(-name) %>% 
+  group_by(location, species) %>% 
+  summarize(mean_kg_ind = mean(value))
+
+
 table_si9_data = all_chem_posts %>% # Salmon chemical concentrations mg kg wet mass
   left_join(mean_kg_per_species) %>% 
   mutate(.epred = .epred*mean_kg_ind,
@@ -501,13 +557,13 @@ table_si9_data = all_chem_posts %>% # Salmon chemical concentrations mg kg wet m
   group_by(.draw, species, type) %>% 
   summarize(sum = sum(.epred)) %>% 
   pivot_wider(names_from = type, values_from = sum) %>% 
-  mutate(ratio = Nutrients/Contaminants,
-         ratio_1e6 = ratio) %>% 
+  mutate(Nutrients = Nutrients/1e6) %>% 
+  mutate(ratio = Nutrients/Contaminants) %>% 
   group_by(species) %>% 
   pivot_longer(cols = c(-.draw, -species)) %>% 
   group_by(species, name) %>% 
   summarize(mean = mean(value),
-            sd = sd(value))
+            sd = sd(value)) 
 
 
 table_si9 = table_si9_data %>% 

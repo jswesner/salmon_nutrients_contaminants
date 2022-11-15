@@ -111,3 +111,13 @@ gam_salmon_posts <- gam_salmon2$data %>%
   
 saveRDS(gam_salmon_posts, file = "posteriors/gam_salmon_posts.rds")
 
+
+# re-run without outlier of 1980
+gam_salmon2 <- readRDS("models/gam_salmon2.rds")
+
+d_short_removestrike = gam_salmon2$data %>% as_tibble() %>% 
+  filter(species_location != "Sockeye _ BeringSea" | year != 1980)
+
+gam_salmon2_removestrike = update(gam_salmon2, newdata = d_short_removestrike, iter = 1000, chains = 1)
+saveRDS(gam_salmon2_removestrike, file = "models/gam_salmon2_removestrike.rds")
+

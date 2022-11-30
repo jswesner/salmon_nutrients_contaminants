@@ -45,15 +45,22 @@ all_chem_posts <- dha_posts %>% bind_rows(ddt_posts,
                                      epa_posts) %>%
   ungroup() %>% 
   select(species, .draw, .epred, chemical) %>%
-  mutate(units = "mg/kg ww") 
+  mutate(units = "mg/kg ww") %>% 
+  mutate(chemical = case_when(chemical == "DDT" ~ "DDTs",
+                              chemical == "PBDE" ~ "PBDEs",
+                              TRUE ~ chemical)) %>% 
+  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+                          TRUE ~ "Contaminants"),
+         chemical = fct_relevel(chemical, "N", 
+                                "P", 
+                                "DHA", 
+                                "EPA",
+                                "Hg",
+                                "DDTs")) # Salmon chemical concentrations mg kg wet mass
+
 
 
 saveRDS(all_chem_posts, file = "posteriors/all_chem_posts.rds")
-
-
-
-
-
 
 
 

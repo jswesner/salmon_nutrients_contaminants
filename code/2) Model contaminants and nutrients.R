@@ -11,6 +11,51 @@ nut_cont <- readRDS("data/nut_cont.rds")
 
 source("code/functions.R")
 
+
+# single model ------------------------------------------------------------
+# consider using this instead of separate models
+nut_cont_scaled = nut_cont %>% 
+  ungroup %>% 
+  mutate(scaling = max(mean_concentration_standardized)) %>% 
+  glimpse() %>% 
+  mutate(scaled_conc = mean_concentration_standardized/scaling) %>% 
+  filter(species != "All")
+
+nut_cont_scaled %>% 
+  ggplot(aes(x = scaled_conc, y = mean_concentration_standardized)) + 
+  geom_point() 
+
+scaled_brm = brm(scaled_conc ~ 1 + species*chemical + (1|authors) + (1|region),
+                 family = Gamma(link = "log"),
+                 data = nut_cont_scaled,
+                 iter = 1000, chains = 1,
+                 cores = 4)
+saveRDS(scaled_brm, file = "models/scaled_brm.rds")
+#extract posteriors
+
+single_posts = scaled_brm$data %>% 
+  distinct(species, chemical) %>% 
+  add_epred_draws(scaled_brm, re_formula = NA) %>% 
+  mutate(scaling = unique(nut_cont_scaled$scaling),
+         .epred = .epred*scaling,
+         model = "single model") %>% 
+  select(-scaling) %>% 
+  mutate(chemical = case_when(chemical == "DDT" ~ "DDTs",
+                              chemical == "PBDE" ~ "PBDEs",
+                              TRUE ~ chemical)) %>% 
+  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+                          TRUE ~ "Contaminants"),
+         chemical = as.factor(chemical),
+         chemical = fct_relevel(chemical, "N", 
+                                "P", 
+                                "DHA", 
+                                "EPA",
+                                "Hg",
+                                "DDTs"))
+
+saveRDS(single_posts, file = "posteriors/single_posts.rds")
+
+
 # Hg ----------------------------------------------------------------------
 
 #data prep: check for duplicates
@@ -58,7 +103,7 @@ plot(conditional_effects(hg_model), points = T)
 
 hg_posts <- hg_model$data %>% 
   data_grid(species) %>% 
-  add_epred_draws(hg_model, ndraws = 1000, re_formula = NA) %>%
+  add_epred_draws(hg_model, re_formula = NA) %>%
   mutate(chemical = "Hg")
 
 saveRDS(hg_posts, file = "posteriors/hg_posts.rds")
@@ -286,7 +331,7 @@ pcb_data <- nut_cont %>%
     
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
-prior_b = rnorm(1000, -3.5, .5)
+prior_b = rnorm(1000, -5.5, 1)
 prior_sd = rexp(1000, 2)
 prior_shape = rgamma(1000, 5, 2)
 
@@ -295,9 +340,9 @@ sim_gamma_priors(prior_b = prior_b,
                  prior_shape = prior_shape) +
   scale_y_log10(labels = comma) +
   annotation_logticks() +
-  geom_hline(yintercept = c(0.025, 
-                            0.045,
-                            0.078))
+  geom_hline(yintercept = c(0.0025, 
+                            0.0095,
+                            0.028))
 
 
 #numbers above are consistent with Montory, M., Habit, E., Fernandez, P., Grimalt, J. O., & Barra, R. (2010). PCBs and PBDEs in wild Chinook salmon (Oncorhynchus tshawytscha) in the Northern Patagonia, Chile. Chemosphere, 78(10), 1193-1199.
@@ -307,7 +352,7 @@ sim_gamma_priors(prior_b = prior_b,
 pcb_model <- brm(mean_concentration_standardized ~ 0 + species + (1|authors) + (1|region),
                  family = Gamma(link = "log"),
                  data = pcb_data,
-                 prior = c(prior(normal(-3.5, 0.5), class = "b"),
+                 prior = c(prior(normal(-5.5, 1), class = "b"),
                            prior(exponential(2), class = "sd"),
                            prior(gamma(5, 2), class = "shape")),
                  sample_prior = T,

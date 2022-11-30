@@ -18,7 +18,9 @@ n_iter <- 1000
 
 flux_predictions <- gam_salmon_posts %>% filter(.draw <= n_iter) %>% ungroup() %>% 
   select(species, location, year, .draw, kg) %>% 
-  left_join(all_chem_posts %>% filter(.draw <= n_iter) %>% rename(mg_kg_chem = .epred) %>% select(-units)) %>% 
+  left_join(all_chem_posts %>% filter(.draw <= n_iter) %>% 
+              rename(mg_kg_chem = .epred)) %>% 
+              # select(-units)) %>%
   mutate(mg_flux = kg*mg_kg_chem) %>% 
   group_by(location, species, chemical, year) %>% 
   mutate(kg_median = median(kg),

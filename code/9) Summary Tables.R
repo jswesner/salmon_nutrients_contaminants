@@ -1,6 +1,6 @@
 library(janitor)
 library(tidybayes)
-detach("package:tidyverse") # ensures that maked functions will default to tidyverse first
+detach("package:tidyverse") # ensures that masked functions will default to tidyverse first
 library("tidyverse")
 
 # escapement --------------------------------------------------------------
@@ -72,22 +72,30 @@ salmon_mass %>%
 
 # Change in mean annual metric tons escapement
 salmon_mass %>% 
-  filter(year == 1976 | year == 2015) %>% 
-  pivot_wider(names_from = year, values_from = metric_tons) %>% 
-  mutate(diff = `2015` - `1976`,
-         prop = diff/`1976`) %>% 
+  filter(year <= 1981 | year >= 2010) %>% 
+  mutate(year_group = case_when(year <= 1981 ~ "start", 
+                   TRUE ~ 'end')) %>% 
+  group_by(location, species, year_group, .draw) %>% 
+  summarize(metric_tons = mean(metric_tons)) %>% 
+  pivot_wider(names_from = year_group, values_from = metric_tons) %>% 
+  mutate(diff = end - start,
+         prop = diff/start) %>% 
   ungroup() %>% 
   # filter(species == "Total") %>% 
   group_by(.draw, location, species) %>% 
   summarize(diff = sum(diff),
             prop = sum(prop)) %>% 
   group_by(location, species) %>%
-  median_qi(diff, prop)
+  median_qi(diff, prop) %>% 
+  print(n = Inf)
 
 # Change in mean annual millions escapement
-fish_escapement %>% 
-  group_by(year)  %>% 
-  filter(year == 1976 | year == 2015) %>% 
+fish_escapement  %>% 
+  filter(year <= 1981 | year >= 2010) %>% 
+  mutate(year_group = case_when(year <= 1981 ~ "start", 
+                                TRUE ~ 'end')) %>% 
+  group_by(location, species, year_group) %>% 
+  summarize(value = mean(value)) %>% 
   summarize(total = sum(value, na.rm = T))
 
 # chemical flux -----------------------------------------------------------
@@ -547,22 +555,14 @@ mean_kg_per_species = read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.
   group_by(location, species) %>% 
   summarize(mean_kg_ind = mean(value))
 
+species_ind_average = readRDS(file = "posteriors/derived_quantities/species_ind_average.rds")
 
-table_si9_data = all_chem_posts %>% # Salmon chemical concentrations mg kg wet mass
-  left_join(mean_kg_per_species) %>% 
-  mutate(.epred = .epred*mean_kg_ind,
-         units = "mg/ind") %>% 
-  group_by(.draw, species, type) %>% 
-  summarize(.epred = mean(.epred)) %>% 
-  group_by(.draw, species, type) %>% 
-  summarize(sum = sum(.epred)) %>% 
-  pivot_wider(names_from = type, values_from = sum) %>% 
-  mutate(Nutrients = Nutrients/1e6) %>% 
-  mutate(ratio = Nutrients/Contaminants) %>% 
-  group_by(species) %>% 
-  pivot_longer(cols = c(-.draw, -species)) %>% 
+table_si9_data = species_ind_average %>% 
+  select(species, cont_total, nut_total, ratio_1e6) %>% 
+  mutate(nut_total = nut_total/1e6) %>% 
+  pivot_longer(cols = c(cont_total, nut_total, ratio_1e6)) %>% 
   group_by(species, name) %>% 
-  summarize(mean = mean(value),
+  summarize(mean = median(value),
             sd = sd(value)) 
 
 

@@ -8,6 +8,7 @@ library(janitor)
 library(ggridges)
 library(viridis)
 library(egg)
+library(patchwork)
 
 theme_set(theme_default()) 
 
@@ -31,18 +32,8 @@ escapement_plus_concentrations_plot<- readRDS(file = "plots/escapement_plus_conc
 # load posteriors
 flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
 gam_salmon_posts <- readRDS("posteriors/gam_salmon_posts.rds") # Salmon escapement in kg wet mass
-all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") %>% 
-  mutate(chemical = case_when(chemical == "DDT" ~ "DDTs",
-                              chemical == "PBDE" ~ "PBDEs",
-                              TRUE ~ chemical)) %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants"),
-         chemical = fct_relevel(chemical, "N", 
-                                "P", 
-                                "DHA", 
-                                "EPA",
-                                "Hg",
-                                "DDTs")) # Salmon chemical concentrations mg kg wet mass
+all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") 
+
 
 # load raw data
 nut_cont <- readRDS("data/nut_cont.rds")   # nutrient and contaminant concentrations mg/kg
@@ -172,9 +163,10 @@ escapement_plot <- plot_grid(total_escapement,
 saveRDS(escapement_plot, file = "plots/escapement_plot.rds")
 ggsave(escapement_plot, file = "plots/escapement_plot.jpg", dpi = 400, width = 6, height = 8)
 
-
+saveRDS(species_escapement, file = "plots/species_escapement.rds")
 
 # Chemical Concentrations -------------------------------------------------
+species_escapement = readRDS(file = "plots/species_escapement.rds")
 
 chem_concentrations <- all_chem_posts%>% 
   mutate(chemical = as.character(chemical),
@@ -614,6 +606,7 @@ six_panel_species = all_series_data %>%
   theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
   guides(fill = guide_legend(override.aes = list(alpha = 1))) +
   NULL
+
 
 six_panel_cow = six_panel_totals + six_panel_species
 
@@ -1319,32 +1312,17 @@ mean_kg_per_species = fish_mass_kgww_of_individual_fish %>% pivot_longer(cols = 
   summarize(mean_kg_ind = mean(value, na.rm = T))
 
 
+single_posts <- readRDS("posteriors/single_posts.rds") 
 
-
-all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") %>% 
-  mutate(chemical = case_when(chemical == "DDT" ~ "DDTs",
-                              chemical == "PBDE" ~ "PBDEs",
-                              TRUE ~ chemical)) %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants"),
-         chemical = fct_relevel(chemical, "N", 
-                                "P", 
-                                "DHA", 
-                                "EPA",
-                                "Hg",
-                                "DDTs")) 
-
-species_ind_average = all_chem_posts %>% # Salmon chemical concentrations mg kg wet mass
-  left_join(mean_kg_per_species) %>% 
-  mutate(.epred = .epred*mean_kg_ind,
-         units = "mg/ind") %>% 
-  group_by(.draw, species, type) %>% 
-  summarize(.epred = mean(.epred)) %>% 
-  group_by(.draw, species, type) %>% 
-  summarize(sum = sum(.epred)) %>% 
-  pivot_wider(names_from = type, values_from = sum) %>% 
-  mutate(ratio = Nutrients/Contaminants,
-         ratio_1e6 = ratio/1e6) %>% 
+species_ind_average = all_chem_posts %>% 
+  left_join(mean_fish_size) %>% 
+  mutate(.epred = .epred*mean_size_kg) %>% 
+  select(species, .draw, .epred, chemical) %>% 
+  pivot_wider(names_from = chemical, values_from = .epred) %>% 
+  mutate(cont_total = DDTs + Hg + PCBs + PBDEs,
+         nut_total = DHA + N + P + EPA,
+         ratio = nut_total /cont_total,
+         ratio_1e6 = ratio/1e6)%>% 
   left_join(trophic_levels) %>% 
   mutate(species_tl = paste0(species, "\n(TL: ", round(tl,1), ")"))
 
@@ -1361,7 +1339,7 @@ ratio_per_kg = species_ind_average %>%
   geom_vline(xintercept = 1) + 
   labs(color = "Year",
        x = "Ratio of nutrients (g) to contaminants (\u00B5g) per fish\n(divided by 1,000,000)") +
-  annotate("text", label = "More nutrients per contaminant", x = 2.5, y = 0.8,
+  annotate("text", label = "More nutrients per contaminant", x = 1.5, y = 0.8,
            size = 3) +
   annotate("segment", x = 2.5, y = 0.6, xend = 4, yend = 0.6,
            arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
@@ -1378,6 +1356,9 @@ fig_4new = ratio_per_kg + prop_differences +
         axis.text.y = element_blank()) +
   NULL
 
+library(ggview)
+
+ggview(fig_4new, units = "in", width = 10, height = 5)
 
 ggsave(fig_4new, file = "plots/ms_plots/fig_4new.jpg", dpi = 600, width = 10, height = 5)
 ggsave(fig_4new, file = "plots/ms_plots/fig_4new.pdf", dpi = 600, width = 10, height = 5)

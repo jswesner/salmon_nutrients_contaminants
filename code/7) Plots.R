@@ -24,7 +24,8 @@ proportion_contributions_species_nutcont <- readRDS( file = "plots/proportion_co
 proportion_contributions_species <- readRDS( file = "plots/proportion_contributions_species.rds")  
 proportion_contributions_region <- readRDS( file = "plots/proportion_contributions_region.rds")  
 escapement_plus_concentrations_plot<- readRDS(file = "plots/escapement_plus_concentrations_plot.rds")
-
+new_fig3 = readRDS(file = "plots/ms_plots/new_fig3.rds")
+new_fig2 = readRDS(file = "plots/ms_plots/new_fig2.rds")
 
 # re-create plots ---------------------------------------------------------
 
@@ -986,15 +987,18 @@ nut_location = species_location_series %>%
   ggplot(aes(x = year, y = median)) +
   # geom_linerange(aes(ymin = low75, ymax = high75), alpha = 1,
   #                size = .5) +
-  # geom_ribbon(aes(ymin = low75, ymax = high75, fill = panel), alpha = 0.25) +
-  geom_line(aes(color = panel), size = 1.2) +
-  scale_color_viridis_d(direction = 1, option = 'D', end = 0.9) +
-  scale_fill_viridis_d(direction = 1, option = 'D') +
-  guides(color = "none",
-         fill = guide_legend(override.aes = list(size = 7))) +
+  geom_ribbon(aes(ymin = low50, ymax = high50, fill = panel), alpha = 0.25) +
+  geom_line(aes(color = panel), linewidth = 1.2) +
+  # scale_color_colorblind() +
+  # scale_color_brewer(type = "qual", palette = 3) +
+  scale_color_viridis_d(direction = 1, option = 'E') +
+  scale_fill_viridis_d(direction = 1, option = 'E') +
+  # guides(color = "none",
+  #        fill = guide_legend(override.aes = list(size = 7))) +
   labs(y = "Total Biotransport (kg/y)",
        subtitle = "Nutrients",
-       color = "Region") +
+       color = "Region",
+       fill = "Region") +
   facet_wrap(~ facet_label, ncol = 4) +
   scale_y_log10(labels = comma) +
   scale_x_continuous(breaks = c(1975, 1995, 2015),
@@ -1020,13 +1024,16 @@ cont_location = species_location_series %>%
                            TRUE ~ panel),
          panel = fct_relevel(panel, "BCWC", "SEAK", "CAK", "BS")) %>% 
   ggplot(aes(x = year, y = median)) +
+  geom_ribbon(aes(ymin = low50, ymax = high50, fill = panel), alpha = 0.25) +
   geom_line(aes(color = panel), size = 1.2) +
-  scale_color_viridis_d(direction = 1, option = 'D', end = 0.9) +
-  scale_fill_viridis_d(direction = 1, option = 'D') +
-  guides(fill = guide_legend(override.aes = list(size = 7))) +
+  scale_color_viridis_d(direction = 1, option = "E") +
+  scale_fill_viridis_d(direction = 1, option = "E") +
+  # scale_color_brewer(type = "qual", palette = 3) +
+  # guides(fill = guide_legend(override.aes = list(size = 7))) +
   labs(y = "Total Biotransport (kg/y)",
        subtitle = "Contaminants",
-       color = "Region") +
+       color = "Region",
+       fill = "Region") +
   facet_wrap(~ facet_label, ncol = 4) +
   scale_y_log10(labels = comma) +
   scale_x_continuous(breaks = c(1975, 1995, 2015),
@@ -1035,10 +1042,10 @@ cont_location = species_location_series %>%
   theme(axis.title.x = element_blank(),
         strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) +
   NULL
-  
 
-new_fig3 = nut_location / cont_location + plot_layout(guides = "collect")
- 
+
+new_fig3 = nut_location / cont_location + plot_layout(guides = "collect") 
+
 ggsave(new_fig3, file = "plots/ms_plots/new_fig3.jpg", dpi = 600, width = 8, height = 4.5)
 ggsave(new_fig3, file = "plots/ms_plots/new_fig3.pdf", dpi = 600, width = 8, height = 4.5)
 saveRDS(new_fig3, file = "plots/ms_plots/new_fig3.rds")
@@ -1258,7 +1265,7 @@ diff_props <- species_props %>%
   select(-species_flux, -total_flux) %>% 
   pivot_wider(names_from = type, values_from = species_prop) %>% 
   ungroup() %>% 
-  mutate(cont_minus_nut = Nutrients - Contaminants,
+  mutate(cont_minus_nut = Contaminants - Nutrients,
          species = fct_relevel(species, "Chinook", "Coho", "Sockeye", "Chum")) %>% 
   group_by(species, year) %>% 
   mutate(mean_difference = median(cont_minus_nut),
@@ -1287,11 +1294,11 @@ prop_differences <- diff_props %>%
   labs(y = "", 
        color = "Year",
        x = "Relative contribution of\nnutrients versus contaminants") +
-  annotate("text", label = "Relatively more nutrients", x = 0.14, y = 0.6,
-           size = 3) +
-  annotate("text", label = "Relatively more contaminants", x = -0.14, y = 0.6,
-           size = 3) +
-  theme(legend.position = c(0.87, 0.75),
+  annotate("text", label = "Relatively more nutrients", x = -0.14, y = 0.6,
+           size = 2.5) +
+  annotate("text", label = "Relatively more contaminants", x = 0.14, y = 0.6,
+           size = 2.5) +
+  theme(legend.position = c(0.27, 0.75),
         legend.background = element_rect(fill = "white")) +
   NULL
 
@@ -1312,7 +1319,7 @@ mean_kg_per_species = fish_mass_kgww_of_individual_fish %>% pivot_longer(cols = 
   summarize(mean_kg_ind = mean(value, na.rm = T))
 
 
-single_posts <- readRDS("posteriors/single_posts.rds") 
+all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") 
 
 species_ind_average = all_chem_posts %>% 
   left_join(mean_fish_size) %>% 
@@ -1321,8 +1328,8 @@ species_ind_average = all_chem_posts %>%
   pivot_wider(names_from = chemical, values_from = .epred) %>% 
   mutate(cont_total = DDTs + Hg + PCBs + PBDEs,
          nut_total = DHA + N + P + EPA,
-         ratio = nut_total /cont_total,
-         ratio_1e6 = ratio/1e6)%>% 
+         ratio = cont_total/nut_total,
+         ratio_1e6 = ratio*1e6) %>% 
   left_join(trophic_levels) %>% 
   mutate(species_tl = paste0(species, "\n(TL: ", round(tl,1), ")"))
 
@@ -1338,13 +1345,13 @@ ratio_per_kg = species_ind_average %>%
                       direction = -1) +
   geom_vline(xintercept = 1) + 
   labs(color = "Year",
-       x = "Ratio of nutrients (g) to contaminants (\u00B5g) per fish\n(divided by 1,000,000)") +
-  annotate("text", label = "More nutrients per contaminant", x = 1.5, y = 0.8,
+       x = "Ratio of contaminants (g) to nutrients (\u00B5g) per fish\n(divided by 1,000,000)") +
+  annotate("text", label = "More contaminants per nutrient", x = 2, y = 0.8,
            size = 3) +
-  annotate("segment", x = 2.5, y = 0.6, xend = 4, yend = 0.6,
+  annotate("segment", x = 1.5, y = 0.6, xend = 2, yend = 0.6,
            arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
-  coord_cartesian(xlim = c(NA, 4)) +
-  labs(subtitle = "a) Nutrients to contaminants per fish") +
+  coord_cartesian(xlim = c(NA, 3)) +
+  labs(subtitle = "a) Contaminants to nutrients per fish") +
   theme(axis.title.y = element_blank()) +
   NULL
 
@@ -1362,4 +1369,71 @@ ggview(fig_4new, units = "in", width = 10, height = 5)
 
 ggsave(fig_4new, file = "plots/ms_plots/fig_4new.jpg", dpi = 600, width = 10, height = 5)
 ggsave(fig_4new, file = "plots/ms_plots/fig_4new.pdf", dpi = 600, width = 10, height = 5)
+
+
+
+# hazard ratios -----------------------------------------------------------
+
+all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") 
+risk_posts = all_chem_posts %>% 
+  select(-type) %>%
+  mutate(.epred = 4*(.epred/1000)) %>% # convert to mg/g dry weight
+  pivot_wider(names_from = chemical, values_from = .epred) %>%
+  mutate(rfdm_hg = 0.000186,
+         rfdm_pbde = 0.0001,
+         rfdm_pcb = 0.00002,
+         rfdm_ddt = 0.0005,
+         bw = 81, 
+         rsefa = 250,
+         csefa = EPA + DHA,
+         crlim = bw/(Hg/rfdm_hg + PBDEs/rfdm_pbde + PCBs/rfdm_pcb + DDTs/rfdm_ddt),
+         crsefa = rsefa/csefa,
+         risk_quotient = crsefa/crlim) %>% 
+  left_join(trophic_levels) %>% 
+  mutate(species_tl = paste0(species, "\n(TL: ", round(tl,1), ")"))
+
+
+risk_plot = risk_posts %>% 
+  ggplot(aes(x = risk_quotient, y = reorder(species_tl,tl))) +
+  geom_density_ridges(scale = 1) +
+  geom_boxplot(outlier.shape = NA, width = 0.1, size = 1) +
+  scale_color_viridis(option = "E",
+                      direction = -1) +
+  # geom_vline(xintercept = 1, linetype = "dashed") + 
+  labs(x = "Benefit-Risk Quotient") +
+  annotate("text", label = "More risk to consumers", x = 0.2, y = 0.8,
+           size = 3) +
+  annotate("segment", x = 0.1, y = 0.6, xend = 0.5, yend = 0.6,
+           arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
+  coord_cartesian(xlim = c(NA, 0.8)) +
+  labs(subtitle = "c) Benefit-Risk Quotient") +
+  theme(axis.title.y = element_blank()) +
+  # scale_x_log10() +
+  NULL
+
+risk_table = risk_posts %>% 
+  group_by(species, tl) %>% 
+  summarize(mean = mean(risk_quotient),
+            sd = sd(risk_quotient),
+            low95 = quantile(risk_quotient, probs = 0.025),
+            upper95 = quantile(risk_quotient, probs = 0.975)) %>%
+  mutate(across(where(is.numeric), round, 2)) %>% 
+  arrange(-tl) %>% 
+  select(-tl)
+
+
+library(patchwork)
+all_three_ratios = ratio_per_kg + prop_differences +
+  labs(subtitle = "b) Relative contribution to continential biotransport") +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank()) +
+  risk_plot + theme(axis.title.y = element_blank(),
+                   axis.text.y = element_blank()) + 
+  NULL
+
+
+ggview(all_three_ratios, units = "in", width = 14, height = 5)
+ggsave(all_three_ratios, units = "in", width = 14, height = 5,
+       file = "plots/all_three_ratios.jpg")
+
 

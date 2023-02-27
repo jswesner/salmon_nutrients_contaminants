@@ -162,7 +162,22 @@ chem_species_prop %>%
   geom_hline(yintercept = 0) +
   facet_wrap(~chemical)
 
-
+# proportion biotransport change by species
+chem_species_prop %>% 
+  filter(year == 1976 | year == 2015) %>%
+  select(-All, -proportion) %>% 
+  group_by(year, .draw, species) %>% 
+  summarize(value = sum(value)) %>% 
+  pivot_wider(names_from = year, values_from = value) %>% 
+  mutate(species_change = `2015` - `1976`) %>% 
+  mutate(species_change = case_when(species_change < 0 ~ 0, TRUE ~ species_change)) %>% 
+  group_by(.draw) %>% 
+  mutate(total_76 = sum(`1976`),
+         total_15 = sum(`2015`),
+         total_change = total_15 - total_76) %>% 
+  mutate(proportional_species_change = species_change/total_change) %>% 
+  group_by(species) %>% 
+  median_qi(proportional_species_change)
 
 # biomass_chem_medians
 biomass_chem_medians <- all_chem_posts %>%

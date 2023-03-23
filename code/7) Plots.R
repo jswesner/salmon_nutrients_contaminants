@@ -1282,7 +1282,7 @@ species_props_mean <- diff_props %>%
 prop_differences <- diff_props %>% 
   ggplot(aes(x = cont_minus_nut, y = reorder(species_tl,tl))) +
   geom_density_ridges(fill = NA, scale = 1.3,
-                      size = 0.01,
+                      size = 0.1,
                       aes(group = interaction(species, year),
                           color = year)) +
   geom_boxplot(data = species_props_mean, aes(group = species, x = mean_prop), outlier.shape = NA,
@@ -1293,13 +1293,13 @@ prop_differences <- diff_props %>%
   geom_vline(xintercept = 0) + 
   labs(y = "", 
        color = "Year",
-       x = "Relative contribution of\nnutrients versus contaminants") +
+       x = "Contribution of\nnutrients versus contaminants") +
   annotate("text", label = "Relatively more nutrients", x = -0.14, y = 0.6,
-           size = 2.5) +
+           size = 2.0) +
   annotate("text", label = "Relatively more contaminants", x = 0.14, y = 0.6,
-           size = 2.5) +
-  theme(legend.position = c(0.27, 0.75),
-        legend.background = element_rect(fill = "white")) +
+           size = 2.0) +
+  theme(legend.background = element_rect(fill = "white"),
+        axis.text.x = element_text(size = 9)) +
   NULL
 
 saveRDS(prop_differences, file = "plots/prop_differences.rds")
@@ -1337,6 +1337,8 @@ saveRDS(species_ind_average, file = "posteriors/derived_quantities/species_ind_a
 
 library(tidybayes)
 
+species_ind_average = readRDS(file = "posteriors/derived_quantities/species_ind_average.rds")
+
 ratio_per_kg = species_ind_average %>%  
   ggplot(aes(x = ratio_1e6, y = reorder(species_tl,tl))) +
   geom_density_ridges(scale = 1, size = 0.01) +
@@ -1345,17 +1347,20 @@ ratio_per_kg = species_ind_average %>%
                       direction = -1) +
   geom_vline(xintercept = 1) + 
   labs(color = "Year",
-       x = "Ratio of contaminants (g) to nutrients (\u00B5g) per fish\n(divided by 1,000,000)") +
-  annotate("text", label = "More contaminants per nutrient", x = 2, y = 0.8,
-           size = 3) +
-  annotate("segment", x = 1.5, y = 0.6, xend = 2, yend = 0.6,
+       x = "Ratio of contaminants (g) to nutrients (\u00B5g)\nper fish (divided by 1,000,000)") +
+  annotate("text", label = "More contaminants per nutrient", x = 2, y = 0.7,
+           size = 2) +
+  annotate("segment", x = 1.5, y = 0.6, xend = 3, yend = 0.6,
            arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
-  coord_cartesian(xlim = c(NA, 3)) +
+  coord_cartesian(xlim = c(NA, 4)) +
   labs(subtitle = "a) Contaminants to nutrients per fish") +
-  theme(axis.title.y = element_blank()) +
+  theme(axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 9)) +
   NULL
 
+saveRDS(ratio_per_kg, file = 'plots/ratio_per_kg.rds')
 
+prop_differences = readRDS(file = "plots/prop_differences.rds")
 
 fig_4new = ratio_per_kg + prop_differences +
   labs(subtitle = "b) Relative contribution to continential biotransport") +
@@ -1400,14 +1405,15 @@ risk_plot = risk_posts %>%
   scale_color_viridis(option = "E",
                       direction = -1) +
   # geom_vline(xintercept = 1, linetype = "dashed") + 
-  labs(x = "Benefit-Risk Quotient") +
-  annotate("text", label = "More risk to consumers", x = 0.2, y = 0.8,
+  labs(x = "Risk-Benefit Quotient") +
+  annotate("text", label = "More risk to consumers", x = 0.6, y = 0.8,
            size = 3) +
   annotate("segment", x = 0.1, y = 0.6, xend = 0.5, yend = 0.6,
            arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
   coord_cartesian(xlim = c(NA, 0.8)) +
-  labs(subtitle = "c) Benefit-Risk Quotient") +
-  theme(axis.title.y = element_blank()) +
+  labs(subtitle = "c) Risk-Benefit Quotient") +
+  theme(axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 9)) +
   # scale_x_log10() +
   NULL
 
@@ -1423,17 +1429,19 @@ risk_table = risk_posts %>%
 
 
 library(patchwork)
-all_three_ratios = ratio_per_kg + prop_differences +
-  labs(subtitle = "b) Relative contribution to continential biotransport") +
+all_three_ratios = ratio_per_kg + prop_differences + guides(color = "none") +
+  labs(subtitle = "b) Contribution to biotransport") +
   theme(axis.title.y = element_blank(),
         axis.text.y = element_blank()) +
-  risk_plot + theme(axis.title.y = element_blank(),
-                   axis.text.y = element_blank()) + 
+  risk_plot + 
+  plot_layout(ncol = 2) +
   NULL
 
 
-ggview(all_three_ratios, units = "in", width = 14, height = 5)
-ggsave(all_three_ratios, units = "in", width = 14, height = 5,
-       file = "plots/all_three_ratios.jpg")
+ggview::ggview(all_three_ratios, units = "in", width = 6.5, height = 7)
 
+ggsave(all_three_ratios, units = "in", width = 6.5, height = 7,
+       file = "plots/all_three_ratios.jpg")
+ggsave(all_three_ratios, units = "in", width = 6.5, height = 7,
+       file = "plots/ms_plots/fig4_all_three_ratios.jpg")
 

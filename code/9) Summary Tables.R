@@ -1,7 +1,6 @@
 library(janitor)
 library(tidybayes)
-detach("package:tidyverse") # ensures that masked functions will default to tidyverse first
-library("tidyverse")
+library(tidyverse)
 
 # escapement --------------------------------------------------------------
 
@@ -331,7 +330,7 @@ change_1976_2015 <- flux_predictions %>%
   mutate(kg_flux = mg_flux/1e6) %>% 
   dplyr::select(year, chemical, .draw, kg_flux, location) %>% 
   pivot_wider(names_from = chemical, values_from = kg_flux) %>% 
-  mutate(All = DHA + DDT + Hg + PCBs + N + P + PBDE + EPA) %>% 
+  mutate(All = DHA + DDTs + Hg + PCBs + N + P + PBDEs + EPA) %>% 
   pivot_longer(cols = c(-location, -species, -year, -.draw)) %>% 
   pivot_wider(values_from = value, names_from = location) %>% 
   mutate(All = BCWC + BeringSea + CentralAK + SEAK) %>% 
@@ -417,6 +416,26 @@ prop_contribution_annual <- flux_predictions %>%
   summarize(median = median(median))
 
 write_csv(prop_contribution_annual, file = "tables/ms_tables/tbl4_prop_contribution_annual.csv")  
+
+# median total transport
+flux_predictions %>% 
+  # filter(year == 1976 | year ==2015) %>% 
+  mutate(kg_flux = mg_flux/1e6) %>% 
+  dplyr::select(year, chemical, .draw, kg_flux, location) %>% 
+  group_by(year, species, .draw, location) %>% 
+  summarize(region_species_kg_flux = sum(kg_flux)) %>% 
+  pivot_wider(values_from = region_species_kg_flux, names_from = location) %>% 
+  mutate(All = BCWC + BeringSea + CentralAK + SEAK) %>% 
+  pivot_longer(cols = c(-year, -.draw, -species),
+               names_to = "location", values_to = "kg_year") %>% 
+  group_by(year, location, .draw) %>% 
+  mutate(total = sum(kg_year),
+         proportion = kg_year/total) %>% 
+  group_by(.draw, location, species) %>% 
+  summarize(median = median(kg_year)) %>% 
+  group_by(location, species) %>% 
+  summarize(median = median(median))
+
 
 # change in size, escapement abundance, and escapement biomass
 fish_mass_kgww_of_individual_fish <- read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.csv") %>% 

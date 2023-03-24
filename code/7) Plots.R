@@ -221,24 +221,28 @@ legend_escapement_conc <- get_legend(species_escapement + theme(legend.position 
                                 chem_concentrations,
                                 ncol = 3,
                                 rel_widths = c(0.36, 0.43, 0.55)))
-
-fig_ed1 = plot_grid(total_escapement,
-                    species_escapement + guides(color = F, fill = F),
-                    ncol = 2) +
-  scale_color_viridis_d(direction = -1, option = 'A', alpha = 1,
+library(patchwork)
+total_escapement + species_escapement+
+  scale_color_viridis_d(direction = 1, option = 'A', alpha = 1,
                         begin = 0.15, end = 0.7) +
-  scale_fill_viridis_d(direction = -1, option = 'A', alpha = 1,
+  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
+                       begin = 0.15, end = 0.7)
+
+fig_ed1 = total_escapement + species_escapement+
+  scale_color_viridis_d(direction = 1, option = 'A', alpha = 1,
+                        begin = 0.15, end = 0.7) +
+  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
                        begin = 0.15, end = 0.7)
 
 fig_ed4 = chem_concentrations
 
-ggview::ggview(fig_ed1, width = 5, height = 8, units = "in")
+ggview::ggview(fig_ed1, width = 6.5, height = 8, units = "in")
 ggview::ggview(fig_ed4, width = 5, height = 6, units = "in")
 
 saveRDS(fig_ed4, file = "plots/ms_plots/fig_ed4.rds")
 ggsave(fig_ed4, file = "plots/ms_plots/fig_ed4.jpg", width = 5, height = 8, units = "in")
 saveRDS(fig_ed1, file = "plots/ms_plots/fig_ed1.rds")
-ggsave(fig_ed1, file = "plots/ms_plots/fig_ed1.jpg", width = 5, height = 8, units = "in")
+ggsave(fig_ed1, file = "plots/ms_plots/fig_ed1.jpg", width = 6.5, height = 8, units = "in")
 
 
 (escapement_plus_concentrations_plot <- plot_grid(legend_escapement_conc,

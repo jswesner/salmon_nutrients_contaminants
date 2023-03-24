@@ -128,12 +128,17 @@ lmg <- tibble(chemical = lmg_data_chem,
   pivot_longer(cols = -chemical,
                names_to = "term", values_to = "estimate")
 
+saveRDS(lmg, file = "data/lmg.rds")
+
+
+# Make plot ---------------------------------------------------------------
+lmg = readRDS(file = "data/lmg.rds")
 
 rel_importance <- lmg %>% 
   group_by(chemical) %>% 
   mutate(order = max(estimate),
          term = case_when(term == "conc_c" ~ "Chemical Concentration",
-                          term == "kg_ind_c" ~ "Mass",
+                          term == "kg_ind_c" ~ "Weight",
                           TRUE ~ "Escapement")) %>% 
   mutate(term = fct_relevel(term, "Escapement",
                             "Chemical Concentration")) %>% 

@@ -174,8 +174,8 @@ chem_concentrations <- all_chem_posts%>%
          chemical = case_when(chemical == "DDT" ~ "DDTs",
                               chemical == "PBDE" ~ "PBDEs",
                               TRUE ~ chemical)) %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "c) Nutrients",
-                          TRUE ~ "d) Contaminants"),
+  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "a) Nutrients",
+                          TRUE ~ "b) Contaminants"),
          chemical = fct_relevel(chemical, "N",
                                 "DHA", 
                                 "EPA",
@@ -198,20 +198,21 @@ chem_concentrations <- all_chem_posts%>%
                                              "Hg",
                                              "DDTs"),
                       species = fct_relevel(species, "Pink", "Sockeye", "Chum", "Chinook"),
-                      type = case_when(type == "nutrient" ~ "c) Nutrients",
-                                       TRUE ~ "d) Contaminants")),
+                      type = case_when(type == "nutrient" ~ "a) Nutrients",
+                                       TRUE ~ "b) Contaminants")),
              position = position_dodge(width = 0.75), 
              aes(y = mean_concentration_standardized, group = species),
              size = 0.4) +
-  guides(fill = "none") +
+  # guides(fill = "none") +
   labs(y = "Whole body concentrations (mg/kg ww)",
        x = "Chemical") +
   theme(text = element_text(size = 11),
-        plot.subtitle = element_text(size = 11)) +
-  scale_color_viridis_d(option = "A",
-                        direction = 1) +
-  scale_fill_viridis_d(option = "A",
-                       direction = 1)
+        plot.subtitle = element_text(size = 11),
+        legend.title = element_blank()) +
+  scale_color_viridis_d(direction = -1, option = 'A', alpha = 1,
+                        begin = 0.15, end = 0.7) +
+  scale_fill_viridis_d(direction = -1, option = 'A', alpha = 1,
+                       begin = 0.15, end = 0.7)
 
 legend_escapement_conc <- get_legend(species_escapement + theme(legend.position = "top"))
 
@@ -220,6 +221,24 @@ legend_escapement_conc <- get_legend(species_escapement + theme(legend.position 
                                 chem_concentrations,
                                 ncol = 3,
                                 rel_widths = c(0.36, 0.43, 0.55)))
+
+fig_ed1 = plot_grid(total_escapement,
+                    species_escapement + guides(color = F, fill = F),
+                    ncol = 2) +
+  scale_color_viridis_d(direction = -1, option = 'A', alpha = 1,
+                        begin = 0.15, end = 0.7) +
+  scale_fill_viridis_d(direction = -1, option = 'A', alpha = 1,
+                       begin = 0.15, end = 0.7)
+
+fig_ed4 = chem_concentrations
+
+ggview::ggview(fig_ed1, width = 5, height = 8, units = "in")
+ggview::ggview(fig_ed4, width = 5, height = 6, units = "in")
+
+saveRDS(fig_ed4, file = "plots/ms_plots/fig_ed4.rds")
+ggsave(fig_ed4, file = "plots/ms_plots/fig_ed4.jpg", width = 5, height = 8, units = "in")
+saveRDS(fig_ed1, file = "plots/ms_plots/fig_ed1.rds")
+ggsave(fig_ed1, file = "plots/ms_plots/fig_ed1.jpg", width = 5, height = 8, units = "in")
 
 
 (escapement_plus_concentrations_plot <- plot_grid(legend_escapement_conc,
@@ -1339,7 +1358,7 @@ library(tidybayes)
 
 species_ind_average = readRDS(file = "posteriors/derived_quantities/species_ind_average.rds")
 
-ratio_per_kg = species_ind_average %>%  
+ratio_per_kg = species_ind_average %>% 
   ggplot(aes(x = ratio_1e6, y = reorder(species_tl,tl))) +
   geom_density_ridges(scale = 1, size = 0.01) +
   geom_boxplot(outlier.shape = NA, width = 0.1, size = 1) +
@@ -1347,10 +1366,10 @@ ratio_per_kg = species_ind_average %>%
                       direction = -1) +
   geom_vline(xintercept = 1) + 
   labs(color = "Year",
-       x = "Ratio of contaminants (g) to nutrients (\u00B5g)\nper fish (divided by 1,000,000)") +
-  annotate("text", label = "More contaminants per nutrient", x = 2, y = 0.7,
+       x = "Ratio of contaminants (g) to nutrients\n(\u00B5g) per fish (divided by 1e6)") +
+  annotate("text", label = "More contaminants per nutrient", x = 2.5, y = 0.7,
            size = 2) +
-  annotate("segment", x = 1.5, y = 0.6, xend = 3, yend = 0.6,
+  annotate("segment", x = 2.5, y = 0.6, xend = 4, yend = 0.6,
            arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
   coord_cartesian(xlim = c(NA, 4)) +
   labs(subtitle = "a) Contaminants to nutrients per fish") +
@@ -1365,21 +1384,26 @@ prop_differences = readRDS(file = "plots/prop_differences.rds")
 fig_4new = ratio_per_kg + prop_differences +
   labs(subtitle = "b) Relative contribution to continential biotransport") +
   theme(axis.title.y = element_blank(),
-        axis.text.y = element_blank()) +
+        axis.text.y = element_blank(),
+        legend.title=element_text(size=10), 
+        legend.text=element_text(size=10),
+        legend.key.size = unit(0.3, 'cm')) +
   NULL
 
 library(ggview)
 
-ggview(fig_4new, units = "in", width = 10, height = 5)
+ggview(fig_4new, units = "in", width = 6.5, height = 3.5)
 
-ggsave(fig_4new, file = "plots/ms_plots/fig_4new.jpg", dpi = 600, width = 10, height = 5)
-ggsave(fig_4new, file = "plots/ms_plots/fig_4new.pdf", dpi = 600, width = 10, height = 5)
+save(fig_4new, file = "plots/ms_plots/fig_4new.rds")
+ggsave(fig_4new, file = "plots/ms_plots/fig_4new.jpg", dpi = 600, width = 6.5, height = 3.5)
+ggsave(fig_4new, file = "plots/ms_plots/fig_4new.pdf", dpi = 600, width = 6.5, height = 3.5)
 
 
 
 # hazard ratios -----------------------------------------------------------
 
 all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") 
+
 risk_posts = all_chem_posts %>% 
   select(-type) %>%
   mutate(.epred = 4*(.epred/1000)) %>% # convert to mg/g dry weight
@@ -1398,7 +1422,9 @@ risk_posts = all_chem_posts %>%
   mutate(species_tl = paste0(species, "\n(TL: ", round(tl,1), ")"))
 
 
-risk_plot = risk_posts %>% 
+risk_plot = risk_posts  %>%  
+  mutate(tl = case_when(species == "Sockeye" ~ tl - 0.1,
+                        TRUE ~ tl)) %>%
   ggplot(aes(x = risk_quotient, y = reorder(species_tl,tl))) +
   geom_density_ridges(scale = 1) +
   geom_boxplot(outlier.shape = NA, width = 0.1, size = 1) +
@@ -1406,16 +1432,22 @@ risk_plot = risk_posts %>%
                       direction = -1) +
   # geom_vline(xintercept = 1, linetype = "dashed") + 
   labs(x = "Risk-Benefit Quotient") +
-  annotate("text", label = "More risk to consumers", x = 0.6, y = 0.8,
+  annotate("text", label = "More risk to consumers", x = 0.4, y = 0.8,
            size = 3) +
   annotate("segment", x = 0.1, y = 0.6, xend = 0.5, yend = 0.6,
            arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
   coord_cartesian(xlim = c(NA, 0.8)) +
-  labs(subtitle = "c) Risk-Benefit Quotient") +
+  # labs(subtitle = "c) Risk-Benefit Quotient") +
   theme(axis.title.y = element_blank(),
         axis.text.x = element_text(size = 9)) +
   # scale_x_log10() +
   NULL
+
+
+ggview::ggview(risk_plot, width = 5, height = 5, units = "in")
+saveRDS(risk_plot, file = "plots/ms_plots/fig_5.rds")
+ggsave(risk_plot, file = "plots/ms_plots/fig_5.jpg", width = 5, height = 5, units = "in", dpi = 500 )
+ggsave(risk_plot, file = "plots/ms_plots/fig_5.pdf", width = 5, height = 5, units = "in", dpi = 500 )
 
 risk_table = risk_posts %>% 
   group_by(species, tl) %>% 

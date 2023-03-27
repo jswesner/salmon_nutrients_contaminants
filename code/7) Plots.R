@@ -1316,13 +1316,14 @@ prop_differences <- diff_props %>%
   geom_vline(xintercept = 0) + 
   labs(y = "", 
        color = "Year",
-       x = "Contribution of\nnutrients versus contaminants") +
+       x = "Contribution of nutrients\nversus contaminants") +
   annotate("text", label = "Relatively more nutrients", x = -0.14, y = 0.6,
            size = 2.0) +
   annotate("text", label = "Relatively more contaminants", x = 0.14, y = 0.6,
            size = 2.0) +
   theme(legend.background = element_rect(fill = "white"),
-        axis.text.x = element_text(size = 9)) +
+        axis.text.x = element_text(size = 9),
+        plot.subtitle = element_text(size = 10)) +
   NULL
 
 saveRDS(prop_differences, file = "plots/prop_differences.rds")
@@ -1371,26 +1372,34 @@ ratio_per_kg = species_ind_average %>%
   geom_vline(xintercept = 1) + 
   labs(color = "Year",
        x = "Ratio of contaminants (g) to nutrients\n(\u00B5g) per fish (divided by 1e6)") +
-  annotate("text", label = "More contaminants per nutrient", x = 2.5, y = 0.7,
+  annotate("text", label = "More contaminants per nutrient", x = 2.3, y = 0.74,
            size = 2) +
   annotate("segment", x = 2.5, y = 0.6, xend = 4, yend = 0.6,
            arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
   coord_cartesian(xlim = c(NA, 4)) +
   labs(subtitle = "a) Contaminants to nutrients per fish") +
   theme(axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 9)) +
+        axis.text.x = element_text(size = 9),
+        plot.subtitle = element_text(size = 10)) +
   NULL
 
 saveRDS(ratio_per_kg, file = 'plots/ratio_per_kg.rds')
 
-prop_differences = readRDS(file = "plots/prop_differences.rds")
+prop_differences = readRDS(file = "plots/prop_differences.rds") + 
+  theme(plot.subtitle = element_text(size = 10),
+        legend.position = c(0.2, 0.7))
 
-fig_4new = ratio_per_kg + prop_differences +
-  labs(subtitle = "b) Relative contribution to continential biotransport") +
+
+fig_4new = ratio_per_kg +
+  labs(subtitle = "a)") + 
+  theme(plot.subtitle = element_text(size = 11)) + 
+  prop_differences + 
+  labs(subtitle = "b)") +
   theme(axis.title.y = element_blank(),
         axis.text.y = element_blank(),
-        legend.title=element_text(size=10), 
-        legend.text=element_text(size=10),
+        plot.subtitle = element_text(size = 11),
+        legend.title=element_text(size=9), 
+        legend.text=element_text(size=9),
         legend.key.size = unit(0.3, 'cm')) +
   NULL
 
@@ -1398,7 +1407,7 @@ library(ggview)
 
 ggview(fig_4new, units = "in", width = 6.5, height = 3.5)
 
-save(fig_4new, file = "plots/ms_plots/fig_4new.rds")
+saveRDS(fig_4new, file = "plots/ms_plots/fig_4new.rds")
 ggsave(fig_4new, file = "plots/ms_plots/fig_4new.jpg", dpi = 600, width = 6.5, height = 3.5)
 ggsave(fig_4new, file = "plots/ms_plots/fig_4new.pdf", dpi = 600, width = 6.5, height = 3.5)
 
@@ -1475,7 +1484,6 @@ all_three_ratios = ratio_per_kg + prop_differences + guides(color = "none") +
 
 
 ggview::ggview(all_three_ratios, units = "in", width = 6.5, height = 7)
-
 ggsave(all_three_ratios, units = "in", width = 6.5, height = 7,
        file = "plots/all_three_ratios.jpg")
 ggsave(all_three_ratios, units = "in", width = 6.5, height = 7,

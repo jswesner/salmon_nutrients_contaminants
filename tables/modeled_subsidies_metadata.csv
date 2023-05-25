@@ -1,0 +1,7 @@
+variable	description
+species	Salmon species common name
+chemical	specific nutrient or contaminent
+units	unit of contaminant concentration ww = wet weight e.g. mg/kg ww
+type	"General type of chemical (""Nutrient"" or ""Contaminant"")"
+mean	Mean modeled mass-specific concentration of the contaminant or nutrient summarized from the posterior distribution. Separate models were fit for each nutrient or contaminant.
+sd	Standard deviation of modeled mass-specific concentration of the contaminant or nutrient summarized from the posterior distribution. Separate models were fit for each nutrient or contaminant.

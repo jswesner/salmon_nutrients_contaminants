@@ -524,11 +524,13 @@ all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") %>%
                                 "DHA", 
                                 "EPA",
                                 "Hg",
-                                "DDTs")) # Salmon chemical concentrations mg kg wet mass
+                                "DDTs",
+                                "PCBs")) # Salmon chemical concentrations mg kg wet mass
 
 
 # average fish size
 mean_fish_size <- fish_mass_kgww_of_individual_fish %>% 
+  clean_names() %>% 
   pivot_longer(cols = c(-year, -units, -source)) %>% 
   mutate(species = case_when(grepl("pink", name) ~ "Pink",
                              grepl("chum", name) ~ "Chum",
@@ -543,15 +545,15 @@ mean_fish_size <- fish_mass_kgww_of_individual_fish %>%
   filter(year >= 1976) %>% 
   summarize(mean_size_kg = mean(value))
 
-biotransport_potential_grams_per_individual <- all_chem_posts %>% 
+biotransport_potential_mg_per_individual <- all_chem_posts %>% 
   left_join(mean_fish_size) %>% 
-  mutate(grams_per_fish = (.epred*mean_size_kg)/1e3) %>% 
+  mutate(milligrams_per_fish = (.epred)) %>% 
   group_by(species, chemical, type) %>% 
-  summarize(mean_grams_per_fish = mean(grams_per_fish)) %>% 
-  pivot_wider(names_from = species, values_from = mean_grams_per_fish)
+  summarize(mean_milligrams_per_fish = mean(milligrams_per_fish)) %>% 
+  pivot_wider(names_from = species, values_from = mean_milligrams_per_fish)
 
 
-write_csv(biotransport_potential_grams_per_individual, file = "tables/ms_tables/tbl8_biotransport_potential_grams_per_individual.csv")
+write_csv(biotransport_potential_mg_per_individual, file = "tables/ms_tables/tbl8_biotransport_potential_mg_per_individual.csv")
 
 
 
@@ -592,19 +594,41 @@ mean_kg_per_species = read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.
 species_ind_average = readRDS(file = "posteriors/derived_quantities/species_ind_average.rds")
 
 table_si9_data = species_ind_average %>% 
-  select(species, cont_total, nut_total, ratio_1e6) %>% 
-  mutate(nut_total = nut_total/1e6) %>% 
-  pivot_longer(cols = c(cont_total, nut_total, ratio_1e6)) %>% 
+  select(species, cont_total_mgperfish, nut_total_kgperfish, ratio_kgmgperfish) %>% 
+  pivot_longer(cols = -species) %>% 
   group_by(species, name) %>% 
   summarize(mean = median(value),
             sd = sd(value)) 
 
-
 table_si9 = table_si9_data %>% 
-  mutate(mean_sd = paste0(round(mean, 2), "+/-(", round(sd, 2), ")")) %>% 
-  select(-mean, -sd) %>% 
-  pivot_wider(names_from = species, values_fro = mean_sd) %>% 
+  mutate(mean_sd = paste0(round(mean, 2), "+/-(", round(sd, 2), ")")) %>%
+  select(-mean, -sd) %>%
+  pivot_wider(names_from = species, values_from = mean_sd) %>% 
   select(name, Chinook, Coho, Sockeye, Chum, Pink)
 
 write_csv(table_si9, file = "tables/table_si9.csv")
 
+
+# hazard ratios ------------------
+all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") 
+
+risk_posts = all_chem_posts %>% 
+  select(-type) %>%
+  mutate(.epred = 4*(.epred/1000)) %>% # convert to mg/g dry weight
+  pivot_wider(names_from = chemical, values_from = .epred) %>%
+  mutate(rfdm_hg = 0.000186,
+         rfdm_pbde = 0.0001,
+         rfdm_pcb = 0.00002,
+         rfdm_ddt = 0.0005,
+         bw = 81, 
+         rsefa = 250,
+         csefa = EPA + DHA,
+         crlim = bw/(Hg/rfdm_hg + PBDEs/rfdm_pbde + PCBs/rfdm_pcb + DDTs/rfdm_ddt),
+         crsefa = rsefa/csefa,
+         risk_quotient = crsefa/crlim) %>% 
+  left_join(trophic_levels) %>% 
+  mutate(species_tl = paste0(species, "\n(TL: ", round(tl,1), ")"))
+
+risk_posts %>% 
+  group_by(species) %>% 
+  median_qi(risk_quotient)

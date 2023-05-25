@@ -1,0 +1,576 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<metadata>
+  <idinfo>
+    <citation>
+      <citeinfo>
+        <origin>Jeff Wesner	</origin>
+        <pubdate>20230531</pubdate>
+        <title>Pacific Salmon Escapement Biomass and Nutrient and Contaminant Concentrations	</title>
+        <geoform>spreadsheet</geoform>
+        <onlink>https://doi.org/10.5066/xxxxxxxx</onlink>
+      </citeinfo>
+    </citation>
+    <descript>
+      <abstract>The data contain yearly modeled estimates of Pacific salmon escapement (in annual metric tons of wet mass) from 1976 to 2015 across four regions of western North America. A second data file contains modeled estimates of contaminant or nutrient concentrations in Pacific Salmon. The modeled estimates were derived from Bayesian generalized linear models (contaminant or nutrient concentrations) or from Bayesian generalized additive models (Salmon Escapement). The raw data underlying those models are available upon request from the authors. </abstract>
+      <purpose>The modeled values are used to estimate the transport by salmon of biomass, nutrients, and contaminants to freshwater streams in western North America.</purpose>
+    </descript>
+    <timeperd>
+      <timeinfo>
+        <rngdates>
+          <begdate>19760101</begdate>
+          <enddate>20150101</enddate>
+        </rngdates>
+      </timeinfo>
+      <current>ground condition</current>
+    </timeperd>
+    <status>
+      <progress>Complete</progress>
+      <update>None planned</update>
+    </status>
+    <spdom>
+      <descgeog/>
+      <bounding>
+        <westbc>-171.5625</westbc>
+        <eastbc>-110.3906</eastbc>
+        <northbc>69.6571</northbc>
+        <southbc>25.7999</southbc>
+      </bounding>
+    </spdom>
+    <keywords>
+      <theme>
+        <themekt>ISO 19115 Topic Category</themekt>
+        <themekey>biota</themekey>
+      </theme>
+      <theme>
+        <themekt/>
+        <themekey>salmon</themekey>
+        <themekey>subsidies</themekey>
+        <themekey>contaminants</themekey>
+        <themekey>nutrients</themekey>
+        <themekey>escapement</themekey>
+      </theme>
+      <place>
+        <placekt>Common geographic areas</placekt>
+        <placekey>North America</placekey>
+        <placekey>Southeast Alaska</placekey>
+        <placekey>Bering Sea Wilderness</placekey>
+        <placekey>British Columbia</placekey>
+      </place>
+    </keywords>
+    <taxonomy>
+      <keywtax>
+        <taxonkt>None</taxonkt>
+        <taxonkey>Chinook salmon</taxonkey>
+        <taxonkey>chum salmon</taxonkey>
+        <taxonkey>pink salmon</taxonkey>
+        <taxonkey>coho salmon</taxonkey>
+        <taxonkey>sockeye salmon</taxonkey>
+      </keywtax>
+      <taxoncl>
+        <taxonrn>Kingdom</taxonrn>
+        <taxonrv>Animalia</taxonrv>
+        <common>animals</common>
+        <taxoncl>
+          <taxonrn>Subkingdom</taxonrn>
+          <taxonrv>Bilateria</taxonrv>
+          <taxoncl>
+            <taxonrn>Infrakingdom</taxonrn>
+            <taxonrv>Deuterostomia</taxonrv>
+            <taxoncl>
+              <taxonrn>Phylum</taxonrn>
+              <taxonrv>Chordata</taxonrv>
+              <common>chordates</common>
+              <taxoncl>
+                <taxonrn>Subphylum</taxonrn>
+                <taxonrv>Vertebrata</taxonrv>
+                <common>vertebrates</common>
+                <taxoncl>
+                  <taxonrn>Infraphylum</taxonrn>
+                  <taxonrv>Gnathostomata</taxonrv>
+                  <taxoncl>
+                    <taxonrn>Superclass</taxonrn>
+                    <taxonrv>Actinopterygii</taxonrv>
+                    <common>ray-finned fishes</common>
+                    <common>spiny rayed fishes</common>
+                    <taxoncl>
+                      <taxonrn>Class</taxonrn>
+                      <taxonrv>Teleostei</taxonrv>
+                      <taxoncl>
+                        <taxonrn>Superorder</taxonrn>
+                        <taxonrv>Protacanthopterygii</taxonrv>
+                        <taxoncl>
+                          <taxonrn>Order</taxonrn>
+                          <taxonrv>Salmoniformes</taxonrv>
+                          <common>salmons</common>
+                          <taxoncl>
+                            <taxonrn>Family</taxonrn>
+                            <taxonrv>Salmonidae</taxonrv>
+                            <common>salmonids</common>
+                            <common>trouts and salmons</common>
+                            <common>salmons</common>
+                            <common>trouts</common>
+                            <taxoncl>
+                              <taxonrn>Subfamily</taxonrn>
+                              <taxonrv>Salmoninae</taxonrv>
+                              <taxoncl>
+                                <taxonrn>Genus</taxonrn>
+                                <taxonrv>Oncorhynchus</taxonrv>
+                                <common>Pacific salmon</common>
+                                <taxoncl>
+                                  <taxonrn>Species</taxonrn>
+                                  <taxonrv>Oncorhynchus tshawytscha</taxonrv>
+                                  <common>Chinook salmon</common>
+                                  <common>king salmon</common>
+                                  <common>TSN: 161980</common>
+                                </taxoncl>
+                                <taxoncl>
+                                  <taxonrn>Species</taxonrn>
+                                  <taxonrv>Oncorhynchus keta</taxonrv>
+                                  <common>chum salmon</common>
+                                  <common>TSN: 161976</common>
+                                </taxoncl>
+                                <taxoncl>
+                                  <taxonrn>Species</taxonrn>
+                                  <taxonrv>Oncorhynchus gorbuscha</taxonrv>
+                                  <common>pink salmon</common>
+                                  <common>humpback</common>
+                                  <common>humpbacked salmon</common>
+                                  <common>TSN: 161975</common>
+                                </taxoncl>
+                                <taxoncl>
+                                  <taxonrn>Species</taxonrn>
+                                  <taxonrv>Oncorhynchus kisutch</taxonrv>
+                                  <common>coho salmon</common>
+                                  <common>silver salmon</common>
+                                  <common>TSN: 161977</common>
+                                </taxoncl>
+                                <taxoncl>
+                                  <taxonrn>Species</taxonrn>
+                                  <taxonrv>Oncorhynchus nerka</taxonrv>
+                                  <common>blueback salmon</common>
+                                  <common>kokanee</common>
+                                  <common>red salmon</common>
+                                  <common>sockeye salmon</common>
+                                  <common>TSN: 161979</common>
+                                </taxoncl>
+                              </taxoncl>
+                            </taxoncl>
+                          </taxoncl>
+                        </taxoncl>
+                      </taxoncl>
+                    </taxoncl>
+                  </taxoncl>
+                </taxoncl>
+              </taxoncl>
+            </taxoncl>
+          </taxoncl>
+        </taxoncl>
+      </taxoncl>
+    </taxonomy>
+    <accconst>None.  Please see 'Distribution Info' for details.</accconst>
+    <useconst>None.  Users are advised to read the dataset's metadata thoroughly to understand appropriate use and data limitations.</useconst>
+    <ptcontac>
+      <cntinfo>
+        <cntperp>
+          <cntper>Jeff Wesner</cntper>
+          <cntorg>University of South Dakota</cntorg>
+        </cntperp>
+        <cntaddr>
+          <addrtype>mailing and physical</addrtype>
+          <address>414 East Clark Street</address>
+          <city>Vermillion</city>
+          <state>SD</state>
+          <postal>57069</postal>
+          <country>USA</country>
+        </cntaddr>
+        <cntvoice>6056586718</cntvoice>
+      </cntinfo>
+    </ptcontac>
+    <datacred>Jess Brandt, Greg Ruggerone, David Walters</datacred>
+    <native>version  R version 4.3.0 (2023-04-21 ucrt)
+ os       Windows 10 x64 (build 19044)
+ system   x86_64, mingw32
+ ui       RStudio
+ language (EN)
+ collate  English_United States.utf8
+ ctype    English_United States.utf8
+ tz       America/Chicago
+ date     2023-05-19
+ rstudio  2023.03.1+446 Cherry Blossom (desktop)
+ pandoc   NA</native>
+  </idinfo>
+  <dataqual>
+    <attracc>
+      <attraccr>These are modeled data whose posterior distributions accurately captured the raw data based on posterior predictive checking.</attraccr>
+    </attracc>
+    <logic>yes</logic>
+    <complete>All available data was included</complete>
+    <lineage>
+      <procstep>
+        <procdesc>Salmon Biomass: Obtain raw abundance escapement estimates from Greg Ruggerone along with mean salmon wet mass per year. Multiply wet mass x abundance to obtain salmon wet mass escapement per year per species per region.
+Salmon nutrients or contaminants: Obtain concentrations for each contaminant and species from the published and gray literature</procdesc>
+        <procdate>20210101</procdate>
+      </procstep>
+      <procstep>
+        <procdesc>Salmon Biomass: Fit a generalized additive model to the salmon biomass data with year x species x location as predictors. 
+Salmon nutrients or contaminants: Fit generalized linear mixed models to individual contaminant or nutrient concentrations to estimate the mean contaminant or nutrient concentration (and it's posterior distribution) per species per contaminant.</procdesc>
+        <procdate></procdate>
+      </procstep>
+      <procstep>
+        <procdesc>Salmon Biomass: Summarize the mean and standard deviation of the posterior samples per species, year, and location.
+Salmon nutrients or contaminants: Summarize the mean and standard deviation of the posterior samples per chemical and species.</procdesc>
+        <procdate></procdate>
+      </procstep>
+    </lineage>
+  </dataqual>
+  <eainfo>
+    <detailed>
+      <enttyp>
+        <enttypl>modeled_biomass_datarelease.csv</enttypl>
+        <enttypd>Comma Separated Value (CSV) file containing data.</enttypd>
+        <enttypds>Producer Defined</enttypds>
+      </enttyp>
+      <attr>
+  <attrlabl>species</attrlabl><attrdef>Salmon species common name
+</attrdef><attrdefs>Producer Defined</attrdefs><attrdomv>
+    <edom>
+      <edomv>Chinook</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>Chum</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>Coho</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>Pink</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>Sockeye</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+</attr>
+      <attr>
+  <attrlabl>location</attrlabl><attrdef>Region in which the data are partitioned: BCWC = British Columbia/West Coast of North America, BeringSea = Bering Sea, CentralAK = Central Alaska, SEAK = Southeast Alaska
+</attrdef><attrdefs>Producer Defined</attrdefs><attrdomv>
+    <edom>
+      <edomv>BCWC</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>BeringSea</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>CentralAK</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>SEAK</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+</attr>
+      <attr>
+        <attrlabl>year</attrlabl>
+        <attrdef>Year in which salmon escapement was measured
+</attrdef>
+        <attrdefs>Producer Defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>1976</rdommin>
+            <rdommax>2015</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>mean</attrlabl>
+        <attrdef>Mean salmon escapement for a given year, location, and species. Values are the mean of the posterior distribution of modeled salmon biomass escapement. Raw data used to model salmon biomass are available upon request from Greg Ruggerone.
+</attrdef>
+        <attrdefs>Producer Defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>329</rdommin>
+            <rdommax>65554</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>sd</attrlabl>
+        <attrdef>Standard deviation of salmon escapement for a given year, location, and species. Values are the standard deviation of the posterior distribution of modeled salmon biomass escapement. Raw data used to model salmon biomass are available upon request from Greg Ruggerone.
+</attrdef>
+        <attrdefs>Producer Defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>60</rdommin>
+            <rdommax>12968</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+  <attrlabl>units</attrlabl><attrdef>Units of measure for salmon biomass escapement
+</attrdef><attrdefs>Producer Defined</attrdefs><attrdomv>
+    <edom>
+      <edomv>Metric Tons</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+</attr>
+    </detailed>
+    <detailed>
+      <enttyp>
+        <enttypl>modeled_subsidies_datarelease.csv</enttypl>
+        <enttypd>Comma Separated Value (CSV) file containing data.</enttypd>
+        <enttypds>Producer Defined</enttypds>
+      </enttyp>
+      <attr>
+  <attrlabl>species</attrlabl><attrdef>	Salmon species common name</attrdef><attrdefs>Producer Defined</attrdefs><attrdomv>
+    <edom>
+      <edomv>Chinook</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>Chum</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>Coho</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>Pink</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>Sockeye</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+</attr>
+      <attr>
+  <attrlabl>chemical</attrlabl><attrdef>	specific nutrient or contaminant</attrdef><attrdefs>Producer Defined</attrdefs><attrdomv>
+    <edom>
+      <edomv>N</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>P</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>DHA</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>EPA</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>Hg</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>DDTs</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>PBDEs</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>PCBs</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+</attr>
+      <attr>
+  <attrlabl>units</attrlabl><attrdef>	unit of contaminant concentration ww = wet weight e.g. mg/kg ww</attrdef><attrdefs>Producer Defined</attrdefs><attrdomv>
+    <edom>
+      <edomv>mg/kg ww</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+</attr>
+      <attr>
+  <attrlabl>type</attrlabl><attrdef>General type of chemical (Nutrient or Contaminant)</attrdef><attrdefs>Producer Defined</attrdefs><attrdomv>
+    <edom>
+      <edomv>Nutrients</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+  <attrdomv>
+    <edom>
+      <edomv>Contaminants</edomv>
+      <edomvd>
+      </edomvd>
+      <edomvds>Producer defined</edomvds>
+    </edom>
+  </attrdomv>
+</attr>
+      <attr>
+        <attrlabl>mean</attrlabl>
+        <attrdef>Mean modeled mass-specific concentration of the contaminant or nutrient summarized from the posterior distribution. Separate models were fit for each nutrient or contaminant.
+</attrdef>
+        <attrdefs>Producer Defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0</rdommin>
+            <rdommax>32671</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>sd</attrlabl>
+        <attrdef>	Standard deviation of modeled mass-specific concentration of the contaminant or nutrient summarized from the posterior distribution. Separate models were fit for each nutrient or contaminant.</attrdef>
+        <attrdefs>Producer Defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0</rdommin>
+            <rdommax>6570</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+    </detailed>
+  </eainfo>
+  <distinfo>
+    <distrib>
+      <cntinfo>
+        <cntperp>
+          <cntper>GS ScienceBase</cntper>
+          <cntorg>U.S. Geological Survey</cntorg>
+        </cntperp>
+        <cntaddr>
+          <addrtype>mailing address</addrtype>
+          <address>Denver Federal Center, Building 810, Mail Stop 302</address>
+          <city>Denver</city>
+          <state>CO</state>
+          <postal>80225</postal>
+          <country>United States</country>
+        </cntaddr>
+        <cntvoice>1-888-275-8747</cntvoice>
+        <cntemail>sciencebase@usgs.gov</cntemail>
+      </cntinfo>
+    </distrib>
+    <distliab>Unless otherwise stated, all data, metadata and related materials are considered to satisfy the quality standards relative to the purpose for which the data were collected. Although these data and associated metadata have been reviewed for accuracy and completeness and approved for release by the U.S. Geological Survey (USGS), no warranty expressed or implied is made regarding the display or utility of the data for other purposes, nor on all computer systems, nor shall the act of distribution constitute any such warranty.</distliab>
+    <stdorder>
+      <digform><digtinfo>
+          <formname>Digital Data</formname>
+        </digtinfo>
+        <digtopt><onlinopt><computer><networka><networkr>https://doi.org/10.5066/xxxxxxxx</networkr></networka></computer></onlinopt></digtopt></digform>
+      <fees>None</fees>
+    </stdorder>
+  </distinfo>
+  <metainfo>
+    <metd>20230519</metd>
+    <metc>
+      <cntinfo>
+        <cntperp>
+          <cntper>Jeff Wesner</cntper>
+          <cntorg>University of South Dakota</cntorg>
+        </cntperp>
+        <cntaddr>
+          <addrtype>mailing and physical</addrtype>
+          <address>414 East Clark Street</address>
+          <city>Vermillion</city>
+          <state>SD</state>
+          <postal>57069</postal>
+          <country>USA</country>
+        </cntaddr>
+        <cntvoice>6056586718</cntvoice>
+      </cntinfo>
+    </metc>
+    <metstdn>FGDC Biological Data Profile of the Content Standard for Digital Geospatial Metadata</metstdn>
+    <metstdv>FGDC-STD-001.1-1999</metstdv>
+  </metainfo>
+</metadata>

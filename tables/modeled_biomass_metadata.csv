@@ -1,0 +1,7 @@
+﻿variable,description
+species,Salmon species common name
+location,"Region in which the data are partitioned: BCWC = British Columbia/West Coast of North America, BeringSea = Bering Sea, CentralAK = Central Alaska, SEAK = Southeast Alaska"
+year,Year in which salmon escapement was measured
+mean,"Mean salmon escapement for a given year, location, and species. Values are the mean of the posterior distribution of modeled salmon biomass escapement. Raw data used to model salmon biomass are available upon request from Greg Ruggerone."
+sd,"Standard deviation of salmon escapement for a given year, location, and species. Values are the standard deviation of the posterior distribution of modeled salmon biomass escapement. Raw data used to model salmon biomass are available upon request from Greg Ruggerone."
+units,Units of measure for salmong biomass escapement

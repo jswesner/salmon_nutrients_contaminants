@@ -174,8 +174,8 @@ chem_concentrations <- all_chem_posts%>%
          chemical = case_when(chemical == "DDT" ~ "DDTs",
                               chemical == "PBDE" ~ "PBDEs",
                               TRUE ~ chemical)) %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "a) Nutrients",
-                          TRUE ~ "b) Contaminants"),
+  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "c) Nutrients",
+                          TRUE ~ "d) Contaminants"),
          chemical = fct_relevel(chemical, "N",
                                 "DHA", 
                                 "EPA",
@@ -198,8 +198,8 @@ chem_concentrations <- all_chem_posts%>%
                                              "Hg",
                                              "DDTs"),
                       species = fct_relevel(species, "Pink", "Sockeye", "Chum", "Chinook"),
-                      type = case_when(type == "nutrient" ~ "a) Nutrients",
-                                       TRUE ~ "b) Contaminants")),
+                      type = case_when(type == "nutrient" ~ "c) Nutrients",
+                                       TRUE ~ "d) Contaminants")),
              position = position_dodge(width = 0.75), 
              aes(y = mean_concentration_standardized, group = species),
              size = 0.4) +
@@ -209,52 +209,40 @@ chem_concentrations <- all_chem_posts%>%
   theme(text = element_text(size = 11),
         plot.subtitle = element_text(size = 11),
         legend.title = element_blank()) +
-  scale_color_viridis_d(direction = -1, option = 'A', alpha = 1,
+  scale_color_viridis_d(direction = 1, option = 'A', alpha = 1,
                         begin = 0.15, end = 0.7) +
-  scale_fill_viridis_d(direction = -1, option = 'A', alpha = 1,
+  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
                        begin = 0.15, end = 0.7)
 
-legend_escapement_conc <- get_legend(species_escapement + theme(legend.position = "top"))
+legend_escapement_conc <- get_legend(chem_concentrations + theme(legend.position = "top"))
 
 (escapement_plus_a <- plot_grid(total_escapement,
-                                species_escapement + guides(color = F, fill = F),
-                                chem_concentrations,
+                                species_escapement +
+                                  scale_color_viridis_d(direction = 1, option = 'A', alpha = 1,
+                                                        begin = 0.15, end = 0.7) +
+                                  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
+                                                       begin = 0.15, end = 0.7) + 
+                                  guides(color = "none", 
+                                         fill = "none"),
+                                chem_concentrations + 
+                                  guides(color = "none", 
+                                         fill = "none"),
                                 ncol = 3,
                                 rel_widths = c(0.36, 0.43, 0.55)))
-library(patchwork)
-total_escapement + species_escapement+
-  scale_color_viridis_d(direction = 1, option = 'A', alpha = 1,
-                        begin = 0.15, end = 0.7) +
-  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
-                       begin = 0.15, end = 0.7)
 
-fig_ed1 = total_escapement + species_escapement+
-  scale_color_viridis_d(direction = 1, option = 'A', alpha = 1,
-                        begin = 0.15, end = 0.7) +
-  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
-                       begin = 0.15, end = 0.7)
-
-fig_ed4 = chem_concentrations
-
-ggview::ggview(fig_ed1, width = 6.5, height = 8, units = "in")
-ggview::ggview(fig_ed4, width = 5, height = 6, units = "in")
-
-saveRDS(fig_ed4, file = "plots/ms_plots/fig_ed4.rds")
-ggsave(fig_ed4, file = "plots/ms_plots/fig_ed4.jpg", width = 5, height = 8, units = "in")
-saveRDS(fig_ed1, file = "plots/ms_plots/fig_ed1.rds")
-ggsave(fig_ed1, file = "plots/ms_plots/fig_ed1.jpg", width = 6.5, height = 8, units = "in")
-
-
-(escapement_plus_concentrations_plot <- plot_grid(legend_escapement_conc,
+(escapement_plus_concentrations_plot <- 
+    plot_grid(legend_escapement_conc,
           escapement_plus_a,
           ncol = 1,
           rel_heights = c(0.1, 1)))
 
-saveRDS(escapement_plus_concentrations_plot, file = "plots/ms_plots/escapement_plus_concentrations_plot.rds")
-ggsave(escapement_plus_concentrations_plot, file = "plots/ms_plots/escapement_plus_concentrations_plot.pdf",
-       dpi = 500, width = 8.5, height = 8, units = "in")
-ggsave(escapement_plus_concentrations_plot, file = "plots/ms_plots/escapement_plus_concentrations_plot.jpg",
-       dpi = 500, width = 8.5, height = 8, units = "in")
+saveRDS(escapement_plus_concentrations_plot, file = "plots/ms_plots/fig_ed1.rds")
+ggview::ggview(escapement_plus_concentrations_plot,
+       dpi = 500, width = 6.5, height = 6, units = "in")
+ggsave(escapement_plus_concentrations_plot, file = "plots/ms_plots/fig_ed1.pdf",
+       dpi = 500, width = 6.5, height = 6, units = "in")
+ggsave(escapement_plus_concentrations_plot, file = "plots/ms_plots/fig_ed1.jpg",
+       dpi = 500, width = 6.5, height = 6, units = "in")
 
 
 # Flux Time Series --------------------------------------------------------
@@ -1258,15 +1246,15 @@ ggsave(proportion_contributions_species_locations, file = "plots/ms_plots/propor
 # Proportional differences ------------------------------------------------
 
 # proportions
-# species_props <- flux_predictions %>%
-#   mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-#                           TRUE ~ "Contaminants")) %>%
-#   group_by(species, year, type, .draw) %>%
-#   summarize(species_flux = sum(mg_flux)) %>%
-#   group_by(year, .draw, type) %>%
-#   mutate(total_flux = sum(species_flux),
-#          species_prop = species_flux/total_flux)
-# 
+species_props <- flux_predictions %>%
+  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+                          TRUE ~ "Contaminants")) %>%
+  group_by(species, year, type, .draw) %>%
+  summarize(species_flux = sum(mg_flux)) %>%
+  group_by(year, .draw, type) %>%
+  mutate(total_flux = sum(species_flux),
+         species_prop = species_flux/total_flux)
+
 # saveRDS(species_props, file = "posteriors/derived_quantities/species_props.rds")
 
 species_props <- readRDS("posteriors/derived_quantities/species_props.rds")
@@ -1288,13 +1276,11 @@ diff_props <- species_props %>%
   select(-species_flux, -total_flux) %>% 
   pivot_wider(names_from = type, values_from = species_prop) %>% 
   ungroup() %>% 
-  mutate(cont_minus_nut = Contaminants - Nutrients,
+  mutate(cont_minus_nut = (Nutrients-Contaminants),
          species = fct_relevel(species, "Chinook", "Coho", "Sockeye", "Chum")) %>% 
   group_by(species, year) %>% 
   mutate(mean_difference = median(cont_minus_nut),
          species_tl = paste0(species, "\n(TL: ", round(tl,1), ")"))
-
-
 
 species_props_mean <- diff_props %>% 
   group_by(species, .draw) %>% 
@@ -1310,17 +1296,21 @@ prop_differences <- diff_props %>%
                           color = year)) +
   geom_boxplot(data = species_props_mean, aes(group = species, x = mean_prop), outlier.shape = NA,
                width = 0.1,
-               size = 0.75) +
+               size = 0.25) +
   scale_color_viridis(option = "E",
                       direction = -1) +
   geom_vline(xintercept = 0) + 
   labs(y = "", 
        color = "Year",
-       x = "Contribution of nutrients\nversus contaminants") +
-  annotate("text", label = "Relatively more nutrients", x = -0.14, y = 0.6,
+       x = "Relative contribution to continental biotransport") +
+  annotate("text", label = "Relatively more contaminants", x = -0.14, y = 0.6,
            size = 2.0) +
-  annotate("text", label = "Relatively more contaminants", x = 0.14, y = 0.6,
+  annotate("text", label = "Relatively more nutrients", x = 0.14, y = 0.6,
            size = 2.0) +
+  # annotate("text", label = "More contaminants per nutrient", x = 2.3, y = 0.74, size = 2) +
+  # annotate("segment", x = 2.5, y = 0.6, xend = 4, yend = 0.6,
+  #          arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
+  # coord_cartesian(xlim = c(NA, 4)) +
   theme(legend.background = element_rect(fill = "white"),
         axis.text.x = element_text(size = 9),
         plot.subtitle = element_text(size = 10)) +
@@ -1345,15 +1335,36 @@ mean_kg_per_species = fish_mass_kgww_of_individual_fish %>% pivot_longer(cols = 
 
 all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") 
 
+# average fish size
+mean_fish_size <- fish_mass_kgww_of_individual_fish %>% 
+  clean_names() %>% 
+  pivot_longer(cols = c(-year, -units, -source)) %>% 
+  mutate(species = case_when(grepl("pink", name) ~ "Pink",
+                             grepl("chum", name) ~ "Chum",
+                             grepl("sockeye", name) ~ "Sockeye",
+                             grepl("chinook", name) ~ "Chinook",
+                             TRUE ~ "Coho"),
+         location = case_when(grepl("bering", name) ~ "BeringSea",
+                              grepl("central", name) ~ "CentralAK",
+                              grepl("seak", name) ~ "SEAK",
+                              grepl("bc_wc", name) ~ "BCWC")) %>% 
+  group_by(species) %>% 
+  filter(year >= 1976) %>% 
+  summarize(mean_size_kg = mean(value))
+
+
 species_ind_average = all_chem_posts %>% 
   left_join(mean_fish_size) %>% 
-  mutate(.epred = .epred*mean_size_kg) %>% 
-  select(species, .draw, .epred, chemical) %>% 
+  select(species, .draw, .epred, chemical, mean_size_kg) %>% 
   pivot_wider(names_from = chemical, values_from = .epred) %>% 
-  mutate(cont_total = DDTs + Hg + PCBs + PBDEs,
-         nut_total = DHA + N + P + EPA,
-         ratio = cont_total/nut_total,
-         ratio_1e6 = ratio*1e6) %>% 
+  mutate(cont_total_mgperkg = DDTs + Hg + PCBs + PBDEs,
+         nut_total_mgperkg = DHA + N + P + EPA,
+         cont_total_mgperfish = (DDTs + Hg + PCBs + PBDEs)*mean_size_kg,
+         nut_total_mgperfish = (DHA + N + P + EPA)*mean_size_kg,
+         cont_total_mgperfish = cont_total_mgperfish,
+         nut_total_kgperfish = nut_total_mgperfish/1e6,
+         ratio_mgperfish = nut_total_mgperfish/cont_total_mgperfish,
+         ratio_kgmgperfish = nut_total_kgperfish/cont_total_mgperfish) %>% 
   left_join(trophic_levels) %>% 
   mutate(species_tl = paste0(species, "\n(TL: ", round(tl,1), ")"))
 
@@ -1364,20 +1375,20 @@ library(tidybayes)
 species_ind_average = readRDS(file = "posteriors/derived_quantities/species_ind_average.rds")
 
 ratio_per_kg = species_ind_average %>% 
-  ggplot(aes(x = ratio_1e6, y = reorder(species_tl,tl))) +
+  ggplot(aes(x = ratio_mgkgperfish, y = reorder(species_tl,tl))) +
   geom_density_ridges(scale = 1, size = 0.01) +
-  geom_boxplot(outlier.shape = NA, width = 0.1, size = 1) +
+  geom_boxplot(outlier.shape = NA, width = 0.1, size = 0.25) +
   scale_color_viridis(option = "E",
                       direction = -1) +
-  geom_vline(xintercept = 1) + 
+  # geom_vline(xintercept = 1) + 
   labs(color = "Year",
-       x = "Ratio of contaminants (g) to nutrients\n(\u00B5g) per fish (divided by 1e6)") +
-  annotate("text", label = "More contaminants per nutrient", x = 2.3, y = 0.74,
+       x = "Ratio of nutrients (kg/fish) to\ncontaminants (mg/fish) for individual fish") +
+  annotate("text", label = "More nutrients per cotaminant", x = 2.3, y = 0.74,
            size = 2) +
   annotate("segment", x = 2.5, y = 0.6, xend = 4, yend = 0.6,
            arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
-  coord_cartesian(xlim = c(NA, 4)) +
-  labs(subtitle = "a) Contaminants to nutrients per fish") +
+  # coord_cartesian(xlim = c(NA, 4)) +
+  labs(subtitle = "a) Nutrients to contaminants per fish") +
   theme(axis.title.y = element_blank(),
         axis.text.x = element_text(size = 9),
         plot.subtitle = element_text(size = 10)) +
@@ -1387,20 +1398,22 @@ saveRDS(ratio_per_kg, file = 'plots/ratio_per_kg.rds')
 
 prop_differences = readRDS(file = "plots/prop_differences.rds") + 
   theme(plot.subtitle = element_text(size = 10),
-        legend.position = c(0.2, 0.7))
+        legend.position = c(0.8, 0.8))
 
 
 fig_4new = ratio_per_kg +
   labs(subtitle = "a)") + 
-  theme(plot.subtitle = element_text(size = 11)) + 
+  theme(plot.subtitle = element_text(size = 11),
+        axis.title.x = element_text(size = 10)) +
   prop_differences + 
   labs(subtitle = "b)") +
   theme(axis.title.y = element_blank(),
         axis.text.y = element_blank(),
         plot.subtitle = element_text(size = 11),
-        legend.title=element_text(size=9), 
+        legend.title=element_text(size=9),
         legend.text=element_text(size=9),
-        legend.key.size = unit(0.3, 'cm')) +
+        legend.key.size = unit(0.3, 'cm'),
+        axis.title.x = element_text(size = 10)) +
   NULL
 
 library(ggview)
@@ -1410,8 +1423,6 @@ ggview(fig_4new, units = "in", width = 6.5, height = 3.5)
 saveRDS(fig_4new, file = "plots/ms_plots/fig_4new.rds")
 ggsave(fig_4new, file = "plots/ms_plots/fig_4new.jpg", dpi = 600, width = 6.5, height = 3.5)
 ggsave(fig_4new, file = "plots/ms_plots/fig_4new.pdf", dpi = 600, width = 6.5, height = 3.5)
-
-
 
 # hazard ratios -----------------------------------------------------------
 

@@ -2,6 +2,11 @@ library(janitor)
 library(tidybayes)
 library(tidyverse)
 
+trophic_levels <- tibble(tl = c(4.3, 3.9, 3.9, 3.6, 3.5),
+                         species = c("Chinook", "Sockeye", "Coho",
+                                     "Chum", "Pink"),
+                         source = "Qin, Y., & Kaeriyama, M. (2016). Feeding habits and trophic levels of Pacific salmon (Oncorhynchus spp.) in the North Pacific Ocean. N Pac Anadromous Fish Com Bul, 6, 469-481.")
+
 # escapement --------------------------------------------------------------
 
 #load escapement
@@ -18,6 +23,27 @@ fish_escapement <- read_csv("data/raw_data/fish_escapement.csv") %>% clean_names
                               grepl("central", name) ~ "CentralAK",
                               grepl("seak", name) ~ "SEAK",
                               grepl("bc_wc", name) ~ "BCWC"))
+
+
+# fish size
+fish_mass_kgww_of_individual_fish <- read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.csv") %>% 
+  clean_names()
+
+fish_mass_kgww_of_individual_fish %>% 
+  filter(year <= 1976) %>% 
+  pivot_longer(cols = c(-year,-units,-source)) %>% 
+  mutate(species = case_when(grepl("pink", name) ~ "Pink",
+                             grepl("chum", name) ~ "Chum",
+                             grepl("sockeye", name) ~ "Sockeye",
+                             grepl("chinook", name) ~ "Chinook",
+                             TRUE ~ "Coho"),
+         location = case_when(grepl("bering", name) ~ "BeringSea",
+                              grepl("central", name) ~ "CentralAK",
+                              grepl("seak", name) ~ "SEAK",
+                              grepl("bc_wc", name) ~ "BCWC")) %>% 
+  group_by(species, location) %>% 
+  summarize(median = round(median(value, na.rm = T),1),
+            mean = round(mean(value, na.rm = T), 1))
 
 
 # metric tons wet
@@ -39,8 +65,8 @@ mean_annual_escapement_millions <- fish_escapement %>%
   mutate(species_total = sum(c_across(-c(1:2)))) %>% 
   pivot_longer(cols = c(-year, -location), names_to = "species") %>% 
   group_by(location, species) %>% 
-  summarize(mean = mean(value)) %>% 
-  pivot_wider(names_from = species, values_from = mean) 
+  summarize(median = median(value)) %>% 
+  pivot_wider(names_from = species, values_from = median) 
 
 write_csv(mean_annual_escapement_millions, file = "tables/ms_tables/tbl1_mean_annual_escape.csv")
 
@@ -48,8 +74,8 @@ write_csv(mean_annual_escapement_millions, file = "tables/ms_tables/tbl1_mean_an
 
 mean_escape_mass = salmon_mass %>% 
   group_by(location, species) %>% 
-  summarize(median = median(metric_tons)) %>% 
-  pivot_wider(names_from = species, values_from = median) %>%
+  summarize(mean = mean(metric_tons)) %>% 
+  pivot_wider(names_from = species, values_from = mean) %>%
   adorn_totals("row") 
 
 write_csv(mean_escape_mass, file = "tables/ms_tables/tbl1_mean_escape_mass.csv")
@@ -242,6 +268,37 @@ mean_sd_annual_flux <- flux_with_all  %>%
 
 write_csv(mean_sd_annual_flux, file = "tables/ms_tables/tbl2_mean_sd_annual_flux.csv")
 
+median_iqr_annual_flux <- flux_with_all  %>% 
+  group_by(species, chemical, type) %>% 
+  mutate(value = case_when(type == "Contaminants" ~ total_kg,
+                           TRUE ~ total_kg/1000)) %>% 
+  group_by(species, chemical, type, .draw) %>%
+  summarize(median_year = median(value)) %>%       # annual flux
+  ungroup() %>% 
+  group_by(species, chemical, type) %>% 
+  summarize(median = median(median_year/1000),        # mean of mean per year
+            low25 = quantile(median_year/1000, 0.25),
+            high75 = quantile(median_year/1000, 0.75)) %>%        # sd of mean per year
+  mutate(median = case_when(median > 2 ~ round(median, 0),
+                          TRUE ~ round(median, 2)),
+         low25 = case_when(median > 2 ~ round(low25, 0),
+                        TRUE ~ round(low25, 2)),
+         high75 = case_when(median > 2 ~ round(high75, 0),
+                           TRUE ~ round(high75, 2))) %>% 
+  mutate(median_sd = paste0(median," (", low25, ",", high75, ")")) %>% 
+  dplyr::select(-median, -low25, -high75) %>%
+  pivot_wider(names_from = species, values_from = median_sd) %>% 
+  arrange(desc(type), desc(Total)) %>% 
+  mutate(units = case_when(type == "Nutrients" ~ "MT/y", 
+                           TRUE ~ "Kg/y"),
+         summary = "Average Annual")
+
+write_csv(median_iqr_annual_flux, file = "tables/ms_tables/tbl2_median_iqr_annual_flux.csv")
+
+
+
+
+
 cumulative_sd_annual_flux <- flux_with_all  %>% 
   group_by(species, chemical, type) %>% 
   mutate(value = case_when(type == "Contaminants" ~ total_kg,
@@ -388,9 +445,9 @@ mean_total_biotransport = flux_predictions %>%
   pivot_longer(cols = c(-year, -.draw),
                names_to = "location", values_to = "kg_year") %>% 
   group_by(.draw, location) %>% 
-  summarize(median = median(kg_year)) %>% 
+  summarize(mean = mean(kg_year)) %>% 
   group_by(location) %>% 
-  summarize(median_annual_flux = median(median))
+  summarize(mean_annual_flux = mean(mean))
 
 
 write_csv(mean_total_biotransport, file = "tables/ms_tables/tbl4_mean_total_biotransport.csv")
@@ -493,7 +550,7 @@ escape_change_metric_tons <- gam_salmon_posts %>%
   mutate(overall = sum(c_across("BCWC":"SEAK"))) %>% 
   pivot_longer(cols = c(-species, -.draw)) %>% 
   group_by(species, name) %>% 
-  summarize(diff = median(value)) %>% 
+  summarize(diff = mean(value)) %>% 
   pivot_wider(names_from = name, values_from = diff) %>% 
   adorn_totals(where = "row") %>% 
   mutate(`40 year change` = "Escapement (MT wet)")
@@ -630,5 +687,6 @@ risk_posts = all_chem_posts %>%
   mutate(species_tl = paste0(species, "\n(TL: ", round(tl,1), ")"))
 
 risk_posts %>% 
-  group_by(species) %>% 
-  median_qi(risk_quotient)
+  group_by(species) %>%
+  summarize(mean = mean(risk_quotient),
+            sd = sd(risk_quotient))

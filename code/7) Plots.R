@@ -256,8 +256,6 @@ summary_all <- readRDS(file = "posteriors/derived_quantities/summary_all.rds")
 # total nutrients and contaminants
 
 nut_cont_plot_data <- flux_predictions %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants")) %>%
   ungroup() %>%
   group_by(year, .draw, type) %>%
   summarize(total = sum(mg_flux/1000000)) %>%
@@ -308,13 +306,15 @@ cont_twopanel <- nut_cont_plot_data %>%
 
 # total nutrients and contaminants by species
 
-nut_cont_species_plot_data <- flux_predictions %>% 
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants")) %>%
+nut_cont_species_plot_data <- flux_predictions %>%
   ungroup() %>%
   group_by(year, .draw, type, species) %>%
-  summarize(total = sum(mg_flux/1000000)) %>%
-  group_by(year, type, species) %>%
+  summarize(total = sum(mg_flux/1000000)) %>% # sum total transport across all regions
+  mutate(total = case_when(type == "Nutrients" ~ total/1000,
+                           TRUE ~ total),
+         units = case_when(type == "Nutrients" ~ "MT_yr", 
+                           TRUE ~ "kg_yr")) %>% 
+  group_by(year, type, species) %>%  # summarize transport by year
   summarize(median = median(total),
             low75 = quantile(total, probs = 0.125),
             high75 = quantile(total, probs = 1-0.125),
@@ -462,61 +462,7 @@ total_escapement_only <- salmon_mass_region_toplot %>%
 ggsave(total_escapement_only, file = "plots/total_escapement_only.jpg", width = 3.5, height = 2.7, dpi = 500)
 ggsave(nut_cont_twopanel, file = "plots/nut_cont_twopanel.jpg", width = 6, height = 2.7, dpi = 500)
 
-
-
-# 5-panel plot ------------------------------------------------------------
-
-all_series_data = total_escapement_only$data %>% 
-  mutate(type = "Escapement",
-         panel = "a) Total Escapement") %>% 
-  rename(low75 = low,
-         high75 = upper,
-         median = med,
-         high50 = upper50) %>% 
-  bind_rows(nut_twopanel$data %>%  mutate(panel = "b) Total Nutrients", species = "Total"),
-            cont_twopanel$data %>%  mutate(panel = "d) Total Contaminants", species = "Total"),
-            nut_twopanel_species$data %>%  mutate(panel = "c) Species Nutrients"),
-            cont_twopanel_species$data %>%  mutate(panel = "e) Species Contaminants")) 
-
-five_panel_plot = all_series_data %>% 
-  mutate(species = as_factor(species),
-         species = fct_relevel(species, "Total", "Chinook")) %>% 
-  ggplot(aes(x = year, y = median))  + 
-  geom_ribbon(aes(ymin = low75, ymax = high75, fill = species), alpha = 0.5) + 
-  geom_line(aes(group = species), color = "black") +
-  facet_wrap(~panel, ncol = 3, scales = "free_y") +
-  geom_text_repel(data = . %>% filter(year == 2015) %>% 
-                    distinct(year, median, species, panel) %>% 
-                    filter(species != "Total"), 
-                  aes(x = 2015,
-                      y = median, 
-                      # color = species,
-                      label = species),
-                  # color = "#FCFDBFFF",
-                  nudge_x = 10,
-                  size = 3,
-                  hjust = 0,
-                  segment.color = "black",
-                  segment.linetype = "dashed") +
-  scale_y_continuous(labels = scientific) +
-  scale_x_continuous(breaks = c(1975, 1995, 2015), limits = c(1975, 2025)) + 
-  guides(fill = "none") +
-  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 0.5) + 
-  labs(y = "kg/y",
-       x = "Year") +
-  geom_point(data = d_region_toplot %>% 
-               filter(species == "Total" & location == "All Regions") %>% 
-               mutate(panel = "a) Total Escapement"),
-             aes(y = value),
-             size = 0.3) 
-
-ggsave(five_panel_plot, file = "plots/five_panel_plot.pdf", dpi = 600, width = 12, height = 5.5)
-saveRDS(five_panel_plot, file = "plots/five_panel_plot.rds")
-
-
 # 6-panel plot ------------------------------------------------------------
-
-
 
 all_series_data = total_escapement_only$data %>% 
   mutate(type = "Escapement",
@@ -538,41 +484,6 @@ all_series_data = total_escapement_only$data %>%
                      median = med,
                      high50 = upper50) ) 
 
-six_panel_plot = all_series_data %>% 
-  mutate(species = as_factor(species),
-         species = fct_relevel(species, "Total", "Chinook")) %>% 
-  ggplot(aes(x = year, y = median))  + 
-  geom_ribbon(aes(ymin = low75, ymax = high75, fill = species), alpha = 0.5) + 
-  geom_line(aes(group = species), color = "black") +
-  facet_wrap(~panel, ncol = 2, scales = "free_y") +
-  geom_text_repel(data = . %>% filter(year == 2015) %>% 
-                    distinct(year, median, species, panel) %>% 
-                    filter(species != "Total"), 
-                  aes(x = 2015,
-                      y = median, 
-                      # color = species,
-                      label = species),
-                  # color = "#FCFDBFFF",
-                  nudge_x = 10,
-                  size = 3,
-                  hjust = 0,
-                  segment.color = "black",
-                  segment.linetype = "dashed") +
-  scale_y_continuous(labels = scientific) +
-  scale_x_continuous(breaks = c(1975, 1995, 2015), limits = c(1975, 2025)) + 
-  guides(fill = "none") +
-  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 0.5) + 
-  labs(y = "kg/y",
-       x = "Year") +
-  geom_point(data = d_region_toplot %>% 
-               filter(species == "Total" & location == "All Regions") %>% 
-               mutate(panel = "a) Total Escapement"),
-             aes(y = value),
-             size = 0.3) 
-
-ggsave(six_panel_plot, file = "plots/six_panel_plot.pdf", dpi = 600, width = 9, height = 8)
-saveRDS(six_panel_plot, file = "plots/six_panel_plot.rds")
-
 
 six_panel_totals = all_series_data %>% 
   filter(species == "Total") %>% 
@@ -583,7 +494,8 @@ six_panel_totals = all_series_data %>%
   scale_y_continuous(labels = scientific) +
   scale_x_continuous(breaks = c(1975, 1995, 2015), limits = c(1975, 2015)) + 
   guides(fill = "none") +
-  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 0.5) + 
+  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 0.5,
+                       guide = guide_legend(reverse = TRUE) ) + 
   labs(y = "kg/y",
        x = "Year") +
   geom_point(data = d_region_toplot %>% 
@@ -600,7 +512,7 @@ six_panel_totals = all_series_data %>%
 
 
 
-six_panel_species = all_series_data %>% 
+six_panel_species = all_series_data %>%
   filter(species != "Total") %>% 
   mutate(species = as_factor(species)) %>% 
   mutate(species = fct_relevel(species, "Coho", "Chinook","Chum", "Sockeye", "Pink" )) %>% 
@@ -608,7 +520,7 @@ six_panel_species = all_series_data %>%
   geom_ribbon(aes(ymin = low75, ymax = high75, fill = species), alpha = 0.8) + 
   geom_line(aes(group = species), color = "black") +
   facet_wrap(~panel, ncol = 1, scales = "free_y") +
-  scale_y_continuous(labels = scientific) +
+  scale_y_continuous(labels = comma) +
   scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
   scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
                        begin = 0.7, end = 0.15) +
@@ -616,15 +528,142 @@ six_panel_species = all_series_data %>%
        x = "Year",
        fill = "Species") +
   theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
-  guides(fill = guide_legend(override.aes = list(alpha = 1))) +
+  guides(fill = guide_legend(override.aes = list(alpha = 1),
+                             reverse = T)) +
   NULL
 
 
 six_panel_cow = six_panel_totals + six_panel_species
 
-ggsave(six_panel_cow, file = "plots/ms_plots/new_fig1.pdf", dpi = 600, width = 9, height = 9)
-ggsave(six_panel_cow, file = "plots/ms_plots/new_fig1.jpg", dpi = 600, width = 9, height = 9)
-saveRDS(six_panel_cow, file = "plots/ms_plots/new_fig1.rds")
+# ggsave(six_panel_cow, file = "plots/ms_plots/new_fig1.pdf", dpi = 600, width = 9, height = 9)
+# ggsave(six_panel_cow, file = "plots/ms_plots/new_fig1.jpg", dpi = 600, width = 9, height = 9)
+# saveRDS(six_panel_cow, file = "plots/ms_plots/new_fig1.rds")
+
+# re-do with MT for nutrients and kg for contaminants
+a = six_panel_totals$data %>% 
+  filter(grepl("a)", panel)) %>% 
+  ggplot(aes(x = year, y = median))  + 
+  geom_ribbon(aes(ymin = low75, ymax = high75), alpha = 0.5) + 
+  geom_line(color = "black") +
+  facet_wrap(~panel, ncol = 1, scales = "free_y") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
+  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
+                       begin = 0.7, end = 0.15) +
+  labs(y = "MT/y",
+       x = "Year",
+       fill = "Species") +
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  guides(fill = "none") +
+  NULL
+
+
+b = six_panel_species$data %>% 
+  filter(panel == "b) Species Escapement") %>% 
+  filter(species != "Total") %>% 
+  mutate(species = as_factor(species)) %>% 
+  mutate(species = fct_relevel(species, "Coho", "Chinook","Chum", "Sockeye", "Pink" )) %>% 
+  ggplot(aes(x = year, y = median))  + 
+  geom_ribbon(aes(ymin = low75, ymax = high75, fill = species), alpha = 0.8) + 
+  geom_line(aes(group = species), color = "black") +
+  facet_wrap(~panel, ncol = 1, scales = "free_y") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
+  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
+                       begin = 0.7, end = 0.15) +
+  labs(y = "MT/y",
+       x = "Year",
+       fill = "Species") +
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  guides(fill = "none") +
+  NULL
+
+c = six_panel_totals$data %>% 
+  filter(grepl("c)", panel)) %>% 
+  ggplot(aes(x = year, y = median/1000))  + 
+  geom_ribbon(aes(ymin = low75/1000, 
+                  ymax = high75/1000), alpha = 0.5) + 
+  geom_line(color = "black") +
+  facet_wrap(~panel, ncol = 1, scales = "free_y") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
+  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
+                       begin = 0.7, end = 0.15) +
+  labs(y = "MT/y",
+       x = "Year",
+       fill = "Species") +
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  guides(fill = "none") +
+  NULL
+
+d = six_panel_cow$data %>% 
+  filter(type == "Nutrients") %>%
+  filter(species != "Total") %>% 
+  mutate(species = as_factor(species)) %>% 
+  mutate(species = fct_relevel(species, "Coho", "Chinook","Chum", "Sockeye", "Pink" )) %>% 
+  ggplot(aes(x = year, y = median/1000))  + 
+  geom_ribbon(aes(ymin = low75/1000, ymax = high75/1000, fill = species), alpha = 0.8) + 
+  geom_line(aes(group = species), color = "black") +
+  facet_wrap(~panel, ncol = 1, scales = "free_y") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
+  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
+                       begin = 0.7, end = 0.15) +
+  labs(y = "MT/y",
+       x = "Year",
+       fill = "Species") +
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  guides(fill = guide_legend(override.aes = list(alpha = 1),
+                             reverse = T)) +
+  NULL
+
+e = six_panel_totals$data %>% 
+  filter(grepl("e)", panel)) %>% 
+  ggplot(aes(x = year, y = median))  + 
+  geom_ribbon(aes(ymin = low75, 
+                  ymax = high75), alpha = 0.5) + 
+  geom_line(color = "black") +
+  facet_wrap(~panel, ncol = 1, scales = "free_y") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
+  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
+                       begin = 0.7, end = 0.15) +
+  labs(y = "kg/y",
+       x = "Year",
+       fill = "Species") +
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  guides(fill = "none") +
+  NULL
+
+f = six_panel_cow$data %>% 
+  filter(type == "Contaminants") %>%
+  filter(species != "Total") %>% 
+  mutate(species = as_factor(species)) %>% 
+  mutate(species = fct_relevel(species, "Coho", "Chinook","Chum", "Sockeye", "Pink" )) %>% 
+  ggplot(aes(x = year, y = median))  + 
+  geom_ribbon(aes(ymin = low75, ymax = high75, fill = species), alpha = 0.8) + 
+  geom_line(aes(group = species), color = "black") +
+  facet_wrap(~panel, ncol = 1, scales = "free_y") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
+  scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
+                       begin = 0.7, end = 0.15) +
+  labs(y = "kg/y",
+       x = "Year",
+       fill = "Species") +
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  guides(fill = "none") +
+  ylim(0, 5) +
+  NULL
+
+six_panel_cow_new = a/c/e | b/d/f
+
+ggsave(six_panel_cow_new, file = "plots/ms_plots/new_fig1.pdf", dpi = 600, width = 9, height = 9)
+ggsave(six_panel_cow_new, file = "plots/ms_plots/new_fig1.jpg", dpi = 600, width = 9, height = 9)
+saveRDS(six_panel_cow_new, file = "plots/ms_plots/new_fig1.rds")
+
+
+
 
 # make plots
 
@@ -776,9 +815,7 @@ ggsave(mean_chem_plot, file = "plots/mean_chem_plot.jpg", dpi = 400, width = 6, 
 
 chem_species_prop_nutcont <- flux_predictions %>%
   filter(.draw <= 500) %>%
-  select(species, location, year, .draw, mg_flux, chemical) %>%
-  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants")) %>%
+  select(species, location, year, .draw, mg_flux, chemical, type) %>%
   group_by(species, year, .draw, type) %>%
   summarize(mg_flux = sum(mg_flux)) %>%
   pivot_wider(names_from = species, values_from = mg_flux) %>%
@@ -922,8 +959,8 @@ b_new = species_location_series %>%
   filter(panel != "All") %>%
   mutate(facet_label = case_when(chemical == "Hg" ~ "i) Hg",
                                  chemical == "PCBs" ~ "j) PCBs",
-                                 chemical == "DDT" ~ "k) DDT",
-                                 TRUE ~ "l) PBDE")) %>% 
+                                 chemical == "DDT" ~ "k) DDTs",
+                                 TRUE ~ "l) PBDEs")) %>% 
   mutate(panel = fct_relevel(panel, "Pink", "Sockeye", "Chum", "Chinook")) %>% 
   ggplot(aes(x = year, y = median)) +
   geom_linerange(aes(ymin = low75, ymax = high75, color = panel), alpha = 0.5,
@@ -949,8 +986,8 @@ b_new = species_location_series %>%
 cont_props = chem_species_total_summary %>%
   mutate(facet_label = case_when(chemical == "Hg" ~ "m) Hg",
                                  chemical == "PCBs" ~ "n) PCBs",
-                                 chemical == "DDT" ~ "o) DDT",
-                                 TRUE ~ "p) PBDE"))  %>% 
+                                 chemical == "DDT" ~ "o) DDTs",
+                                 TRUE ~ "p) PBDEs"))  %>% 
   filter(type != "Nutrients") %>% 
   ggplot(aes(x = year, y = median)) + 
   geom_area(position = "fill", aes(fill = species)) +
@@ -971,10 +1008,35 @@ cont_props = chem_species_total_summary %>%
 new_fig2 = a_new/nutrient_props/b_new/cont_props + plot_layout(guides = "collect")
 
 
+# fix MT and kg
+a_new = a_new$data %>% 
+  ggplot(aes(x = year, y = median/1000)) +
+  geom_linerange(aes(ymin = low75/1000, 
+                     ymax = high75/1000, color = panel), alpha = 0.5,
+                 size = .6) +
+  geom_point(size = 0.2, aes(color = panel)) +
+  scale_color_viridis_d(direction = -1, option = 'A', alpha = 1,
+                        begin = 0.7, end = 0.15) +
+  scale_fill_viridis_d(direction = -1, option = 'A', alpha = 1,
+                       begin = 0.7, end = 0.15) +
+  guides(color = "none",
+         fill = "none") +
+  labs(y = "Total Biotransport \n(MT/y)",
+       subtitle = "Nutrients") +
+  facet_wrap(~ facet_label, ncol = 4) +
+  scale_y_log10(labels = comma) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015)) +
+  theme_default() +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) +
+  NULL
+
+new_fig2 = a_new/nutrient_props/b_new/cont_props + plot_layout(guides = "collect")
+
+ggsave(new_fig2, file = "plots/ms_plots/new_fig2.pdf", dpi = 600, width = 8, height = 8)
 ggsave(new_fig2, file = "plots/ms_plots/new_fig2.jpg", dpi = 600, width = 8, height = 8)
 saveRDS(new_fig2, file = "plots/ms_plots/new_fig2.rds")
-
-
 
 
 
@@ -988,17 +1050,17 @@ nut_location = species_location_series %>%
                                  chemical == "EPA" ~ "d) EPA",
                                  chemical == "Hg" ~ "e) Hg",
                                  chemical == "PCBs" ~ "f) PCBs",
-                                 chemical == "DDT" ~ "g) DDT",
-                                 TRUE ~ "h) PBDE")) %>% 
+                                 chemical == "DDT" ~ "g) DDTs",
+                                 TRUE ~ "h) PBDEs")) %>% 
   filter(type == "Nutrients") %>% 
   mutate(panel = case_when(panel == "BeringSea" ~ "BS",
                            panel == "CentralAK" ~ "CAK",
                            TRUE ~ panel),
          panel = fct_relevel(panel, "BCWC", "SEAK", "CAK", "BS")) %>% 
-  ggplot(aes(x = year, y = median)) +
+  ggplot(aes(x = year, y = median/1000)) +
   # geom_linerange(aes(ymin = low75, ymax = high75), alpha = 1,
   #                size = .5) +
-  geom_ribbon(aes(ymin = low50, ymax = high50, fill = panel), alpha = 0.25) +
+  geom_ribbon(aes(ymin = low50/1000, ymax = high50/1000, fill = panel), alpha = 0.25) +
   geom_line(aes(color = panel), linewidth = 1.2) +
   # scale_color_colorblind() +
   # scale_color_brewer(type = "qual", palette = 3) +
@@ -1006,7 +1068,7 @@ nut_location = species_location_series %>%
   scale_fill_viridis_d(direction = 1, option = 'E') +
   # guides(color = "none",
   #        fill = guide_legend(override.aes = list(size = 7))) +
-  labs(y = "Total Biotransport (kg/y)",
+  labs(y = "Total Biotransport (MT/y)",
        subtitle = "Nutrients",
        color = "Region",
        fill = "Region") +
@@ -1027,8 +1089,8 @@ cont_location = species_location_series %>%
                                  chemical == "EPA" ~ "d) EPA",
                                  chemical == "Hg" ~ "e) Hg",
                                  chemical == "PCBs" ~ "f) PCBs",
-                                 chemical == "DDT" ~ "g) DDT",
-                                 TRUE ~ "h) PBDE")) %>% 
+                                 chemical == "DDT" ~ "g) DDTs",
+                                 TRUE ~ "h) PBDEs")) %>% 
   filter(type != "Nutrients") %>% 
   mutate(panel = case_when(panel == "BeringSea" ~ "BS",
                            panel == "CentralAK" ~ "CAK",
@@ -1178,7 +1240,7 @@ chem_species_location_prop_summary <- chem_species_prop %>%
                                 "DHA", 
                                 "EPA",
                                 "Hg",
-                                "DDT"),
+                                "DDTs"),
          group = case_when(species == "All" ~ "All",
                            TRUE ~ "Species"),
          units = "kg") %>%
@@ -1289,8 +1351,14 @@ species_props_mean <- diff_props %>%
   mutate(species_tl = paste0(species, "\n(TL: ", round(tl,1), ")"))
 
 prop_differences <- diff_props %>% 
+  ungroup %>% 
+  mutate(decade = case_when(year <1980 ~ "1970's",
+                            year <= 1990 ~ "1980's",
+                            year <= 2000 ~ "1990's", 
+                            year <= 2010 ~ "2000's",
+                            year <= 2020 ~ "2010's")) %>%
   ggplot(aes(x = cont_minus_nut, y = reorder(species_tl,tl))) +
-  geom_density_ridges(fill = NA, scale = 1.3,
+  geom_density_ridges(fill = NA, scale = 0.9,
                       size = 0.1,
                       aes(group = interaction(species, year),
                           color = year)) +
@@ -1315,6 +1383,8 @@ prop_differences <- diff_props %>%
         axis.text.x = element_text(size = 9),
         plot.subtitle = element_text(size = 10)) +
   NULL
+
+prop_differences
 
 saveRDS(prop_differences, file = "plots/prop_differences.rds")
 ggsave(prop_differences, file = "plots/prop_differences.jpg", dpi = 400, width = 6, height = 5)
@@ -1375,7 +1445,7 @@ library(tidybayes)
 species_ind_average = readRDS(file = "posteriors/derived_quantities/species_ind_average.rds")
 
 ratio_per_kg = species_ind_average %>% 
-  ggplot(aes(x = ratio_mgkgperfish, y = reorder(species_tl,tl))) +
+  ggplot(aes(x = ratio_kgmgperfish, y = reorder(species_tl,tl))) +
   geom_density_ridges(scale = 1, size = 0.01) +
   geom_boxplot(outlier.shape = NA, width = 0.1, size = 0.25) +
   scale_color_viridis(option = "E",
@@ -1383,7 +1453,7 @@ ratio_per_kg = species_ind_average %>%
   # geom_vline(xintercept = 1) + 
   labs(color = "Year",
        x = "Ratio of nutrients (kg/fish) to\ncontaminants (mg/fish) for individual fish") +
-  annotate("text", label = "More nutrients per cotaminant", x = 2.3, y = 0.74,
+  annotate("text", label = "More nutrients per contaminant", x = 2.3, y = 0.74,
            size = 2) +
   annotate("segment", x = 2.5, y = 0.6, xend = 4, yend = 0.6,
            arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
@@ -1415,10 +1485,6 @@ fig_4new = ratio_per_kg +
         legend.key.size = unit(0.3, 'cm'),
         axis.title.x = element_text(size = 10)) +
   NULL
-
-library(ggview)
-
-ggview(fig_4new, units = "in", width = 6.5, height = 3.5)
 
 saveRDS(fig_4new, file = "plots/ms_plots/fig_4new.rds")
 ggsave(fig_4new, file = "plots/ms_plots/fig_4new.jpg", dpi = 600, width = 6.5, height = 3.5)

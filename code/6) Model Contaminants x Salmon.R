@@ -26,7 +26,9 @@ flux_predictions <- gam_salmon_posts %>% filter(.draw <= n_iter) %>% ungroup() %
   mutate(kg_median = median(kg),
          chem_median = median(mg_kg_chem),
          chem_flux_mg_medianconc = chem_median*kg,
-         chem_flux_mg_mediafish = mg_kg_chem*kg_median)
+         chem_flux_mg_mediafish = mg_kg_chem*kg_median)  %>% 
+  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+                          TRUE ~ "Contaminants"))
 
 
 saveRDS(flux_predictions, file = "posteriors/flux_predictions.rds")

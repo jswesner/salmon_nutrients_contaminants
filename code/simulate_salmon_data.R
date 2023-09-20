@@ -2,12 +2,8 @@ library(tidyverse)
 library(janitor)
 
 # bring in original data
-fish_escapement_dont_post = read_csv("data/raw_data/fish_escapement.csv") 
-fish_mass_kgww_of_individual_fish_dont_post = read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.csv")
-
-# save original data
-write_csv(fish_escapement_dont_post, file = "data/raw_data/fish_escapement_dont_post.csv")
-write_csv(fish_mass_kgww_of_individual_fish_dont_post, file = "data/raw_data/fish_mass_kgww_of_individual_fish_dont_post.csv")
+fish_escapement_dont_post = read_csv("data/raw_data/fish_escapement_dont_post.csv") 
+fish_mass_kgww_of_individual_fish_dont_post = read_csv("data/raw_data/fish_mass_kgww_of_individual_fish_dont_post.csv")
 
 # randomize original data
 fish_escapement = fish_escapement_dont_post %>% 
@@ -24,7 +20,7 @@ fish_mass_kgww_of_individual_fish = fish_mass_kgww_of_individual_fish_dont_post 
          value = abs(value + rnorm(nrow(.), 0, sd))) %>%   # add random noise to data
   select(-sd) %>%
   pivot_wider(names_from = name, values_from = value) %>% 
-  mutate(source = "Simulated data. Contact Dr. Greg Ruggerone for raw data")
+  mutate(Source = "Simulated data. Contact Dr. Greg Ruggerone for raw data")
 
 
 

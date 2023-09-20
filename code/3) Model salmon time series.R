@@ -58,7 +58,7 @@ d = escapement_mt %>%
   mutate(y_10000 = y/10000)
 
 
-write_csv(d, file = "data/raw_data/salmon_metric_tons")
+write_csv(d, file = "data/raw_data/salmon_metric_tons.csv")
 
 
 d_short <- d %>% filter(year >= 1976) %>% 

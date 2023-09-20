@@ -5,13 +5,13 @@ EPA,Nutrients,123 ± 68,524 ± 417,109 ± 77,419 ± 194,504 ± 203,1680 ± 571,M
 P,Nutrients,57 ± 9,269 ± 42,53 ± 8,412 ± 65,264 ± 42,1055 ± 163,MT/y,Average Annual
 Hg,Contaminants,0.8 ± 0.2,2 ± 0.62,0.49 ± 0.12,1.42 ± 0.47,2 ± 0.59,7 ± 2,Kg/y,Average Annual
 PCBs,Contaminants,0.31 ± 0.15,0.32 ± 0.2,0.21 ± 0.1,0.45 ± 0.36,0.42 ± 0.21,1.7 ± 0.78,Kg/y,Average Annual
-DDT,Contaminants,0.24 ± 0.07,0.22 ± 0.08,0.16 ± 0.05,0.33 ± 0.13,0.75 ± 0.22,1.69 ± 0.44,Kg/y,Average Annual
-PBDE,Contaminants,0.07 ± 0.07,0.04 ± 0.04,0.01 ± 0.01,0.1 ± 0.12,0.05 ± 0.04,0.27 ± 0.19,Kg/y,Average Annual
+DDTs,Contaminants,0.24 ± 0.07,0.22 ± 0.08,0.16 ± 0.05,0.33 ± 0.13,0.75 ± 0.22,1.69 ± 0.44,Kg/y,Average Annual
+PBDEs,Contaminants,0.07 ± 0.07,0.04 ± 0.04,0.01 ± 0.01,0.1 ± 0.12,0.05 ± 0.04,0.27 ± 0.19,Kg/y,Average Annual
 DHA,Nutrients,4320 ± 2865,19963 ± 20095,3904 ± 3575,26413 ± 12880,30157 ± 13848,90934 ± 32148,MT,Cumulative
 EPA,Nutrients,4221 ± 2709,16604 ± 16697,3542 ± 3098,15335 ± 7753,18325 ± 8112,62475 ± 22846,MT,Cumulative
 P,Nutrients,2264 ± 368,10565 ± 1690,2076 ± 335,16388 ± 2616,10411 ± 1683,41752 ± 6537,MT,Cumulative
 N,Nutrients,20472 ± 2069,96135 ± 9175,18818 ± 1773,147303 ± 13849,94161 ± 9172,377665 ± 33731,MT,Cumulative
-PBDE,Contaminants,2 ± 2.74,1.03 ± 1.46,0.25 ± 0.4,3 ± 5,1.6 ± 1.65,9 ± 8,Kg,Cumulative
-DDT,Contaminants,9 ± 3,8 ± 3,6 ± 2,12 ± 5,29 ± 9,66 ± 18,Kg,Cumulative
+PBDEs,Contaminants,2 ± 2.74,1.03 ± 1.46,0.25 ± 0.4,3 ± 5,1.6 ± 1.65,9 ± 8,Kg,Cumulative
+DDTs,Contaminants,9 ± 3,8 ± 3,6 ± 2,12 ± 5,29 ± 9,66 ± 18,Kg,Cumulative
 PCBs,Contaminants,11 ± 6,11 ± 8,7 ± 4,13 ± 14,15 ± 9,62 ± 31,Kg,Cumulative
 Hg,Contaminants,32 ± 8,92 ± 25,19 ± 5,54 ± 19,92 ± 23,292 ± 66,Kg,Cumulative

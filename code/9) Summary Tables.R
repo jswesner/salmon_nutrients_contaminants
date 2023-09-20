@@ -30,7 +30,7 @@ fish_mass_kgww_of_individual_fish <- read_csv("data/raw_data/fish_mass_kgww_of_i
   clean_names()
 
 fish_mass_kgww_of_individual_fish %>% 
-  filter(year <= 1976) %>% 
+  filter(year >= 1976) %>% 
   pivot_longer(cols = c(-year,-units,-source)) %>% 
   mutate(species = case_when(grepl("pink", name) ~ "Pink",
                              grepl("chum", name) ~ "Chum",

@@ -128,3 +128,14 @@ d_short_removestrike = gam_salmon2$data %>% as_tibble() %>%
 gam_salmon2_removestrike = update(gam_salmon2, newdata = d_short_removestrike, iter = 1000, chains = 1)
 saveRDS(gam_salmon2_removestrike, file = "models/gam_salmon2_removestrike.rds")
 
+# Fit prior only
+gam_salmon2_prior <- brm(y_10000 ~ s(year, by = species_location) + (1|species_location),
+                   data = d_short, family = Gamma(link = "log"),
+                   iter = 1000, chains = 1,
+                   prior = c(prior(exponential(1), class = "sd"),
+                             prior(normal(2, 3), class = "Intercept"),
+                             prior(normal(0, 5), class = "b"),   # prior is posterior from gam_salmon1
+                             prior(gamma(4,1), class = "shape")), # prior is posterior from gam_salmon1
+                   file = "models/gam_salmon2_prior.rds",
+                   sample_prior = "only",
+                   cores = 4)

@@ -189,6 +189,7 @@ prior_shape = rgamma(1000, 5, 3)
 sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
                  prior_shape = prior_shape) +
+  geom_hline(yintercept = 5000) +
   scale_y_log10(labels = comma)
 
 # prior generates ranges from the literature of ~ 0 to 100 ug/kg, e.g. https://www.sciencedirect.com/science/article/pii/S0048969718343055 
@@ -230,10 +231,10 @@ prior_shape = rgamma(1000, 10, 1)
 sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
                  prior_shape = prior_shape) +
-  scale_y_log10() +
-  annotation_logticks()
+  scale_y_log10() 
 
-
+#" Salmon molar N:P ratios range from 12:1 to 15:1 (Gende 2002
+# "Gende, S. M., Edwards, R. T., Willson, M. F., & Wipfli, M. S. (2002). Pacific salmon in aquatic and terrestrial ecosystems. BioScience, 52(10), 917-928."
 # plot above generates some values above 75000 mg/kg N, but mostly lower than that. 
 
 # fit model - no random effects b/c only 6 samples total
@@ -289,7 +290,8 @@ prior_shape = rgamma(1000, 4, 2)
 sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
                  prior_shape = prior_shape) +
-  scale_y_log10()
+  scale_y_log10() +
+  geom_hline(yintercept = 3500)
 
 
 
@@ -436,7 +438,7 @@ ddt_data <- nut_cont %>%
 
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
-prior_b = rnorm(1000, -5.5, 2)
+prior_b = rnorm(1000, -7, 2)
 prior_sd = rexp(1000, 3)
 prior_shape = rgamma(1000, 5, 1)
 

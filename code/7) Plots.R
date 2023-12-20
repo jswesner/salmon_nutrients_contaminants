@@ -1490,6 +1490,48 @@ saveRDS(fig_4new, file = "plots/ms_plots/fig_4new.rds")
 ggsave(fig_4new, file = "plots/ms_plots/fig_4new.jpg", dpi = 600, width = 6.5, height = 3.5)
 ggsave(fig_4new, file = "plots/ms_plots/fig_4new.pdf", dpi = 600, width = 6.5, height = 3.5)
 
+
+# revised fig 4 -----------------------------------------------------------
+
+mean_diff_across_species = species_props %>% 
+  left_join(trophic_levels)  %>% 
+  select(-source, -species_prop) %>%  
+  group_by(year, type, .draw) %>% 
+  reframe(total_flux = sum(species_flux)) %>% 
+  pivot_wider(names_from = type, values_from = total_flux) %>% 
+  ungroup() %>% 
+  mutate(cont_minus_nut = (Nutrients/1e6/Contaminants)) %>% 
+  group_by(year) %>% 
+  mutate(mean_difference = median(cont_minus_nut))
+
+
+
+ratio_nut_cont_time = mean_diff_across_species %>% 
+  ggplot(aes(x = year, y = cont_minus_nut)) +
+  stat_pointinterval(.width = c(0.95), size = 0.4) +
+  labs(y = "Ratio of nutrient flux (kg/year)\nto contaminant flux (mg/year)",
+       x = "Year",
+       subtitle = "c)") +
+  theme_default() +
+  ylim(0, 2) +
+  theme(axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10))
+
+ggview::ggview(ratio_nut_cont_time, width = 6.5, height = 5)
+ggsave(ratio_nut_cont_time, width = 6.5, height = 5, dpi = 500, file = "plots/revision_plots/ratio_nut_cont_time.jpg")
+saveRDS(ratio_nut_cont_time, file = "plots/revision_plots/ratio_nut_cont_time.rds")
+
+fig_4new = readRDS(file = "plots/ms_plots/fig_4new.rds")
+
+
+fig_4revised = fig_4new + ratio_nut_cont_time + plot_layout(ncol = 2) 
+ggview::ggview(fig_4revised, width = 6.5, height = 7)
+ggsave(fig_4revised, width = 6.5, height = 7, dpi = 500, file = "plots/revision_plots/fig_4revised.jpg")
+saveRDS(fig_4revised, file = "plots/revision_plots/fig_4revised.rds")
+
+
+
+
 # hazard ratios -----------------------------------------------------------
 
 all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") 
@@ -1548,6 +1590,8 @@ risk_table = risk_posts %>%
   mutate(across(where(is.numeric), round, 2)) %>% 
   arrange(-tl) %>% 
   select(-tl)
+
+
 
 
 library(patchwork)

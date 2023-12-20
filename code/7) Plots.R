@@ -1492,6 +1492,12 @@ ggsave(fig_4new, file = "plots/ms_plots/fig_4new.pdf", dpi = 600, width = 6.5, h
 
 
 # revised fig 4 -----------------------------------------------------------
+species_props <- readRDS("posteriors/derived_quantities/species_props.rds")
+
+trophic_levels <- tibble(tl = c(4.3, 3.9, 3.901, 3.6, 3.5),
+                         species = c("Chinook", "Sockeye", "Coho",
+                                     "Chum", "Pink"),
+                         source = "Qin, Y., & Kaeriyama, M. (2016). Feeding habits and trophic levels of Pacific salmon (Oncorhynchus spp.) in the North Pacific Ocean. N Pac Anadromous Fish Com Bul, 6, 469-481.")
 
 mean_diff_across_species = species_props %>% 
   left_join(trophic_levels)  %>% 
@@ -1503,8 +1509,6 @@ mean_diff_across_species = species_props %>%
   mutate(cont_minus_nut = (Nutrients/1e6/Contaminants)) %>% 
   group_by(year) %>% 
   mutate(mean_difference = median(cont_minus_nut))
-
-
 
 ratio_nut_cont_time = mean_diff_across_species %>% 
   ggplot(aes(x = year, y = cont_minus_nut)) +
@@ -1529,7 +1533,59 @@ ggview::ggview(fig_4revised, width = 6.5, height = 7)
 ggsave(fig_4revised, width = 6.5, height = 7, dpi = 500, file = "plots/revision_plots/fig_4revised.jpg")
 saveRDS(fig_4revised, file = "plots/revision_plots/fig_4revised.rds")
 
+ggview::ggview(ratio_nut_cont_time + labs(subtitle = ""), width = 6.5, height = 3)
+ggsave(ratio_nut_cont_time + labs(subtitle = ""), width = 6.5, height = 7, dpi = 500, file = "plots/revision_plots/ratio_nut_cont_time.jpg")
+saveRDS(ratio_nut_cont_time + labs(subtitle = ""), file = "plots/revision_plots/ratio_nut_cont_time.rds")
 
+
+# revised_fig 4 by species ------------------------------------------------
+
+species_flux = flux_predictions %>%
+  mutate(type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+                          TRUE ~ "Contaminants")) %>%
+  group_by(year, type, .draw) %>%
+  reframe(species_flux = sum(mg_flux)) 
+
+species_flux %>% 
+  pivot_wider(names_from = type, values_from = species_flux) %>% 
+  mutate(prop = Nutrients/1e6/Contaminants) %>% 
+  group_by(year) %>% 
+  median_qi(prop) %>% 
+  ggplot(aes(x = year, y = prop, ymin = .lower, ymax = .upper)) + 
+  geom_pointrange()
+
+
+trophic_levels <- tibble(tl = c(4.3, 3.9, 3.901, 3.6, 3.5),
+                         species = c("Chinook", "Sockeye", "Coho",
+                                     "Chum", "Pink"),
+                         source = "Qin, Y., & Kaeriyama, M. (2016). Feeding habits and trophic levels of Pacific salmon (Oncorhynchus spp.) in the North Pacific Ocean. N Pac Anadromous Fish Com Bul, 6, 469-481.")
+
+mean_diff_across_species = species_props %>% 
+  left_join(trophic_levels)  %>% 
+  select(-source, -species_prop) %>%  
+  group_by(year, type, species, .draw) %>% 
+  reframe(total_flux = sum(species_flux)) %>% 
+  pivot_wider(names_from = type, values_from = total_flux) %>% 
+  ungroup() %>% 
+  mutate(cont_minus_nut = (Nutrients/1e6/Contaminants)) %>% 
+  group_by(year, species) %>% 
+  mutate(mean_difference = median(cont_minus_nut))
+
+ratio_nut_cont_time_species = mean_diff_across_species %>% 
+  ggplot(aes(x = year, y = cont_minus_nut)) +
+  stat_pointinterval(.width = c(0.95), size = 0.4) +
+  labs(y = "Ratio of nutrient flux (kg/year)\nto contaminant flux (mg/year)",
+       x = "Year",
+       subtitle = "c)") +
+  theme_default() +
+  ylim(0, 2) +
+  theme(axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10)) +
+  facet_wrap(~species)
+
+ggview::ggview(ratio_nut_cont_time_species, width = 6.5, height = 5)
+ggsave(ratio_nut_cont_time_species, width = 6.5, height = 5, dpi = 500, file = "plots/revision_plots/ratio_nut_cont_time_species.jpg")
+saveRDS(ratio_nut_cont_time_species, file = "plots/revision_plots/ratio_nut_cont_time_species.rds")
 
 
 # hazard ratios -----------------------------------------------------------

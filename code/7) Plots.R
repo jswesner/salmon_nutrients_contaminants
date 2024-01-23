@@ -466,19 +466,19 @@ ggsave(nut_cont_twopanel, file = "plots/nut_cont_twopanel.jpg", width = 6, heigh
 
 all_series_data = total_escapement_only$data %>% 
   mutate(type = "Escapement",
-         panel = "a) Total Escapement") %>% 
+         panel = "b) Total returns") %>% 
   rename(low75 = low,
          high75 = upper,
          median = med,
          high50 = upper50) %>% 
-  bind_rows(nut_twopanel$data %>%  mutate(panel = "c) Total Nutrients", species = "Total"),
-            cont_twopanel$data %>%  mutate(panel = "e) Total Contaminants", species = "Total"),
-            nut_twopanel_species$data %>%  mutate(panel = "d) Species Nutrients"),
-            cont_twopanel_species$data %>%  mutate(panel = "f) Species Contaminants"),
+  bind_rows(nut_twopanel$data %>%  mutate(panel = "d) Total Nutrients", species = "Total"),
+            cont_twopanel$data %>%  mutate(panel = "f) Total Contaminants", species = "Total"),
+            nut_twopanel_species$data %>%  mutate(panel = "g) Species Nutrients"),
+            cont_twopanel_species$data %>%  mutate(panel = "e) Species Contaminants"),
             salmon_mass_region_toplot %>% 
               filter(species != "Total" & location == "All Regions") %>% 
               mutate(type = "Escapement",
-                     panel = "b) Species Escapement")%>% 
+                     panel = "c) Species returns")%>% 
               rename(low75 = low,
                      high75 = upper,
                      median = med,
@@ -500,12 +500,12 @@ six_panel_totals = all_series_data %>%
        x = "Year") +
   geom_point(data = d_region_toplot %>% 
                filter(species == "Total" & location == "All Regions") %>% 
-               mutate(panel = "a) Total Escapement"),
+               mutate(panel = "b) Total returns"),
              aes(y = value),
              size = 0.3) +
   geom_point(data = d_region_toplot %>% 
                filter(species == "Total" & location == "All Regions") %>% 
-               mutate(panel = "a) Total Escapement"),
+               mutate(panel = "b) Total returns"),
              aes(y = value),
              size = 0.3) +
   theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) 
@@ -540,8 +540,8 @@ six_panel_cow = six_panel_totals + six_panel_species
 # saveRDS(six_panel_cow, file = "plots/ms_plots/new_fig1.rds")
 
 # re-do with MT for nutrients and kg for contaminants
-a = six_panel_totals$data %>% 
-  filter(grepl("a)", panel)) %>% 
+b = six_panel_totals$data %>% 
+  filter(grepl("b)", panel)) %>% 
   ggplot(aes(x = year, y = median))  + 
   geom_ribbon(aes(ymin = low75, ymax = high75), alpha = 0.5) + 
   geom_line(color = "black") +
@@ -550,16 +550,21 @@ a = six_panel_totals$data %>%
   scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
   scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
                        begin = 0.7, end = 0.15) +
-  labs(y = "MT/y",
+  labs(y = expression("MT"~y^-1),
        x = "Year",
        fill = "Species") +
-  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
+        text = element_text(family = "sans")) + 
   guides(fill = "none") +
+  geom_point(data = d_region_toplot %>% 
+               filter(species == "Total" & location == "All Regions"),
+             aes(y = value),
+             size = 0.3) +
   NULL
 
 
-b = six_panel_species$data %>% 
-  filter(panel == "b) Species Escapement") %>% 
+c = six_panel_species$data %>% 
+  filter(panel == "c) Species returns") %>% 
   filter(species != "Total") %>% 
   mutate(species = as_factor(species)) %>% 
   mutate(species = fct_relevel(species, "Coho", "Chinook","Chum", "Sockeye", "Pink" )) %>% 
@@ -571,15 +576,16 @@ b = six_panel_species$data %>%
   scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
   scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
                        begin = 0.7, end = 0.15) +
-  labs(y = "MT/y",
+  labs(y = expression("MT"~y^-1),
        x = "Year",
        fill = "Species") +
-  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
+        text = element_text(family = "sans")) + 
   guides(fill = "none") +
   NULL
 
-c = six_panel_totals$data %>% 
-  filter(grepl("c)", panel)) %>% 
+d = six_panel_totals$data %>% 
+  filter(grepl("d)", panel)) %>% 
   ggplot(aes(x = year, y = median/1000))  + 
   geom_ribbon(aes(ymin = low75/1000, 
                   ymax = high75/1000), alpha = 0.5) + 
@@ -589,36 +595,39 @@ c = six_panel_totals$data %>%
   scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
   scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
                        begin = 0.7, end = 0.15) +
-  labs(y = "MT/y",
+  labs(y = expression("MT"~y^-1),
        x = "Year",
        fill = "Species") +
-  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
+        text = element_text(family = "sans")) + 
   guides(fill = "none") +
   NULL
 
-d = six_panel_cow$data %>% 
+e = six_panel_cow$data %>% 
   filter(type == "Nutrients") %>%
   filter(species != "Total") %>% 
   mutate(species = as_factor(species)) %>% 
-  mutate(species = fct_relevel(species, "Coho", "Chinook","Chum", "Sockeye", "Pink" )) %>% 
-  ggplot(aes(x = year, y = median/1000))  + 
-  geom_ribbon(aes(ymin = low75/1000, ymax = high75/1000, fill = species), alpha = 0.8) + 
+  mutate(species = fct_relevel(species, "Coho", "Chinook","Chum", "Sockeye", "Pink" ),
+         panel = "e) Species nutrients") %>% 
+  ggplot(aes(x = year, y = median))  + 
+  geom_ribbon(aes(ymin = low75, ymax = high75, fill = species), alpha = 0.8) + 
   geom_line(aes(group = species), color = "black") +
   facet_wrap(~panel, ncol = 1, scales = "free_y") +
   scale_y_continuous(labels = comma) +
   scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
   scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
                        begin = 0.7, end = 0.15) +
-  labs(y = "MT/y",
+  labs(y = expression("MT"~y^-1),
        x = "Year",
        fill = "Species") +
-  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
+        text = element_text(family = "sans")) + 
   guides(fill = guide_legend(override.aes = list(alpha = 1),
                              reverse = T)) +
   NULL
 
-e = six_panel_totals$data %>% 
-  filter(grepl("e)", panel)) %>% 
+f = six_panel_totals$data %>% 
+  filter(grepl("f)", panel)) %>% 
   ggplot(aes(x = year, y = median))  + 
   geom_ribbon(aes(ymin = low75, 
                   ymax = high75), alpha = 0.5) + 
@@ -631,15 +640,17 @@ e = six_panel_totals$data %>%
   labs(y = "kg/y",
        x = "Year",
        fill = "Species") +
-  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
+        text = element_text(family = "sans")) + 
   guides(fill = "none") +
   NULL
 
-f = six_panel_cow$data %>% 
+g = six_panel_cow$data %>% 
   filter(type == "Contaminants") %>%
   filter(species != "Total") %>% 
   mutate(species = as_factor(species)) %>% 
-  mutate(species = fct_relevel(species, "Coho", "Chinook","Chum", "Sockeye", "Pink" )) %>% 
+  mutate(species = fct_relevel(species, "Coho", "Chinook","Chum", "Sockeye", "Pink" ),
+         panel = "g) Species contaminants") %>% 
   ggplot(aes(x = year, y = median))  + 
   geom_ribbon(aes(ymin = low75, ymax = high75, fill = species), alpha = 0.8) + 
   geom_line(aes(group = species), color = "black") +
@@ -651,12 +662,13 @@ f = six_panel_cow$data %>%
   labs(y = "kg/y",
        x = "Year",
        fill = "Species") +
-  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) + 
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
+        text = element_text(family = "sans")) + 
   guides(fill = "none") +
   ylim(0, 5) +
   NULL
 
-six_panel_cow_new = a/c/e | b/d/f
+six_panel_cow_new = b/d/f | c/e/g
 
 ggsave(six_panel_cow_new, file = "plots/ms_plots/new_fig1.pdf", dpi = 600, width = 9, height = 9)
 ggsave(six_panel_cow_new, file = "plots/ms_plots/new_fig1.jpg", dpi = 600, width = 9, height = 9)

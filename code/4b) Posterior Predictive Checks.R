@@ -1,6 +1,7 @@
 library(brms)
 library(tidyverse)
 library(ggridges)
+library(bayesplot)
 source("code/functions.R")
 
 # check models
@@ -120,7 +121,7 @@ escapement_pvalue = post_gam_preds %>%
   reframe(p_value = sum(diff>0)/nrow(.)) %>% 
   mutate(p_value = round(p_value, 2))
 
-pp_check_colors = color_scheme_get()
+pp_check_colors = bayesplot::color_scheme_get()
 
 theme_set(bayesplot::theme_default())
 
@@ -147,8 +148,8 @@ escapement_stat = post_gam_preds %>%
        subtitle = paste("Bayes P = ", escapement_pvalue[[1]]),
        x = "Escapement metric tons wet mass/yr")
   
-ggview::ggview(escapement_stat, width = 4, height = 4)
-ggsave(escapement_stat, width = 4, height = 4, file = "plots/ms_plots/postpred_escapement.jpg",
+ggview::ggview(escapement_stat, width = 6.5, height = 6.5)
+ggsave(escapement_stat, width = 6.5, height = 6.5, file = "plots/ms_plots/postpred_escapement.jpg",
        dpi = 500)
 saveRDS(escapement_stat, file =  "plots/ms_plots/postpred_escapement.rds")
 

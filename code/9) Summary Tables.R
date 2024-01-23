@@ -382,6 +382,7 @@ chem_species_prop %>%
   print(n = Inf)
 
 # total biotransport by region
+# Table S3
 change_1976_2015 <- flux_predictions %>% 
   filter(year == 1976 | year ==2015) %>% 
   mutate(kg_flux = mg_flux/1e6) %>% 
@@ -408,6 +409,22 @@ change_1976_2015 <- flux_predictions %>%
 
 write_csv(change_1976_2015, file = "tables/ms_tables/tbl7_change_1976_2015.csv")  
   
+# summarize table s3 by contaminant
+flux_predictions %>% 
+  filter(year == 1976 | year ==2015) %>% 
+  mutate(kg_flux = mg_flux/1e6) %>% 
+  dplyr::select(year, chemical, .draw, kg_flux, location, type) %>% 
+  group_by(year, .draw, type) %>% 
+  reframe(biotransport = sum(kg_flux)) %>% 
+  pivot_wider(names_from = year, values_from = biotransport) %>% 
+  mutate(change = `2015` - `1976`,
+         percent_change = `2015`/`1976`) %>% 
+  group_by(type) %>% 
+  summarize(kg_yr = median(change),
+            percent_diff = median(percent_change) - 1) 
+
+
+
 # total biotransport by species
 change_1976_2015_species <- flux_predictions %>% 
   filter(year == 1976 | year ==2015) %>% 

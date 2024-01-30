@@ -301,6 +301,11 @@ fig4_data = bind_rows(diff_props, species_ind_average)
 
 write_csv(fig4_data, file = "plots/fig4_data.csv")
 
+
+# Figure 5 ----------------------------------------------------------------
+
+
+
 # Figure ED2 --------------------------------------
 flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
 

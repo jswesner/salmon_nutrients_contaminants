@@ -301,7 +301,7 @@ ggsave(fig4_plot, file = "plots/fig4_plot.pdf", dpi = 600, width = 6.5, height =
 
 
 # Figure 5 ----------------------------------------------------------------
-# Note: Need to get data for Figure 5a.
+# Note: Need to get data for Figure 5a Collin made that panel.
 # 1) load data
 fig5_data = read_csv(file = "plots/fig5_data.csv")
 
@@ -324,8 +324,6 @@ fig5_plot = fig5_data %>%
         axis.text.x = element_text(size = 9)) +
   # scale_x_log10() +
   NULL
-
-
 
 saveRDS(fig5_plot, file = "plots/fig5_plot.rds")
 ggsave(fig5_plot, file = "plots/fig5_plot.jpg", width = 5, height = 5, units = "in", dpi = 500 )

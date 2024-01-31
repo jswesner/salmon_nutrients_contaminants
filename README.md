@@ -28,9 +28,12 @@ biomass. Fits Bayesian Generalized Additive Models to estimate the
 escapement of salmon biomass across time, species, and regions. NOTE:
 The data included here are NOT the raw data. Instead, the data are
 simulated and to be used for example code only. For the correct raw
-data, contact Dr. Greg Ruggerone: gruggerone@nrccorp.com.
+data, contact Dr. Greg Ruggerone: <gruggerone@nrccorp.com>.
 
-**4) Posterior Predictive Checks.R**: Conducts posterior predictive
+**4a) Prior Predictive Checks.R**: Conducts prior predictive checks on
+the models fit in steps 2 and 3.
+
+**4b) Posterior Predictive Checks.R**: Conducts posterior predictive
 checks on the models fit in steps 2 and 3.
 
 **5) Stack Posteriors.R**: Combines posteriors from the separate models
@@ -41,8 +44,11 @@ later.
 contaminants/nutrients by the posteriors for salmon escapement to
 generate a distribution of contaminant and nutrient escapement.
 
-**7) Plots.R**: Creates all of the figures in the manuscript (plus
-additional figures).
+**7a) Wrangle Plot Data.R**: Wrangles the posteriors to make underlying
+data for the figures in the main text and in the Extended Data.
+
+**7b) Make Plots.R** Uses the wrangled data from 7a to make the figures
+in the main text and in the Extended Data.
 
 **8) Sensitivity Analysis.R**: Conducts a sensitivity analysis to
 determine the relative contributions of salmon abundance, salmon

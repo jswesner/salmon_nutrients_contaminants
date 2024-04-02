@@ -244,8 +244,8 @@ prior_post_parameters = prior_post_params %>%
   facet_wrap(~analyte, ncol = 2) +
   coord_flip()  + 
   scale_color_manual(values = c("#000000", "#e69f00")) +
-  labs(x = "Parameter Value",
-       y = "Parameter Name",
+  labs(y = "Parameter Value",
+       x = "Parameter Name",
        color = "") +
   theme_default() 
 
@@ -254,6 +254,28 @@ ggsave(prior_post_parameters, width = 6.5, height = 8,
        file = "plots/ms_plots/prior_post_parameters.jpg", dpi = 500)
 saveRDS(prior_post_parameters, file = "plots/ms_plots/prior_post_parameters.rds")
 
+
+# show for N
+prior_post_params %>% 
+  filter(analyte == "a) N") %>% 
+  group_by(analyte, model, name) %>% 
+  median_qi(value) %>% 
+  ggplot(aes(x = name, color = model, y = value)) + 
+  # stat_pointinterval(position = position_dodge(width = 0.5),
+  #                    size = 0.02) +
+  # stat_slab(position = position_dodge(width = 0.5),
+  #                    size = 0.4) +
+  geom_point(size = 0.4, position = position_dodge(width = 0.5)) +
+  geom_linerange(aes(ymin = .lower, ymax = .upper), 
+                 linewidth = 0.1, 
+                 position = position_dodge(width = 0.5)) + 
+  facet_wrap(~name, ncol = 2, scales = "free") +
+  coord_flip()  + 
+  scale_color_manual(values = c("#000000", "#e69f00")) +
+  labs(x = "Parameter Value",
+       y = "Parameter Name",
+       color = "") +
+  theme_default() 
 
 # Escapement
 escapement_params_prior = gam_salmon2_prior %>% as_draws_df() %>% mutate(model = "Prior")

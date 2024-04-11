@@ -18,7 +18,7 @@ pbde_model <- readRDS("models/pbde_model.rds")
 ddt_model <- readRDS("models/ddt_model.rds")
 
 # 2) Posterior predictive checks
-pp_check(gam_salmon2) + scale_x_log10()
+# pp_check(gam_salmon2) + scale_x_log10()
 pp_check(hg_model) + scale_x_log10()
 pp_check(pcb_model) + scale_x_log10()
 pp_check(nit_model) + scale_x_log10()
@@ -26,7 +26,7 @@ pp_check(phos_model) + scale_x_log10()
 pp_check(dha_model) + scale_x_log10()
 pp_check(epa_model) + scale_x_log10()
 
-pp_check(gam_salmon2, type = "boxplot") + scale_y_log10()
+# pp_check(gam_salmon2, type = "boxplot") + scale_y_log10()
 pp_check(hg_model, type = "boxplot") + scale_y_log10()
 pp_check(pcb_model, type = "boxplot") + scale_y_log10()
 pp_check(nit_model, type = "boxplot") + scale_y_log10()

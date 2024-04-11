@@ -101,8 +101,8 @@ plot(conditional_effects(hg_model), points = T)
 
 #extract posteriors
 
-hg_posts <- hg_model$data %>% 
-  data_grid(species) %>% 
+hg_posts <- hg_data %>% ungroup %>% 
+  distinct(species, concentration_units_standardized)%>% 
   add_epred_draws(hg_model, re_formula = NA) %>%
   mutate(chemical = "Hg")
 
@@ -155,8 +155,8 @@ plot(conditional_effects(dha_model), points = T)
 
 #extract posteriors
 
-dha_posts <- dha_model$data %>% 
-  data_grid(species) %>%
+dha_posts <- dha_data %>% ungroup %>% 
+  distinct(species, concentration_units_standardized) %>% 
   add_epred_draws(dha_model, re_formula = NA) %>% 
   mutate(chemical = "DHA")
 
@@ -209,8 +209,8 @@ plot(conditional_effects(epa_model), points = T)
 
 #extract posteriors
 
-epa_posts <-  epa_model$data %>%
-  data_grid(species) %>% 
+epa_posts <-  epa_data %>% ungroup %>% 
+  distinct(species, concentration_units_standardized) %>% 
   add_epred_draws(epa_model, re_formula = NA) %>% 
   mutate(chemical = "EPA")
 
@@ -220,7 +220,9 @@ saveRDS(epa_posts, file = "posteriors/epa_posts.rds")
 
 #check for duplicates
 nit_data <- nut_cont %>% 
-  filter(chemical == "N") 
+  filter(chemical == "N") %>% 
+  mutate(region = case_when(is.na(region) ~ "All",
+                            TRUE ~ region))
 
 #check priors
 #plot priors - only for one species, since all will be the same (same prior)
@@ -231,27 +233,26 @@ prior_shape = rgamma(1000, 10, 1)
 sim_gamma_priors(prior_b = prior_b,
                  prior_sd = prior_sd,
                  prior_shape = prior_shape) +
-  scale_y_log10() 
+  scale_y_log10() +
+  geom_hline(yintercept = 25000)
 
 #" Salmon molar N:P ratios range from 12:1 to 15:1 (Gende 2002
 # "Gende, S. M., Edwards, R. T., Willson, M. F., & Wipfli, M. S. (2002). Pacific salmon in aquatic and terrestrial ecosystems. BioScience, 52(10), 917-928."
 # plot above generates some values above 75000 mg/kg N, but mostly lower than that. 
 
 # fit model - no random effects b/c only 6 samples total
-nit_model <- brm(mean_concentration_standardized ~ 1 + (1|authors) + (1|region),
+nit_model <- brm(mean_concentration_standardized ~ 1 + species + (1|authors) + (1|region),
                  family = Gamma(link = "log"),
                  data = nit_data,
                  prior = c(prior(normal(10, 0.5), class = "Intercept"),
-                           prior(gamma(10, 1), class = "shape"),
-                           prior(exponential(5), class = "sd")),
-                 file = "models/nit_model.rds",
-                 file_refit = "on_change",
-                 cores = 4)
-
+          prior(gamma(10, 1), class = "shape"),
+          prior(normal(0, 0.5), class = "b"),
+          prior(exponential(5), class = "sd")),
+          file = "models/nit_model.rds",
+          file_refit = "on_change",
+          cores = 4)
 
 # extract posteriors
-
-
 # posterior extraction is slightly different code b/c there are no fixed effects in this model
 nit_posts <- as_draws_df(nit_model) %>% 
   mutate(.draw = 1:nrow(.)) %>% 
@@ -259,12 +260,19 @@ nit_posts <- as_draws_df(nit_model) %>%
          chemical = "N") %>% 
   expand_grid(species = nit_data %>% filter(species != "All") %>% distinct(species) %>% pull)
 
+nit_posts = nit_data %>% ungroup %>% 
+  distinct(species, authors, region, concentration_units_standardized) %>% 
+  add_epred_draws(nit_model) %>% 
+  group_by(species, concentration_units_standardized, .draw) %>% 
+  reframe(.epred = mean(.epred)) %>% 
+  mutate(chemical = "N")
 
 nit_posts %>% 
   ggplot(aes(x = species, y = .epred)) +
   geom_violin() +
-  geom_point(data = nit_data %>% filter(species != "All"),
-             aes(y = mean_concentration_standardized))
+  geom_point(data = nit_data,
+             aes(y = mean_concentration_standardized)) +
+  ylim(15000, 60000)
 
 saveRDS(nit_posts, file = "posteriors/nit_posts.rds")
 
@@ -307,20 +315,20 @@ phos_model <- brm(mean_concentration_standardized ~ 1 + (1|authors) + (1|region)
                   cores = 4)
 
 # extract posteriors
-phos_posts <- as_draws_df(phos_model) %>% 
-  mutate(.draw = 1:nrow(.)) %>% 
-  mutate(.epred = exp(b_Intercept),
-         chemical = "P") %>% 
-  expand_grid(species = phos_data %>% filter(species != "All") %>% distinct(species) %>% pull)
+phos_posts = phos_data %>% ungroup %>% 
+  distinct(species, authors, region, concentration_units_standardized) %>% 
+  add_epred_draws(phos_model) %>% 
+  group_by(species, concentration_units_standardized, .draw) %>% 
+  reframe(.epred = mean(.epred)) %>% 
+  mutate(chemical = "P")
 
 phos_posts %>% 
   ggplot(aes(x = species, y = .epred)) +
   geom_violin() +
-  geom_point(data = phos_data %>% filter(species != "All"),
-             aes(y = mean_concentration_standardized))
+  geom_point(data = phos_data,
+             aes(y = mean_concentration_standardized)) 
 
 saveRDS(phos_posts, file = "posteriors/phos_posts.rds")
-
 
 # PCB ----------------------------------------------------------------------
 
@@ -365,8 +373,8 @@ pcb_model <- brm(mean_concentration_standardized ~ 0 + species + (1|authors) + (
 plot(conditional_effects(pcb_model), points = T)
 
 #extract posteriors
-pcb_posts <- pcb_model$data %>% 
-  data_grid(species) %>% 
+pcb_posts <- pcb_data %>% ungroup %>% 
+  distinct(species, concentration_units_standardized) %>% 
   add_epred_draws(pcb_model, re_formula = NA) %>% 
   mutate(chemical = "PCBs")
 
@@ -418,8 +426,8 @@ plot(conditional_effects(pbde_model), points = T)
 
 #extract posteriors
 
-pbde_posts <- pbde_model$data %>% 
-  data_grid(species) %>% 
+pbde_posts <-  pbde_data %>% ungroup %>% 
+  distinct(species, concentration_units_standardized) %>% 
   add_epred_draws(pbde_model, re_formula = NA) %>% 
   mutate(chemical = "PBDE")
 
@@ -465,8 +473,8 @@ plot(conditional_effects(ddt_model), points = T)
 
 #extract posteriors
 
-ddt_posts <- ddt_model$data %>% 
-  data_grid(species) %>% 
+ddt_posts <- ddt_data %>% ungroup %>% 
+  distinct(species, concentration_units_standardized) %>% 
   add_epred_draws(ddt_model, re_formula = NA) %>%
   mutate(chemical = "DDT")
 

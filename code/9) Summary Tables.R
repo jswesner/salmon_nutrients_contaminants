@@ -145,7 +145,7 @@ chem_species_prop <- readRDS("posteriors/chem_species_prop.rds")
 
 mean_subsidy_concentration = all_chem_posts %>% 
   group_by(species, chemical, type, units) %>% 
-  median_qi(.epred) %>% 
+  tidybayes::mean_qi(.epred) %>% 
   select(species, chemical, .epred) %>% 
   pivot_wider(names_from = species, values_from = .epred)
 
@@ -621,10 +621,11 @@ mean_fish_size <- fish_mass_kgww_of_individual_fish %>%
 
 biotransport_potential_mg_per_individual <- all_chem_posts %>% 
   left_join(mean_fish_size) %>% 
-  mutate(milligrams_per_fish = (.epred)) %>% 
+  mutate(milligrams_per_fish = (.epred)*mean_size_kg) %>% 
   group_by(species, chemical, type) %>% 
   summarize(mean_milligrams_per_fish = mean(milligrams_per_fish)) %>% 
-  pivot_wider(names_from = species, values_from = mean_milligrams_per_fish)
+  pivot_wider(names_from = species, values_from = mean_milligrams_per_fish) %>% 
+  select(chemical, type, All, Chinook, Coho, Sockeye, Chum, Pink)
 
 
 write_csv(biotransport_potential_mg_per_individual, file = "tables/ms_tables/tbl8_biotransport_potential_mg_per_individual.csv")

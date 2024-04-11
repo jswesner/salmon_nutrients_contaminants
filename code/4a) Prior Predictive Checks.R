@@ -272,8 +272,8 @@ prior_post_params %>%
   facet_wrap(~name, ncol = 2, scales = "free") +
   coord_flip()  + 
   scale_color_manual(values = c("#000000", "#e69f00")) +
-  labs(x = "Parameter Value",
-       y = "Parameter Name",
+  labs(y = "Parameter Value",
+       x = "Parameter Name",
        color = "") +
   theme_default() 
 
@@ -309,8 +309,8 @@ prior_post_parameters_escapement = escapement_params %>%
                  position = position_dodge(width = 0.5)) + 
   coord_flip()  + 
   scale_color_manual(values = c("#000000", "#e69f00")) +
-  labs(x = "Parameter Value",
-       y = "Parameter Name",
+  labs(y = "Parameter Value",
+       x = "Parameter Name",
        color = "") +
   theme_default() +
   theme(axis.text.y = element_text(size = 9))

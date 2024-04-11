@@ -4,12 +4,12 @@ library(janitor)
 library(brms)
 
 # This script wrangles the posteriors to make the figures in the manuscript. It should all run well, but some code takes a 
-# few minutes. In those cases, we commented out that code and load a previously saved version instead.
+# few minutes. In those cases, we comment out that code and load a previously saved version instead.
 
 # Figure 1 ----------------------------------------------------------------
 # load posteriors that underlie the figures
 gam_salmon_posts <- readRDS("posteriors/gam_salmon_posts.rds") # Salmon escapement in kg wet mass
-flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
+flux_predictions <- readRDS(file = "posteriors/full_posteriors/flux_predictions.rds") # posterior chem export
 
 # wrangle salmon escapement total and per species
 
@@ -94,7 +94,7 @@ write_csv(fig1_data, file = "plots/fig1_data.csv")
 
 
 # Figure 2 ----------------------------------------------------------------
-flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
+# flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
 
 # species_chem_nut_cont_flux = flux_predictions %>%
 #   filter(.draw <= 500) %>% 
@@ -151,7 +151,7 @@ fig2_data = bind_rows(total_flux_species,
 write_csv(fig2_data, file = "plots/fig2_data.csv")
 
 # Figure 3 ----------------------------------------------------------------
-flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
+# flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
 
 # location_chem_nut_cont_flux = flux_predictions %>%
 #   filter(.draw <= 500) %>%
@@ -171,10 +171,10 @@ add_fig3_labels = location_chem_nut_cont_flux %>% ungroup %>%
                            chemical == "P" ~ "b) P",
                            chemical == "DHA" ~ "c) DHA",
                            chemical == "EPA" ~ "d) EPA",
-                           chemical == "Hg" ~ "i) Hg",
-                           chemical == "PCBs" ~ "j) PCBs",
-                           chemical == "DDTs" ~ "k) DDTs",
-                           chemical == "PBDEs" ~ "l) PBDEs"),
+                           chemical == "Hg" ~ "e) Hg",
+                           chemical == "PCBs" ~ "f) PCBs",
+                           chemical == "DDTs" ~ "g) DDTs",
+                           chemical == "PBDEs" ~ "h) PBDEs"),
          location_fixed = case_when(location == "BeringSea" ~ "BS",
                               location == "CentralAK" ~ "CAK",
                               TRUE ~ location)) %>% 
@@ -191,16 +191,18 @@ fig3_data = location_chem_nut_cont_flux %>%
             high75 = quantile(total, probs = 1-0.125),
             low50 = quantile(total, probs = 0.25),
             high50 = quantile(total, probs = 1-0.25)) %>%
-  ungroup()
+  ungroup() %>% 
+  mutate(location = as.factor(location),
+         location = fct_relevel(location, "BCWC", "SEAK", "CAK", "BS"))
   
-
-saveRDS(location_chem_nut_cont_flux_labeled, file = "posteriors/location_chem_nut_cont_flux_labeled.rds")
+write_csv(fig3_data, file = "plots/fig3_data.csv")
+# saveRDS(location_chem_nut_cont_flux_labeled, file = "posteriors/location_chem_nut_cont_flux_labeled.rds")
 
 location_chem_nut_cont_flux_labeled = readRDS(file = "posteriors/location_chem_nut_cont_flux_labeled.rds")
 
 
 # Figure 4 ----------------------------------------------------------------
-flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
+# flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
 all_chem_posts = readRDS(file = "posteriors/all_chem_posts.rds")
 
 # calculate proportions of 
@@ -221,7 +223,7 @@ species_props <- readRDS("posteriors/derived_quantities/species_props.rds") %>%
 # check that it adds to ~ 1 (approximately because it is a sum of medians)
 species_props %>% 
   group_by(year, type, .draw, panel) %>% 
-  summarize(sum = sum(species_prop))
+  summarize(sum = sum(median_prop))
 
 # add trophic levels
 trophic_levels <- tibble(tl = c(4.3, 3.9, 3.901, 3.6, 3.5),
@@ -231,8 +233,8 @@ trophic_levels <- tibble(tl = c(4.3, 3.9, 3.901, 3.6, 3.5),
 
 diff_props <- species_props %>% 
   left_join(trophic_levels) %>%  
-  select(-species_flux, -total_flux) %>% 
-  pivot_wider(names_from = type, values_from = species_prop) %>% 
+  # select(-species_flux, -total_flux) %>% 
+  pivot_wider(names_from = type, values_from = median_prop) %>% 
   ungroup() %>% 
   mutate(cont_minus_nut = (Nutrients-Contaminants),
          species = fct_relevel(species, "Chinook", "Coho", "Sockeye", "Chum")) %>% 
@@ -306,6 +308,83 @@ write_csv(fig4_data, file = "plots/fig4_data.csv")
 
 
 
+
+
+# Figure ED1 --------------------------------------------------------------
+# data for panel b (Do b first becase a can be added from b)
+gam_salmon_posts <- readRDS(file = "posteriors/gam_salmon_posts.rds")
+all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") 
+
+species_order = gam_salmon_posts %>% ungroup %>% distinct(species) %>% 
+  mutate(species_order = as.factor(species),
+         species_order = fct_relevel(species_order, "Pink", "Sockeye", "Chum", "Chinook", "Coho"))
+
+fig_ed1b_lines <- gam_salmon_posts %>% 
+  select(-metric_tons) %>% 
+  #calculate total Hg and kg 
+  pivot_wider(names_from = location, values_from = kg) %>%
+  mutate(Total = BCWC + BeringSea + CentralAK + SEAK) %>% 
+  pivot_longer(cols = c(-species, -year, -.draw), names_to = "location", values_to = "kg") %>%
+  mutate(metric_tons = kg*0.001) %>% 
+  left_join(species_order) %>% 
+  mutate(panel = "b) Species returns",
+         type = "lines")
+
+d_short = d_short %>% mutate(metric_tons = mt_escape)
+
+d_short_totals = d_short %>% group_by(species, year) %>% reframe(metric_tons = sum(metric_tons)) %>% 
+  mutate(location = "Total")
+
+fig_ed1b_dots = bind_rows(d_short, d_short_totals) %>% 
+  left_join(species_order) %>% 
+  mutate(panel = "b) Species returns",
+         type = "dots")
+
+
+# data for panel a
+
+fig_ed1a_lines = fig_ed1b_lines %>% 
+  group_by(location, year, .draw) %>% 
+  reframe(metric_tons = sum(metric_tons),
+          kg = sum(kg)) %>% 
+  mutate(panel = "a) Total returns",
+         type = "lines")
+
+fig_ed1a_dots = fig_ed1b_dots %>% 
+  group_by(year, location) %>% 
+  reframe(metric_tons = sum(metric_tons)) %>% 
+  mutate(panel = "a) Total returns",
+         type = "dots")
+
+# make all data for a and b
+       
+location_fix = fig_ed1a_data %>% distinct(location) %>%
+  mutate(fixed_location = case_when(location == "Total" ~ "All Regions",
+                              location == "BeringSea" ~ "Bering Sea",
+                              TRUE ~ location)) %>% 
+  mutate(fixed_location = as.factor(fixed_location),
+         fixed_location = fct_relevel(fixed_location, "All Regions", "SEAK", "Bering Sea", "BCWC"))
+
+fig_ed1a_data = bind_rows(fig_ed1a_lines, fig_ed1a_dots) %>% left_join(location_fix) %>% select(-location) %>% rename(location = fixed_location)
+fig_ed1b_data = bind_rows(fig_ed1b_lines, fig_ed1b_dots) %>% left_join(location_fix) %>% select(-location) %>% rename(location = fixed_location)
+fig_ed1cd_lines = all_chem_posts %>% left_join(species_order) %>% mutate(type = "lines") %>% 
+  mutate(chem_type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+                          TRUE ~ "Contaminants"))
+fig_ed1cd_dots = read_csv("data/nut_cont.csv") %>% select(species, mean_concentration_standardized, chemical) %>% 
+  mutate(chem_type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
+                          TRUE ~ "Contaminants")) %>% 
+  left_join(species_order) %>% 
+  mutate(type = "dots")
+
+fig_ed1cd_data = bind_rows(fig_ed1cd_lines, fig_ed1cd_dots) %>% 
+  mutate(panel = case_when(chem_type =="Contaminants" ~ "d) Contaminants",
+                           TRUE ~ "c) Nutrients"))
+
+fig_ed1_data = list(fig_ed1a_data, fig_ed1b_data, fig_ed1cd_data)
+saveRDS(fig_ed1_data, file = "plots/fig_ed1_data.rds")
+
+
+
 # Figure ED2 --------------------------------------
 flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
 
@@ -358,17 +437,9 @@ chem_species_location_total_summary <- chem_species_prop %>%
                           TRUE ~ "Contaminants"),
          chemical = case_when(chemical == "PCBS" ~ "PCBs",
                               TRUE ~ chemical),
-         chemical = fct_relevel(chemical, "N", 
-                                "P", 
-                                "DHA", 
-                                "EPA",
-                                "Hg",
-                                "DDT"),
          group = case_when(species == "All" ~ "All",
                            TRUE ~ "Species"),
          units = "kg") %>%
-  mutate(species = fct_relevel(species, "Coho", "Chinook", "Chum", "Sockeye", "Pink"),
-         type = fct_relevel(type, "Contaminants"),
-         location = fct_relevel(location, "BeringSea"))
+  mutate(species = as.factor(species))
 
-write_csv(chem_species_location_total_summary, file = "data/fig_ed2_data.csv")
+write_csv(chem_species_location_total_summary, file = "plots/fig_ed2_data.csv")

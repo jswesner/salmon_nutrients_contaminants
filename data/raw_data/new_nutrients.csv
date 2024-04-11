@@ -1,0 +1,46 @@
+Type,Authors,Publication_year,Data_collection_period,Species,Specific_location,Manuscript_region,Chemical,Sample_type,n,Mean_concentration_standardized,Concentration_units_standardized,Tissue
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,4090,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3520,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3960,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3920,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3690,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,4050,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3810,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3700,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3650,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3680,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3790,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,4040,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3410,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3140,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,2780,mg/kg ww,Whole Body
+nutrient,Donaldson 1967,1967,1964,Sockeye,Kvichak River,AK,P,Individual,1,3140,mg/kg ww,Whole Body
+nutrient,Columbo & Mazal 2020,2020,NA,Chinook,Store-bought,All,N,Individual,2,31040,mg/kg ww,muscle
+nutrient,Columbo & Mazal 2020,2020,NA,All,Store-bought,All,N,Individual,2,29920,mg/kg ww,muscle
+nutrient,Columbo & Mazal 2020,2020,NA,Sockeye,Store-bought,All,N,Individual,2,34720,mg/kg ww,muscle
+nutrient,O'Neill et al. 2014,2014,2000-2004,Chinook,Skeena River,BC/WC,N,Composite,28,29760,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Chinook,Fraser River,BC/WC,N,Composite,30,31840,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Chinook,Puget Sound,BC/WC,N,Composite,32,33280,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Chinook,Puget Sound blackmouth,BC/WC,N,Composite,37,26880,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Chinook,Columbia River (fall run),BC/WC,N,Composite,30,31360,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Chinook,Columbia River (spring run),BC/WC,N,Composite,20,29440,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Chinook,Sacramento River,BC/WC,N,Composite,26,31520,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Sockeye,Skeena River,BC/WC,N,Composite,27,32320,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Sockeye,Fraser River,BC/WC,N,Composite,30,29440,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Coho,Kimsquit River,BC/WC,N,Composite,30,31040,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Coho,Puget Sound,BC/WC,N,Composite,36,30880,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Pink,Skeena River,BC/WC,N,Composite,31,28480,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Pink,Puget Sound,BC/WC,N,Composite,28,28480,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Chum,Kimsquit River,BC/WC,N,Composite,30,30080,mg/kg ww,Whole Body
+nutrient,O'Neill et al. 2014,2014,2000-2004,Chum,Puget Sound,BC/WC,N,Composite,31,29920,mg/kg ww,Whole Body
+nutrient,Ando 1986,1986,1983,Chum,Pacific Ocean,NA,N,Individual,1,29729,mg/kg ww,muscle
+nutrient,Ando 1986,1986,1983,Chum,Pacific Ocean,NA,N,Individual,1,30080,mg/kg ww,muscle
+nutrient,Ando 1986,1986,1983,Chum,"Yakumo Coast, Japan",NA,N,Individual,1,34176,mg/kg ww,muscle
+nutrient,Ando 1986,1986,1983,Chum,"Yakumo Coast, Japan",NA,N,Individual,1,32336,mg/kg ww,muscle
+nutrient,Ando 1986,1986,1983,Chum,"Yurappu River, Japan",NA,N,Individual,1,27792,mg/kg ww,muscle
+nutrient,Ando 1986,1986,1983,Chum,"Yurappu River, Japan",NA,N,Individual,1,27392,mg/kg ww,muscle
+nutrient,Ando 1986,1986,1983,Chum,"Yurappu River, Japan",NA,N,Individual,1,23504,mg/kg ww,muscle
+nutrient,Ando 1986,1986,1983,Chum,"Yurappu River, Japan",NA,N,Individual,1,26064,mg/kg ww,muscle
+nutrient,Mathisen et al. 1988,1988,1985,Sockeye,"Iliamna Lake, Alaska",AK,P,Individual,4,4846,mg/kg ww,Whole Body
+nutrient,Koenings and Burkett 1987; cited in Gross et al. 1998,1987,NA,Sockeye,"Karluk Lake, Alaska",AK,P,Individual,NA,3364,mg/kg ww,Whole Body
+nutrient,Johnston et al. 2004,2004,1996-1998,Sockeye,"Forfar & Gluskie creeks, BC",BC/WC,P,Individual,11,3087,mg/kg ww,Whole body

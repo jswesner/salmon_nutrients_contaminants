@@ -1,9 +1,9 @@
 chemical,type,Chinook,Chum,Coho,Pink,Sockeye,Total,units,summary
-N,Nutrients,495 ± 49,2173 ± 165,479 ± 63,3609 ± 403,2524 ± 305,9280 ± 549,MT/y,Average Annual
-DHA,Nutrients,124 ± 73,621 ± 490,124 ± 91,735 ± 327,842 ± 357,2447 ± 807,MT/y,Average Annual
-EPA,Nutrients,123 ± 69,512 ± 412,112 ± 80,430 ± 203,524 ± 212,1700 ± 576,MT/y,Average Annual
-P,Nutrients,51 ± 8,263 ± 29,48 ± 7,423 ± 46,272 ± 26,1057 ± 95,MT/y,Average Annual
-Hg,Contaminants,0.76 ± 0.21,2 ± 0.62,0.47 ± 0.13,1.38 ± 0.52,2 ± 0.64,7 ± 2,Kg/y,Average Annual
-PCBs,Contaminants,0.31 ± 0.15,0.31 ± 0.2,0.21 ± 0.11,0.46 ± 0.37,0.44 ± 0.22,1.72 ± 0.8,Kg/y,Average Annual
-DDTs,Contaminants,0.24 ± 0.07,0.21 ± 0.08,0.16 ± 0.05,0.34 ± 0.13,0.78 ± 0.23,1.72 ± 0.45,Kg/y,Average Annual
-PBDEs,Contaminants,0.07 ± 0.06,0.04 ± 0.04,0.01 ± 0.01,0.1 ± 0.12,0.05 ± 0.04,0.27 ± 0.19,Kg/y,Average Annual
+N,Nutrients,494 ± 43,2255 ± 175,471 ± 64,3520 ± 365,2435 ± 282,9175 ± 507,MT/y,Average Annual
+DHA,Nutrients,124 ± 72,643 ± 511,121 ± 88,718 ± 320,810 ± 347,2416 ± 810,MT/y,Average Annual
+EPA,Nutrients,123 ± 69,527 ± 418,110 ± 78,419 ± 197,503 ± 203,1682 ± 574,MT/y,Average Annual
+P,Nutrients,51 ± 8,272 ± 29,47 ± 7,415 ± 46,261 ± 23,1046 ± 94,MT/y,Average Annual
+Hg,Contaminants,0.76 ± 0.21,2 ± 0.64,0.46 ± 0.13,1.35 ± 0.5,2 ± 0.62,7 ± 2,Kg/y,Average Annual
+PCBs,Contaminants,0.31 ± 0.15,0.32 ± 0.21,0.21 ± 0.1,0.45 ± 0.36,0.42 ± 0.21,1.7 ± 0.78,Kg/y,Average Annual
+DDTs,Contaminants,0.24 ± 0.06,0.22 ± 0.08,0.16 ± 0.05,0.33 ± 0.13,0.75 ± 0.22,1.69 ± 0.44,Kg/y,Average Annual
+PBDEs,Contaminants,0.07 ± 0.07,0.04 ± 0.04,0.01 ± 0.01,0.1 ± 0.12,0.05 ± 0.04,0.27 ± 0.19,Kg/y,Average Annual

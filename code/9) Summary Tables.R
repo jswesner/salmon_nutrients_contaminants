@@ -68,7 +68,7 @@ mean_annual_escapement_millions <- fish_escapement %>%
   summarize(median = median(value)) %>% 
   pivot_wider(names_from = species, values_from = median) 
 
-write_csv(mean_annual_escapement_millions, file = "tables/ms_tables/tbl1_mean_annual_escape.csv")
+write_csv(mean_annual_escapement_millions, file = "tables/tbl1_mean_annual_escape.csv")
 
 # mean annual metric tons escapement by regions
 
@@ -78,7 +78,7 @@ mean_escape_mass = salmon_mass %>%
   pivot_wider(names_from = species, values_from = mean) %>%
   adorn_totals("row") 
 
-write_csv(mean_escape_mass, file = "tables/ms_tables/tbl1_mean_escape_mass.csv")
+write_csv(mean_escape_mass, file = "tables/tbl1_mean_escape_mass.csv")
 
 # mean annual metric tons escapement
 salmon_mass %>% 
@@ -149,7 +149,7 @@ mean_subsidy_concentration = all_chem_posts %>%
   select(species, chemical, .epred) %>% 
   pivot_wider(names_from = species, values_from = .epred)
 
-write_csv(mean_subsidy_concentration, file = "tables/ms_tables/tbl8_mean_subsidy_concentration.csv")
+write_csv(mean_subsidy_concentration, file = "tables/tbl8_mean_subsidy_concentration.csv")
 
 
 chem_species_prop %>% 
@@ -266,7 +266,7 @@ mean_sd_annual_flux <- flux_with_all  %>%
                            TRUE ~ "Kg/y"),
          summary = "Average Annual")
 
-write_csv(mean_sd_annual_flux, file = "tables/ms_tables/tbl2_mean_sd_annual_flux.csv")
+write_csv(mean_sd_annual_flux, file = "tables/tbl2_mean_sd_annual_flux.csv")
 
 median_iqr_annual_flux <- flux_with_all  %>% 
   group_by(species, chemical, type) %>% 
@@ -293,7 +293,7 @@ median_iqr_annual_flux <- flux_with_all  %>%
                            TRUE ~ "Kg/y"),
          summary = "Average Annual")
 
-write_csv(median_iqr_annual_flux, file = "tables/ms_tables/tbl2_median_iqr_annual_flux.csv")
+write_csv(median_iqr_annual_flux, file = "tables/tbl2_median_iqr_annual_flux.csv")
 
 
 
@@ -321,7 +321,7 @@ cumulative_sd_annual_flux <- flux_with_all  %>%
                            TRUE ~ "Kg"),
          summary = "Cumulative")
 
-write_csv(cumulative_sd_annual_flux, file = "tables/ms_tables/tbl3_cumulative_sd_annual_flux.csv")
+write_csv(cumulative_sd_annual_flux, file = "tables/tbl3_cumulative_sd_annual_flux.csv")
 
 mean_cumulative_flux <-
   bind_rows(mean_sd_annual_flux, cumulative_sd_annual_flux)
@@ -407,7 +407,7 @@ change_1976_2015 <- flux_predictions %>%
   pivot_wider(names_from = loc_metric, values_from = value) %>% 
   arrange(-All_kg_yr)
 
-write_csv(change_1976_2015, file = "tables/ms_tables/tbl7_change_1976_2015.csv")  
+write_csv(change_1976_2015, file = "tables/tbl7_change_1976_2015.csv")  
   
 # summarize table s3 by contaminant
 flux_predictions %>% 
@@ -446,7 +446,7 @@ change_1976_2015_species <- flux_predictions %>%
   unite(col = "loc_metric", c(location,metric), sep = "_") %>% 
   pivot_wider(names_from = loc_metric, values_from = value)
 
-write_csv(change_1976_2015_species, file = "tables/ms_tables/tbl6_change_1976_2015_species.csv")  
+write_csv(change_1976_2015_species, file = "tables/tbl6_change_1976_2015_species.csv")  
 
 
 
@@ -469,7 +469,7 @@ mean_total_biotransport = flux_predictions %>%
   summarize(mean_annual_flux = mean(mean))
 
 
-write_csv(mean_total_biotransport, file = "tables/ms_tables/tbl4_mean_total_biotransport.csv")
+write_csv(mean_total_biotransport, file = "tables/tbl4_mean_total_biotransport.csv")
 
 
 # proportional contribution to median annual flux
@@ -491,7 +491,7 @@ prop_contribution_annual <- flux_predictions %>%
   group_by(location, species) %>% 
   summarize(median = median(median))
 
-write_csv(prop_contribution_annual, file = "tables/ms_tables/tbl4_prop_contribution_annual.csv")  
+write_csv(prop_contribution_annual, file = "tables/tbl4_prop_contribution_annual.csv")  
 
 # median total transport
 flux_predictions %>% 
@@ -584,7 +584,7 @@ all_change <- bind_rows(escape_change_metric_tons, escape_change_mill, escape_ch
   select(species, `40 year change`, overall, BeringSea, CentralAK, SEAK, BCWC) 
 
 
-write_csv(all_change, file = "tables/ms_tables/tbl5_all_change.csv")
+write_csv(all_change, file = "tables/tbl5_all_change.csv")
 
 
 
@@ -630,7 +630,7 @@ biotransport_potential_mg_per_individual <- all_chem_posts %>%
   select(chemical, type, Chinook, Coho, Sockeye, Chum, Pink)
 
 
-write_csv(biotransport_potential_mg_per_individual, file = "tables/ms_tables/tbl8_biotransport_potential_mg_per_individual.csv")
+write_csv(biotransport_potential_mg_per_individual, file = "tables/tbl8_biotransport_potential_mg_per_individual.csv")
 
 
 

@@ -221,6 +221,7 @@ saveRDS(epa_posts, file = "posteriors/epa_posts.rds")
 #check for duplicates
 nit_data <- nut_cont %>% 
   filter(chemical == "N") %>% 
+  filter(species != "All") %>%
   mutate(region = case_when(is.na(region) ~ "All",
                             TRUE ~ region))
 
@@ -253,15 +254,16 @@ nit_model <- brm(mean_concentration_standardized ~ 1 + species + (1|authors) + (
           cores = 4)
 
 # extract posteriors
-# posterior extraction is slightly different code b/c there are no fixed effects in this model
-nit_posts <- as_draws_df(nit_model) %>% 
-  mutate(.draw = 1:nrow(.)) %>% 
-  mutate(.epred = exp(b_Intercept),
-         chemical = "N") %>% 
-  expand_grid(species = nit_data %>% filter(species != "All") %>% distinct(species) %>% pull)
+# # posterior extraction is slightly different code b/c there are no fixed effects in this model
+# nit_posts <- as_draws_df(nit_model) %>% 
+#   mutate(.draw = 1:nrow(.)) %>% 
+#   mutate(.epred = exp(b_Intercept),
+#          chemical = "N") %>% 
+#   expand_grid(species = nit_data %>% filter(species != "All") %>% distinct(species) %>% pull)
 
-nit_posts = nit_data %>% ungroup %>% 
-  distinct(species, authors, region, concentration_units_standardized) %>% 
+nit_posts = nit_model$data %>% 
+  distinct(species, authors, region) %>% 
+  mutate(concentration_units_standardized = unique(nit_data$concentration_units_standardized)) %>% 
   add_epred_draws(nit_model) %>% 
   group_by(species, concentration_units_standardized, .draw) %>% 
   reframe(.epred = mean(.epred)) %>% 
@@ -282,6 +284,7 @@ saveRDS(nit_posts, file = "posteriors/nit_posts.rds")
 
 phos_data <- nut_cont %>% 
   filter(chemical == "P") %>% 
+  filter(species != "All") %>% 
   distinct()
 
 #check priors

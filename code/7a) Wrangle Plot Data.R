@@ -9,7 +9,7 @@ library(brms)
 # Figure 1 ----------------------------------------------------------------
 # load posteriors that underlie the figures
 gam_salmon_posts <- readRDS("posteriors/gam_salmon_posts.rds") # Salmon escapement in kg wet mass
-flux_predictions <- readRDS(file = "posteriors/full_posteriors/flux_predictions.rds") # posterior chem export
+flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterior chem export
 
 # wrangle salmon escapement total and per species
 
@@ -213,7 +213,8 @@ all_chem_posts = readRDS(file = "posteriors/all_chem_posts.rds")
 #   summarize(species_flux = sum(mg_flux)) %>%
 #   group_by(year, .draw, type) %>%
 #   mutate(total_flux = sum(species_flux),
-#          species_prop = species_flux/total_flux)
+#          species_prop = species_flux/total_flux) %>% 
+#   mutate(panel = "b)")
 
 # saveRDS(species_props, file = "posteriors/derived_quantities/species_props.rds")
 
@@ -278,25 +279,25 @@ mean_fish_size <- fish_mass_kgww_of_individual_fish %>%
   summarize(mean_size_kg = mean(value))
 
 
-# species_ind_average = all_chem_posts %>% 
-#   left_join(mean_fish_size) %>% 
-#   select(species, .draw, .epred, chemical, mean_size_kg) %>% 
-#   pivot_wider(names_from = chemical, values_from = .epred) %>% 
-#   mutate(cont_total_mgperkg = DDTs + Hg + PCBs + PBDEs,
-#          nut_total_mgperkg = DHA + N + P + EPA,
-#          cont_total_mgperfish = (DDTs + Hg + PCBs + PBDEs)*mean_size_kg,
-#          nut_total_mgperfish = (DHA + N + P + EPA)*mean_size_kg,
-#          cont_total_mgperfish = cont_total_mgperfish,
-#          nut_total_kgperfish = nut_total_mgperfish/1e6,
-#          ratio_mgperfish = nut_total_mgperfish/cont_total_mgperfish,
-#          ratio_kgmgperfish = nut_total_kgperfish/cont_total_mgperfish) %>% 
-#   left_join(trophic_levels) %>% 
-#   mutate(species_tl = paste0(species, "\n(TL: ", round(tl,1), ")"))
-# 
-# saveRDS(species_ind_average, file = "posteriors/derived_quantities/species_ind_average.rds")
-
-species_ind_average = readRDS(file = "posteriors/derived_quantities/species_ind_average.rds") %>% 
+species_ind_average = all_chem_posts %>%
+  left_join(mean_fish_size) %>%
+  select(species, .draw, .epred, chemical, mean_size_kg) %>%
+  pivot_wider(names_from = chemical, values_from = .epred) %>%
+  mutate(cont_total_mgperkg = DDTs + Hg + PCBs + PBDEs,
+         nut_total_mgperkg = DHA + N + P + EPA,
+         cont_total_mgperfish = (DDTs + Hg + PCBs + PBDEs)*mean_size_kg,
+         nut_total_mgperfish = (DHA + N + P + EPA)*mean_size_kg,
+         cont_total_mgperfish = cont_total_mgperfish,
+         nut_total_kgperfish = nut_total_mgperfish/1e6,
+         ratio_mgperfish = nut_total_mgperfish/cont_total_mgperfish,
+         ratio_kgmgperfish = nut_total_kgperfish/cont_total_mgperfish) %>%
+  left_join(trophic_levels) %>%
+  mutate(species_tl = paste0(species, "\n(TL: ", round(tl,1), ")")) %>% 
   mutate(panel = "a)")
+# 
+saveRDS(species_ind_average, file = "posteriors/derived_quantities/species_ind_average.rds")
+
+species_ind_average = readRDS(file = "posteriors/derived_quantities/species_ind_average.rds") 
 
 # combine
 fig4_data = bind_rows(diff_props, species_ind_average)
@@ -306,9 +307,26 @@ write_csv(fig4_data, file = "plots/fig4_data.csv")
 
 # Figure 5 ----------------------------------------------------------------
 
+fig5_data = all_chem_posts %>% 
+  select(-type) %>%
+  mutate(.epred = 4*(.epred/1000)) %>% # convert to mg/g dry weight
+  pivot_wider(names_from = chemical, values_from = .epred) %>%
+  mutate(rfdm_hg = 0.000186,
+         rfdm_pbde = 0.0001,
+         rfdm_pcb = 0.00002,
+         rfdm_ddt = 0.0005,
+         bw = 81, 
+         rsefa = 250,
+         csefa = EPA + DHA,
+         crlim = bw/(Hg/rfdm_hg + PBDEs/rfdm_pbde + PCBs/rfdm_pcb + DDTs/rfdm_ddt),
+         crsefa = rsefa/csefa,
+         risk_quotient = crsefa/crlim) %>% 
+  left_join(trophic_levels) %>% 
+  mutate(species_tl = paste0(species, "\n(TL: ", round(tl,1), ")")) %>%  
+  mutate(tl = case_when(species == "Sockeye" ~ tl - 0.1,
+                        TRUE ~ tl))
 
-
-
+write_csv(fig5_data, file = "plots/fig5_data.csv")
 
 # Figure ED1 --------------------------------------------------------------
 # data for panel b (Do b first becase a can be added from b)
@@ -318,6 +336,10 @@ all_chem_posts <- readRDS("posteriors/all_chem_posts.rds")
 species_order = gam_salmon_posts %>% ungroup %>% distinct(species) %>% 
   mutate(species_order = as.factor(species),
          species_order = fct_relevel(species_order, "Pink", "Sockeye", "Chum", "Chinook", "Coho"))
+
+chem_order = all_chem_posts %>% ungroup %>% distinct(chemical) %>% 
+  mutate(chem_order = as.factor(chemical),
+         chem_order = fct_relevel(chem_order, "N", "P", "DHA", "EPA", "Hg", "PCBs", "DDTs"))
 
 fig_ed1b_lines <- gam_salmon_posts %>% 
   select(-metric_tons) %>% 
@@ -358,7 +380,7 @@ fig_ed1a_dots = fig_ed1b_dots %>%
 
 # make all data for a and b
        
-location_fix = fig_ed1a_data %>% distinct(location) %>%
+location_fix = fig_ed1a_dots %>% distinct(location) %>%
   mutate(fixed_location = case_when(location == "Total" ~ "All Regions",
                               location == "BeringSea" ~ "Bering Sea",
                               TRUE ~ location)) %>% 
@@ -369,11 +391,14 @@ fig_ed1a_data = bind_rows(fig_ed1a_lines, fig_ed1a_dots) %>% left_join(location_
 fig_ed1b_data = bind_rows(fig_ed1b_lines, fig_ed1b_dots) %>% left_join(location_fix) %>% select(-location) %>% rename(location = fixed_location)
 fig_ed1cd_lines = all_chem_posts %>% left_join(species_order) %>% mutate(type = "lines") %>% 
   mutate(chem_type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
-                          TRUE ~ "Contaminants"))
+                          TRUE ~ "Contaminants")) %>% 
+  left_join(chem_order) %>% 
+  left_join(species_order)
 fig_ed1cd_dots = read_csv("data/nut_cont.csv") %>% select(species, mean_concentration_standardized, chemical) %>% 
   mutate(chem_type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
                           TRUE ~ "Contaminants")) %>% 
   left_join(species_order) %>% 
+  left_join(chem_order) %>% 
   mutate(type = "dots")
 
 fig_ed1cd_data = bind_rows(fig_ed1cd_lines, fig_ed1cd_dots) %>% 

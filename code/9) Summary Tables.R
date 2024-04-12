@@ -400,7 +400,7 @@ change_1976_2015 <- flux_predictions %>%
   mutate(change = `2015` - `1976`,
          percent_change = `2015`/`1976`) %>% 
   group_by(name, location) %>% 
-  summarize(kg_yr = median(change),
+  summarize(kg_yr = median(change)/1000,
             percent_diff = median(percent_change) - 1) %>% 
   pivot_longer(cols = c(kg_yr, percent_diff), names_to = "metric") %>% 
   unite(col = "loc_metric", location:metric, sep = "_") %>% 
@@ -440,13 +440,15 @@ change_1976_2015_species <- flux_predictions %>%
   mutate(change = `2015` - `1976`,
          percent_change = `2015`/`1976`) %>% 
   group_by(location, species) %>% 
-  summarize(kg_yr = median(change),
-            percent_diff = median(percent_change)-1) %>% 
-  pivot_longer(cols = c(kg_yr, percent_diff), names_to = "metric") %>% 
+  summarize(mt_yr = median(change)/1000,
+            percent_diff = (median(percent_change)-1)) %>% 
+  pivot_longer(cols = c(mt_yr, percent_diff), names_to = "metric") %>% 
   unite(col = "loc_metric", c(location,metric), sep = "_") %>% 
   pivot_wider(names_from = loc_metric, values_from = value)
 
 write_csv(change_1976_2015_species, file = "tables/ms_tables/tbl6_change_1976_2015_species.csv")  
+
+
 
 
 
@@ -625,7 +627,7 @@ biotransport_potential_mg_per_individual <- all_chem_posts %>%
   group_by(species, chemical, type) %>% 
   summarize(mean_milligrams_per_fish = mean(milligrams_per_fish)) %>% 
   pivot_wider(names_from = species, values_from = mean_milligrams_per_fish) %>% 
-  select(chemical, type, All, Chinook, Coho, Sockeye, Chum, Pink)
+  select(chemical, type, Chinook, Coho, Sockeye, Chum, Pink)
 
 
 write_csv(biotransport_potential_mg_per_individual, file = "tables/ms_tables/tbl8_biotransport_potential_mg_per_individual.csv")
@@ -638,11 +640,11 @@ species_ind_average = readRDS("posteriors/derived_quantities/species_ind_average
 
 ratio_summaries = species_ind_average %>% 
   group_by(species) %>% 
-  summarize(median = median(ratio_1e6),
-            mean = mean(ratio_1e6),
-            low95 = quantile(ratio_1e6, probs = 0.025),
-            high95 = quantile(ratio_1e6, probs = 0.975),
-            sd = sd(ratio_1e6)) %>% 
+  summarize(median = median(ratio_kgmgperfish),
+            mean = mean(ratio_kgmgperfish),
+            low95 = quantile(ratio_kgmgperfish, probs = 0.025),
+            high95 = quantile(ratio_kgmgperfish, probs = 0.975),
+            sd = sd(ratio_kgmgperfish)) %>% 
   arrange(median)
 
 write_csv(ratio_summaries, file = "tables/ratio_summaries.csv")

@@ -8,6 +8,7 @@ library(ggridges)
 library(viridis)
 library(patchwork)
 library(brms)
+library(tidybayes)
 theme_set(theme_default())
 
 # This code loads the the raw data of the figures and recreates the plots
@@ -168,7 +169,9 @@ ggsave(fig2_plot, file = "plots/fig2_plot.jpg", dpi = 600, width = 8, height = 8
 
 # Figure 3 ----------------------------------------------------------------
 # 1) load data
-fig3_data = read_csv(file = "plots/fig3_data.csv") 
+fig3_data = read_csv(file = "plots/fig3_data.csv") %>% 
+  mutate(location = as.factor(location),
+         location = fct_relevel(location, "BCWC", "SEAK", "CAK"))
 
 # 2) make plot
 fig3_plot_a_d = fig3_data %>% 
@@ -259,7 +262,8 @@ fig4_a = fig4_data %>%
            arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
   theme(axis.title.y = element_blank(),
         axis.text.x = element_text(size = 9),
-        plot.subtitle = element_text(size = 10)) +
+        plot.subtitle = element_text(size = 10),
+        text = element_text(size = 10)) +
   NULL
 
 # get species means for Fig 4b
@@ -289,14 +293,20 @@ fig4_b = fig4_data  %>%
   annotate("text", label = "Relatively more nutrients", x = 0.14, y = 0.6,
            size = 2.0) +
   theme(legend.background = element_rect(fill = "white"),
+        legend.position = c(0.8, 0.8),
+        legend.text = element_text(size = 9),
+        legend.key.height = unit(0.3, "cm"),
+        legend.key.width = unit(0.2, "cm"),
         axis.text.x = element_text(size = 9),
-        plot.subtitle = element_text(size = 10)) +
+        plot.subtitle = element_text(size = 10),
+        text = element_text(size = 10)) +
   NULL
 
 # combine plots with patchwork
 fig4_plot = fig4_a + fig4_b
 
 saveRDS(fig4_plot, file = "plots/fig4_plot.rds")
+ggview::ggview(fig4_plot, width = 6.5, height = 3.5)
 ggsave(fig4_plot, file = "plots/fig4_plot.jpg", dpi = 600, width = 6.5, height = 3.5)
 ggsave(fig4_plot, file = "plots/fig4_plot.pdf", dpi = 600, width = 6.5, height = 3.5)
 
@@ -359,9 +369,9 @@ fig_ed1a = fig_ed1_data[[1]] %>%
   scale_color_colorblind() + 
   labs(y = "Escapement: Metric tons per year",
        subtitle = "a) Total Returns") +
-  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
-        text = element_text(family = "sans"),
-        plot.subtitle = element_text(size = 11))
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2, size = 10),
+        text = element_text(family = "sans", size = 10),
+        plot.subtitle = element_text(size = 10))
 
 
 fig_ed1b = fig_ed1_data[[2]] %>% 
@@ -385,9 +395,9 @@ fig_ed1b = fig_ed1_data[[2]] %>%
        y = "",
        subtitle = "b) Species Returns") + 
   theme(legend.text=element_text(size=10),
-        strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
-        text = element_text(family = "sans"),
-        plot.subtitle = element_text(size = 11)) +
+        strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2, size = 10),
+        text = element_text(family = "sans", size = 10),
+        plot.subtitle = element_text(size = 10)) +
   guides(fill = guide_legend(override.aes = 
                                list(alpha = .8))) +
   scale_color_viridis_d(direction = 1, option = 'A', alpha = 1,
@@ -398,8 +408,8 @@ fig_ed1b = fig_ed1_data[[2]] %>%
 fig_ed1cd = fig_ed1_data[[3]] %>%
   filter(species != "All") %>% 
   filter(type == "lines") %>% 
-  ggplot(aes(x = chemical, y = .epred)) +
-  geom_boxplot(aes(fill = species),
+  ggplot(aes(x = chem_order, y = .epred)) +
+  geom_boxplot(aes(fill = species_order),
                alpha = 0.7,
                outlier.shape = NA) +
   scale_y_log10() +
@@ -408,23 +418,23 @@ fig_ed1cd = fig_ed1_data[[3]] %>%
                filter(species != "All") %>% 
                filter(type == "dots"),
              position = position_dodge(width = 0.75), 
-             aes(y = mean_concentration_standardized, group = species),
+             aes(y = mean_concentration_standardized, group = species_order),
              size = 0.4) +
   # guides(fill = "none") +
   labs(y = "Whole body concentrations (mg/kg ww)",
        x = "Chemical") +
-  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2, size = 11),
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2, size = 10),
         text = element_text(family = "sans"),
-        plot.subtitle = element_text(size = 11),
+        plot.subtitle = element_text(size = 10),
         legend.title = element_blank()) +
   scale_color_viridis_d(direction = 1, option = 'A', alpha = 1,
                         begin = 0.15, end = 0.7) +
   scale_fill_viridis_d(direction = 1, option = 'A', alpha = 1,
                        begin = 0.15, end = 0.7)
 
-legend_escapement_conc <- get_legend(fig_ed1_cd + theme(legend.position = "top"))
+legend_escapement_conc <- get_legend(fig_ed1cd + theme(legend.position = "top"))
 
-temp =  plot_grid(fig_ed1a,
+temp =  plot_grid(fig_ed1a + theme(strip.text = element_blank()),
                   fig_ed1b +
                     guides(color = "none", 
                            fill = "none"),
@@ -434,18 +444,20 @@ temp =  plot_grid(fig_ed1a,
                   ncol = 3,
                   rel_widths = c(0.36, 0.43, 0.55))
 
-(fig_ed1_abcd <- 
+fig_ed1_abcd <- 
     plot_grid(legend_escapement_conc,
               temp,
               ncol = 1,
-              rel_heights = c(0.1, 1)))
+              rel_heights = c(0.1, 1))
 
-saveRDS(fig_ed1_abcd, file = "plots/ms_plots/fig_ed1_abcd.rds")
-# ggview::ggview(fig_ed1_abcd,
-#                dpi = 500, width = 6.5, height = 6, units = "in")
+fig_ed1_abcd
+
+saveRDS(fig_ed1_abcd, file = "plots/fig_ed1_abcd.rds")
+ggview::ggview(fig_ed1_abcd,
+               dpi = 500, width = 6.5, height = 6, units = "in")
 ggsave(fig_ed1_abcd, file = "plots/fig_ed1_abcd.pdf",
        dpi = 500, width = 6.5, height = 6, units = "in")
-ggsave(fig_ed1_abcd, file = "plots/ms_plots/fig_ed1_abcd.jpg",
+ggsave(fig_ed1_abcd, file = "plots/fig_ed1_abcd.jpg",
        dpi = 500, width = 6.5, height = 6, units = "in")
 
 # Figure ED2 --------------------------------------------------------------
@@ -474,8 +486,8 @@ fig_ed2 = fig_ed2_data %>%
           # strip.background = element_blank(),
           panel.spacing = unit(0.2, "lines")) 
 
-saveRDS(fig_ed2, file = "plots/ms_plots/fig_ed2.rds")  
-ggsave(fig_ed2, file = "plots/ms_plots/fig_ed2.jpg",
+saveRDS(fig_ed2, file = "plots/fig_ed2.rds")  
+ggsave(fig_ed2, file = "plots/fig_ed2.jpg",
        dpi = 400, width = 7, height = 9)
 ggsave(fig_ed2, file = "plots/fig_ed2.jpg",
        dpi = 400, width = 7, height = 9)

@@ -341,8 +341,6 @@ ggsave(fig5_plot, file = "plots/fig5_plot.jpg", width = 5, height = 5, units = "
 ggsave(fig5_plot, file = "plots/fig5_plot.pdf", width = 5, height = 5, units = "in", dpi = 500 )
 
 
-
-
 # Figure ED1 --------------------------------------------------------------
 
 fig_ed1_data = readRDS("plots/fig_ed1_data.rds")

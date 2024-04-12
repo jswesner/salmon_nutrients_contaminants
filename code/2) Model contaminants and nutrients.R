@@ -319,11 +319,12 @@ phos_model <- brm(mean_concentration_standardized ~ 1 + (1|authors) + (1|region)
 
 # extract posteriors
 phos_posts = phos_data %>% ungroup %>% 
-  distinct(species, authors, region, concentration_units_standardized) %>% 
+  distinct(authors, region, concentration_units_standardized) %>% 
   add_epred_draws(phos_model) %>% 
-  group_by(species, concentration_units_standardized, .draw) %>% 
+  expand_grid(species = phos_data$species) %>% 
+  group_by(concentration_units_standardized, .draw, species) %>% 
   reframe(.epred = mean(.epred)) %>% 
-  mutate(chemical = "P")
+  mutate(chemical = "P") 
 
 phos_posts %>% 
   ggplot(aes(x = species, y = .epred)) +

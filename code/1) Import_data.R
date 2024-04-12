@@ -35,7 +35,8 @@ bind_rows(new_data_for_revision, nutrients_only_original) %>%
   ggplot(aes(x = authors, y = mean_concentration_standardized)) + 
   geom_point(aes(color = data_source), position = position_dodge(width = 2))
 
-nutrients_only = bind_rows(new_data_for_revision, nutrients_only_original)
+nutrients_only = bind_rows(new_data_for_revision, 
+                           nutrients_only_original %>% filter(authors != "Donaldson 1967"))
 
 
 contaminants_only <- read_excel("data/raw_data/SalmonFlux_SubsidiesDatabase_09.22.21.xlsx", 

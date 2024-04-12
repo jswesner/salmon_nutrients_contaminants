@@ -251,6 +251,7 @@ species_props_mean <- diff_props %>%
 
 # wrangle data for Fig 4a:
 fish_mass_kgww_of_individual_fish <- read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.csv")
+
 mean_kg_per_species = fish_mass_kgww_of_individual_fish %>% pivot_longer(cols = c(-Year, -units, -Source)) %>% 
   filter(Year >= 1975) %>%
   mutate(name = str_remove(name, " salmon")) %>% 
@@ -282,7 +283,7 @@ mean_fish_size <- fish_mass_kgww_of_individual_fish %>%
 species_ind_average = all_chem_posts %>%
   left_join(mean_fish_size) %>%
   select(species, .draw, .epred, chemical, mean_size_kg) %>%
-  pivot_wider(names_from = chemical, values_from = .epred) %>%
+  pivot_wider(names_from = chemical, values_from = .epred)  %>%
   mutate(cont_total_mgperkg = DDTs + Hg + PCBs + PBDEs,
          nut_total_mgperkg = DHA + N + P + EPA,
          cont_total_mgperfish = (DDTs + Hg + PCBs + PBDEs)*mean_size_kg,

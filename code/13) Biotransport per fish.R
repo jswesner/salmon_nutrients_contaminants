@@ -52,3 +52,20 @@ mg_perfish %>%
   arrange(-kg_perfish_peryear) %>% 
   ggplot(aes(x = reorder(location, -kg_perfish_peryear), y = kg_perfish_peryear)) +
   geom_pointrange(aes(ymin = .lower, ymax = .upper))
+
+
+fig4_data = read_csv("plots/fig4_data.csv")
+
+fig4_data %>% 
+  filter(panel == "b)") %>% 
+  group_by(species, .draw) %>% 
+  reframe(mean = mean(Contaminants, na.rm = T)) %>% 
+  group_by(species) %>% 
+  mean_hdi(mean)
+
+fig4_data %>% 
+  filter(panel == "b)") %>% 
+  group_by(species, .draw) %>% 
+  reframe(mean = mean(Nutrients, na.rm = T)) %>% 
+  group_by(species) %>% 
+  mean_hdi(mean)

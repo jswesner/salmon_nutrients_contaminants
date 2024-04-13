@@ -107,16 +107,16 @@ gam_salmon2 <- brm(y_10000 ~ s(year, by = species_location) + (1|species_locatio
                    file_refit = "on_change",
                    cores = 4)
 
-# extract posteriors
-gam_salmon_posts <- gam_salmon2$data %>% 
-  data_grid(species_location, year) %>% 
-  add_epred_draws(gam_salmon2, re_formula = NULL, ndraws = 1000) %>% 
-  mutate(metric_tons = .epred*10000,
-         kg = metric_tons*1000) %>% 
-  separate(species_location, c("species", "location")) %>%  
-  select(species, location, year, .draw, kg, metric_tons) %>% ungroup() %>% select(-.row)
-  
-saveRDS(gam_salmon_posts, file = "posteriors/gam_salmon_posts.rds")
+# # extract posteriors
+# gam_salmon_posts <- gam_salmon2$data %>% 
+#   data_grid(species_location, year) %>% 
+#   add_epred_draws(gam_salmon2, re_formula = NULL, ndraws = 1000) %>% 
+#   mutate(metric_tons = .epred*10000,
+#          kg = metric_tons*1000) %>% 
+#   separate(species_location, c("species", "location")) %>%  
+#   select(species, location, year, .draw, kg, metric_tons) %>% ungroup() %>% select(-.row)
+#   
+# saveRDS(gam_salmon_posts, file = "posteriors/gam_salmon_posts.rds")
 
 
 # re-run without outlier of 1980

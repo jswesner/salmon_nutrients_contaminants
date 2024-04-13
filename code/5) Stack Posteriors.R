@@ -34,15 +34,15 @@ dha_posts <- readRDS("posteriors/dha_posts.rds") # DHA concentrations in g per k
 pbde_posts <- readRDS("posteriors/pbde_posts.rds") # DHA concentrations in ug per kg wet mass
 ddt_posts <- readRDS("posteriors/ddt_posts.rds") # DHA concentrations in ug per kg wet mass
 
-
 # 3) Stack Posteriors -----------------------------------------------------
-all_chem_posts <- dha_posts %>% bind_rows(ddt_posts,
-                                     hg_posts,
-                                     pcb_posts,
-                                     nit_posts,
-                                     phos_posts,
-                                     pbde_posts,
-                                     epa_posts) %>%
+all_chem_posts <- bind_rows(dha_posts,
+                            ddt_posts,
+                            hg_posts,
+                            pcb_posts,
+                            nit_posts,
+                            phos_posts,
+                            pbde_posts,
+                            epa_posts) %>%
   ungroup() %>% 
   select(species, .draw, .epred, chemical) %>%
   mutate(units = "mg/kg ww") %>% 
@@ -58,9 +58,6 @@ all_chem_posts <- dha_posts %>% bind_rows(ddt_posts,
                                 "Hg",
                                 "DDTs")) # Salmon chemical concentrations mg kg wet mass
 
-
-
 saveRDS(all_chem_posts, file = "posteriors/all_chem_posts.rds")
-
 
 

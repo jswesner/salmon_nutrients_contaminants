@@ -149,9 +149,9 @@ escapement_stat = post_gam_preds %>%
        x = "Escapement metric tons wet mass/yr")
   
 ggview::ggview(escapement_stat, width = 6.5, height = 6.5)
-ggsave(escapement_stat, width = 6.5, height = 6.5, file = "plots/ms_plots/postpred_escapement.jpg",
+ggsave(escapement_stat, width = 6.5, height = 6.5, file = "plots/Figure_S6.jpg",
        dpi = 500)
-saveRDS(escapement_stat, file =  "plots/ms_plots/postpred_escapement.rds")
+saveRDS(escapement_stat, file =  "plots/Figure_S6.rds")
 
 # combine
 library(patchwork)
@@ -198,8 +198,8 @@ h = ddt_stat +
 
 postpred_contnut = (a + b + c + d)/(e + f + g + h)
 ggview::ggview(postpred_contnut, width = 6.5, height = 8)
-ggsave(postpred_contnut, width = 6.5, height = 8, file = "plots/ms_plots/postpred_contnut.jpg", dpi = 500)
-saveRDS(postpred_contnut, file = "plots/ms_plots/postpred_contnut.rds")
+ggsave(postpred_contnut, width = 6.5, height = 8, file = "plots/Figure_S6.jpg", dpi = 500)
+saveRDS(postpred_contnut, file = "plots/Figure_S6.rds")
 
 ## grouped means
 hg_stat_grouped = pp_check(hg_model, type = "stat_grouped", group = "species", stat = stat)

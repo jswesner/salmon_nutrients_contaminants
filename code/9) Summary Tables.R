@@ -409,6 +409,7 @@ change_1976_2015 <- flux_predictions %>%
 
 write_csv(change_1976_2015, file = "tables/tbl7_change_1976_2015.csv")  
   
+
 # summarize table s3 by contaminant
 flux_predictions %>% 
   filter(year == 1976 | year ==2015) %>% 
@@ -470,6 +471,21 @@ mean_total_biotransport = flux_predictions %>%
 
 
 write_csv(mean_total_biotransport, file = "tables/tbl4_mean_total_biotransport.csv")
+
+flux_predictions %>% 
+  # filter(year == 1976 | year ==2015) %>% 
+  mutate(kg_flux = mg_flux/1e6) %>% 
+  dplyr::select(year, chemical, .draw, kg_flux, location) %>% 
+  group_by(year, .draw, location, chemical) %>% 
+  summarize(total_kg_flux = sum(kg_flux)) %>% 
+  pivot_wider(values_from = total_kg_flux, names_from = location) %>% 
+  mutate(All = BCWC + BeringSea + CentralAK + SEAK) %>% 
+  select(-BCWC, -BeringSea, -CentralAK, -SEAK) %>% 
+  group_by(.draw, chemical) %>% 
+  summarize(mean = mean(All)/1000) %>% 
+  group_by(chemical) %>% 
+  reframe(mean_all = mean(mean),
+          sd_all = sd(mean))
 
 
 # proportional contribution to median annual flux
@@ -631,7 +647,6 @@ biotransport_potential_mg_per_individual <- all_chem_posts %>%
 
 
 write_csv(biotransport_potential_mg_per_individual, file = "tables/tbl8_biotransport_potential_mg_per_individual.csv")
-
 
 
 # loading ratios ----------------------------------------------------------

@@ -4,6 +4,8 @@ library(ggthemes)
 library(scales)
 library(brms)
 
+theme_set(theme_default())
+
 # 1) bring in fitted models
 gam_salmon2 <- readRDS("models/gam_salmon2.rds")
 hg_model <- readRDS("models/hg_model.rds") 
@@ -57,7 +59,7 @@ p8 = dha_model$prior %>% mutate(model = "dha_model")
 p9 = epa_model$prior %>% mutate(model = "epa_model")
 
 prior_table = bind_rows(p1,p2,p3,p4,p5,p6,p7,p8,p9)
-write_csv(prior_table, file = "ms/revision/prior_table.csv")
+write_csv(prior_table, file = "tables/prior_table.csv")
 
 # Compare analyte prior and posterior --------------------------------------------------
 # 3) Get all prior samples
@@ -111,16 +113,16 @@ for(i in 1:length(posterior_models)){
 # bind all samples
 prior_post_samples = bind_rows(prior_samples_temp, posterior_samples_temp)
 
-# add species names to N and P (they are intercept only models, so have to do this by hand)
-prior_post_NP = prior_post_samples %>% 
-  filter(analyte == "a) N" | analyte == "b) P") %>% 
+# add species names to P (it is intercept only, so have to do this by hand)
+prior_post_P = prior_post_samples %>% 
+  filter(analyte == "b) P") %>% 
   ungroup %>% 
   select(-species) %>% 
   expand_grid(species = c("Sockeye", "Pink", "Coho", "Chum", "Chinook"))
 
 # combine with species names for N and P
 prior_post_all = prior_post_samples %>% filter(!is.na(species)) %>% 
-  bind_rows(prior_post_NP)
+  bind_rows(prior_post_P)
 
 
 # 5) plot prior vs posteriors
@@ -142,16 +144,9 @@ prior_post_analytes = prior_post_all %>%
 
 ggview::ggview(prior_post_analytes, width = 6.5, height = 8)
 
-ggsave(prior_post_analytes, file = "plots/ms_plots/prior_post_analytes.jpg", 
+ggsave(prior_post_analytes, file = "plots/Figure_SI5.jpg", 
        width = 6.5, height = 8, dpi = 500)
-saveRDS(prior_post_analytes, file = "plots/ms_plots/prior_post_analytes.rds")
-
-
-
-
-
-
-
+saveRDS(prior_post_analytes, file = "plots/Figure_SI5.rds")
 
 
 # Compare escapement prior and posterior ----------------------------------
@@ -187,9 +182,9 @@ prior_post_escapement = escape_prior_post %>%
 
 ggview::ggview(prior_post_escapement, width = 6.5, height = 6)
 
-ggsave(prior_post_escapement, file = "plots/ms_plots/prior_post_escapement.jpg", 
+ggsave(prior_post_escapement, file = "plots/Figure_SI4.jpg", 
        width = 6.5, height = 6, dpi = 500)
-saveRDS(prior_post_escapement, file = "plots/ms_plots/prior_post_escapement.rds")
+saveRDS(prior_post_escapement, file = "plots/Figure_SI4.rds")
 
 
 
@@ -226,11 +221,15 @@ prior_post_params = bind_rows(posterior_params_temp, prior_params_temp) %>%
   pivot_longer(cols = c(-lprior, -model, -analyte, -starts_with("prior"))) %>% 
   filter(!is.na(value)) %>% 
   mutate(model = as.factor(model),
-         model = fct_relevel(model, "Prior")) 
+         model = fct_relevel(model, "Prior")) %>% 
+  mutate(parameter_type = case_when(name == "shape" ~ "Shape",
+                                    grepl("sd_", name) ~ "Hyperparameter",
+                                    name == "b_Intercept" ~ "Intercept",
+                                    TRUE ~ "Betas"))
 
 
 prior_post_parameters = prior_post_params %>% 
-  group_by(analyte, model, name) %>% 
+  group_by(analyte, model, name, parameter_type) %>% 
   median_qi(value) %>% 
   ggplot(aes(x = name, color = model, y = value)) + 
   # stat_pointinterval(position = position_dodge(width = 0.5),
@@ -251,12 +250,12 @@ prior_post_parameters = prior_post_params %>%
 
 ggview::ggview(prior_post_parameters, width = 6.5, height = 8)
 ggsave(prior_post_parameters, width = 6.5, height = 8,
-       file = "plots/ms_plots/prior_post_parameters.jpg", dpi = 500)
-saveRDS(prior_post_parameters, file = "plots/ms_plots/prior_post_parameters.rds")
+       file = "plots/Figure_S2.jpg", dpi = 500)
+saveRDS(prior_post_parameters, file = "plots/Figure_S2.rds")
 
 
 # show for N
-prior_post_params %>% 
+prior_N_plot = prior_post_params %>% 
   filter(analyte == "a) N") %>% 
   group_by(analyte, model, name) %>% 
   median_qi(value) %>% 
@@ -277,6 +276,8 @@ prior_post_params %>%
        color = "") +
   theme_default() 
 
+ggsave(prior_N_plot, file = "plots/prior_N_plot.jpg", width = 6.5, height = 6)
+
 # Escapement
 escapement_params_prior = gam_salmon2_prior %>% as_draws_df() %>% mutate(model = "Prior")
 escapement_params_posterior = gam_salmon2 %>% as_draws_df() %>% mutate(model = "Posterior")
@@ -296,6 +297,8 @@ prior_post_parameters_escapement = escapement_params %>%
          group = str_remove(group, "syear:species_location")) %>% 
   mutate(group = as.factor(group),
          group = fct_relevel(group, "Intercept"),
+         model = as.factor(model),
+         model = fct_relevel(model, "Prior")
          ) %>% 
   ggplot(aes(x = group, color = model, y = value)) + 
   # stat_pointinterval(position = position_dodge(width = 0.5),
@@ -317,6 +320,6 @@ prior_post_parameters_escapement = escapement_params %>%
 
 ggview::ggview(prior_post_parameters_escapement, width = 6.5, height = 5)
 ggsave(prior_post_parameters_escapement, width = 6.5, height = 6,
-       file = "plots/ms_plots/prior_post_parameters_escapement.jpg", dpi = 500)
-saveRDS(prior_post_parameters_escapement, file = "plots/ms_plots/prior_post_parameters_escapement.rds")
+       file = "plots/Figure_S3.jpg", dpi = 500)
+saveRDS(prior_post_parameters_escapement, file = "plots/Figure_S3.rds")
 

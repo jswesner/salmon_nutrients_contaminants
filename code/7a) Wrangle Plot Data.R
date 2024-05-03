@@ -48,7 +48,7 @@ salmon_mass_posts <- salmon_mass_temp %>%
 total_nut_cont_flux = flux_predictions %>% 
   ungroup() %>%
   group_by(year, .draw, type) %>%
-  summarize(total = sum(mg_flux/1000000)) %>%
+  summarize(total = sum(mg_flux/1e9)) %>%
   group_by(year, type) %>%
   summarize(median = median(total),
             low75 = quantile(total, probs = 0.125),
@@ -57,16 +57,14 @@ total_nut_cont_flux = flux_predictions %>%
             high50 = quantile(total, probs = 1-0.25)) %>%
   ungroup() %>% 
   mutate(type = fct_relevel(type, "Nutrients"),
-         species = "All")
+         species = "All",
+         units = "MT_yr")
 
 species_nut_cont_flux = flux_predictions %>%
   ungroup() %>%
   group_by(year, .draw, type, species) %>%
-  summarize(total = sum(mg_flux/1000000)) %>% # sum total transport across all regions
-  mutate(total = case_when(type == "Nutrients" ~ total/1000,
-                           TRUE ~ total),
-         units = case_when(type == "Nutrients" ~ "MT_yr", 
-                           TRUE ~ "kg_yr")) %>% 
+  summarize(total = sum(mg_flux/1e9)) %>% # sum total transport across all regions
+  mutate(units = "MT_yr") %>% 
   group_by(year, type, species) %>%  # summarize transport by year
   summarize(median = median(total),
             low75 = quantile(total, probs = 0.125),
@@ -82,15 +80,21 @@ all_nut_cont_flux = bind_rows(total_nut_cont_flux, species_nut_cont_flux) %>%
                            species == "All" & type == "Contaminants" ~ "f) Total contaminants",
                            species != "All" & type == "Nutrients" ~ "e) Species nutrients",
                            TRUE ~ "g) Species contaminants")) %>% 
-  select(species, year, low75, median, high75, low50, high50, panel)
+  select(species, year, low75, median, high75, low50, high50, panel, units) %>% 
+  mutate(species = case_when(species == "All" ~ "Total",
+                             TRUE ~ species)) %>% 
+  mutate()
 
 
 # combine escapement and analyte flux
 
-fig1_data = bind_rows(all_nut_cont_flux, 
-                      salmon_mass_posts)
+fig1b_data = bind_rows(all_nut_cont_flux, 
+                      salmon_mass_posts) %>% 
+  mutate(panel_new = str_sub(panel, 3, 30),
+         panel_abc = str_sub(panel, 1, 1)) %>% 
+  left_join(fig1b_colors) 
 
-write_csv(fig1_data, file = "plots/fig1_data.csv")
+write_csv(fig1b_data, file = "plots/fig1b_data.csv")
 
 
 # Figure 2 ----------------------------------------------------------------

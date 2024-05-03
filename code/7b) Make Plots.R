@@ -9,61 +9,210 @@ library(viridis)
 library(patchwork)
 library(brms)
 library(tidybayes)
-theme_set(theme_default())
+library(rnaturalearth)
+library(ggh4x)
+theme_salmon = function () { 
+  theme_default(base_family = "sans")
+}
+
+theme_set(theme_salmon())
 
 # This code loads the the raw data of the figures and recreates the plots
 
 # Figure 1 ----------------------------------------------------------------
 # 1) load data
-fig1_data = read_csv(file = "plots/fig1_data.csv")
+fig1b_colors = readRDS(file = "plots/fig1b_colors.rds") %>% 
+  mutate(species = case_when(species == "All" ~ "Total",
+                             TRUE ~ species)) %>% 
+  mutate(species = as.factor(species),
+         species = fct_relevel(species, "Total", "Pink", "Sockeye", "Chum", "Chinook", "Coho"))
+
+fig1b_data = read_csv(file = "plots/fig1b_data.csv") %>% 
+  mutate(panel_new = str_trim(as.factor(panel_new)), 
+         panel_new = fct_relevel(panel_new, "Total returns", "Total nutrients",
+                                 "Total contaminants", "Species returns", "Species nutrients")) %>% 
+  mutate(species = as.factor(species),
+         species = fct_relevel(species, "Total", "Pink", "Sockeye", "Chum", "Chinook", "Coho")) %>% 
+  separate(panel_new, into = c("group", "measure"), remove = F) %>% 
+  mutate(group = as.factor(group),
+         group = fct_relevel(group, "Total"),
+         measure = as.factor(str_to_sentence(measure)),
+         measure = fct_relevel(measure, "Returns", "Nutrients"))
+
+fig1c_data = read_csv(file = "plots/fig_1c_data.csv") %>% clean_names() %>% 
+  mutate(species = case_when(species == "Alewife_contemporary" ~ "Alewife", 
+                             species == "Pacific salmon" ~ "Pacific salmon\n(this study)",
+                             TRUE ~ species))
+
+# load map data
+world <- map_data("world") 
+states <- map_data("state")
+usa <- ne_countries(scale='medium', returnclass = 'sf') 
+
+
+# 2) make fig1a
+theme_salmon_1 = function () { 
+  theme_default(base_family = "sans") +
+    theme(text = element_text(size = 7),
+          axis.title = element_text(size = 7),
+          axis.text = element_text(size = 5))
+}
+
+
+fig1a = usa %>% 
+  filter(sovereignt == "United States of America") %>% 
+  ggplot() + 
+  # coord_sf() + 
+  geom_polygon(data = world, aes(x = long, y = lat, group = group), fill = "grey70", color = "black") +
+  geom_sf(color = "black", fill = "grey70") +
+  geom_polygon(data = states, aes(x = long, y = lat, group = group), color = "black", fill = "grey70")  +
+  # theme_void() +
+  coord_sf(ylim = c(40, 78), xlim = c(-190, -125)) +
+  labs(subtitle = "a)") +
+  # geom_curve(x = -180, xend = -155, y = 50, yend = 65, curvature = -0.4,
+  #            arrow = arrow(length = unit(0.03, "npc"), type="closed"),
+  #            linewidth = 1) +
+  theme_void() +
+  theme(text = element_text(size = 7)) +
+  NULL
+
 
 # 2) make plot
 # make left column
-fig1_bdf = fig1_data %>%
-  filter(!grepl("Species", panel)) %>% 
-  ggplot(aes(x = year, y = median))  + 
-  geom_ribbon(aes(ymin = low75, ymax = high75), fill = "grey50", alpha = 0.8) + 
-  geom_line(aes(group = species), color = "black") +
-  facet_wrap(~panel, ncol = 1, scales = "free_y") +
+top_1b = fig1b_data %>%
+  filter(grepl("return", panel_new)) %>% 
+  ggplot(aes(x = year, y = median, fill = species))  + 
+  geom_ribbon(aes(ymin = low75, ymax = high75)) + 
+  geom_line(aes(group = species), color = "black", linewidth = 0.1) +
+  # facet_grid2(group ~ measure, scales = "free_y", axes = "all", remove_labels = "x") +
+  facet_wrap(~panel_new, scales = "free_y") +
   scale_y_continuous(labels = comma) +
   scale_x_continuous(breaks = c(1975, 1995, 2015)) +
-  labs(y = expression("kg y"^-1),
+  scale_fill_manual(values = c("grey50", "#251256FF", "#5F187FFF", "#972C80FF",
+                               "#CF406FFF", "#F76F5CFF"),
+                    labels = c("Total", "Pink", "Sockeye",
+                               "Chum", "Chinook", 
+                               "Coho")) +
+  labs(y = expression("MT y"^-1),
        x = "Year",
-       fill = "Species") +
+       fill = "Species",
+       subtitle = "b)") +
+  theme_salmon_1() +
   theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
-        text = element_text(family = "sans")) + 
+        axis.title.x = element_blank(),
+        panel.spacing = unit(0.2, "lines")) + 
   guides(fill = "none") +
   NULL
 
-# make right column
-fig1_ceg = fig1_data %>%
-  filter(grepl("Species", panel)) %>% 
-  mutate(species = as.factor(species),
-         species = fct_relevel(species, "Pink", "Sockeye", "Chum", "Chinook", "Coho")) %>% 
-  ggplot(aes(x = year, y = median))  + 
-  geom_ribbon(aes(ymin = low75, ymax = high75, fill = species), alpha = 0.8) + 
-  geom_line(aes(group = species), color = "black") +
-  facet_wrap(~panel, ncol = 1, scales = "free_y") +
+mid_1b = fig1b_data %>%
+  filter(grepl("nutrients", panel_new)) %>% 
+  ggplot(aes(x = year, y = median, fill = species))  + 
+  geom_ribbon(aes(ymin = low75, ymax = high75)) + 
+  geom_line(aes(group = species), color = "black", linewidth = 0.1) +
+  # facet_grid2(group ~ measure, scales = "free_y", axes = "all", remove_labels = "x") +
+  facet_wrap(~panel_new, scales = "free_y") +
   scale_y_continuous(labels = comma) +
-  scale_x_continuous(breaks = c(1975, 1995, 2015)) + 
-  scale_fill_viridis_d(direction = -1, option = 'A', alpha = 1,
-                       begin = 0.7, end = 0.15) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015)) +
+  scale_fill_manual(values = c("grey50", "#251256FF", "#5F187FFF", "#972C80FF",
+                               "#CF406FFF", "#F76F5CFF"),
+                    labels = c("Total", "Pink", "Sockeye",
+                               "Chum", "Chinook", 
+                               "Coho")) +
+  labs(y = expression("MT y"^-1),
+       x = "Year",
+       fill = "Species") +
+  theme_salmon_1() +
+  theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
+        text = element_text(family = "sans"),
+        axis.title.x = element_blank(),
+        panel.spacing = unit(0.2, "lines")) + 
+  guides(fill = "none") +
+  NULL
+
+bottom_1b = fig1b_data %>%
+  filter(grepl("contaminants", panel_new)) %>% 
+  ggplot(aes(x = year, y = median*1000, fill = species))  + 
+  geom_ribbon(aes(ymin = low75*1000, ymax = high75*1000)) + 
+  geom_line(aes(group = species), color = "black", linewidth = 0.1) +
+  # facet_grid2(group ~ measure, scales = "free_y", axes = "all", remove_labels = "x") +
+  facet_wrap(~panel_new, scales = "free_y") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015)) +
+  scale_fill_manual(values = c("grey50", "#251256FF", "#5F187FFF", "#972C80FF",
+                               "#CF406FFF", "#F76F5CFF"),
+                    labels = c("Total", "Pink", "Sockeye",
+                               "Chum", "Chinook", 
+                               "Coho")) +
   labs(y = expression("kg y"^-1),
        x = "Year",
        fill = "Species") +
+  theme_salmon_1() +
   theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
         text = element_text(family = "sans"),
-        title = element_blank()) + 
-  # guides(fill = "none") +
+        # axis.title.x = element_blank(),
+        panel.spacing = unit(0.2, "lines")
+  ) + 
+  guides(fill = "none") +
   NULL
 
-# combine plots with patchwork
+temp_1b = fig1b_colors %>% 
+  ggplot(aes(x = species, y = c(1, 2, 3, 4, 5, 6), fill = species)) + 
+  geom_col() +
+  scale_fill_manual(values = c("grey50", "#251256FF", "#5F187FFF", "#972C80FF",
+                               "#CF406FFF", "#F76F5CFF"),
+                    labels = c("Total", "Pink", "Sockeye",
+                               "Chum", "Chinook", 
+                               "Coho")) +
+  # guides(fill = guide_legend(nrow = 1)) +
+  labs(fill = "                    ") +
+  theme_salmon_1() +
+  theme(legend.position = "top",
+        legend.text = element_text(size = 6),
+        legend.key.size = unit(0.4, "line"))
 
-fig1_plot = fig1_bdf + fig1_ceg
+legend_1b = get_legend(temp_1b)
 
-saveRDS(fig1_plot, file = "plots/fig1_plot.rds")
-ggsave(fig1_plot, file = "plots/fig1_plot.pdf", dpi = 600, width = 9, height = 9)
-ggsave(fig1_plot, file = "plots/fig1_plot.jpg", dpi = 600, width = 9, height = 9)
+
+# make fig c
+fig1c = ggplot(data = fig1c_data, aes(x = n_flux_annualkg, 
+                                      y = p_flux_annualkg, 
+                                      shape=mechanism, 
+                                      label=species)) +
+  # geom_text_repel(max.overlaps = Inf, size = 1.8) +
+  # geom_text(size = 1.8, aes(x = n_flux_annualkg + 10*n_flux_annualkg)) +
+  geom_point(color="blue")  +
+  scale_shape_manual(values=c(1,4,5,19,17)) +
+  scale_x_log10(labels=comma, limits = c(NA, 1e8)) +
+  scale_y_log10(breaks=c(1,10,100,1000,10000,100000,1000000,10000000), labels=comma,
+                limits = c(NA, 1e7)) +
+  labs(y = expression("P flux in kg y"^-1),
+       x = expression("N flux in kg y"^-1),
+       shape = "Mechanism",
+       subtitle = "c)") +
+  theme_salmon_1() +
+  theme(# legend.background = element_rect(fill="white",
+    #                                  size=0.3, linetype="solid",
+    #                                  colour ="black"),
+    legend.position = c(0.2, 0.87),
+    legend.text = element_text(size = 6),
+    panel.grid = element_blank(),
+    legend.key.size = unit(0.25, "line")) 
+
+a_1b = plot_grid(top_1b, mid_1b, bottom_1b, ncol = 1, align = "v")
+fig1b = plot_grid(a_1b, legend_1b, ncol = 1, rel_heights = c(0.95, 0.05))
+fig1bc = plot_grid(fig1b, fig1c, ncol = 2, align = "v", rel_widths = c(0.4, 0.6))
+
+ab = plot_grid(fig1a, fig1c, ncol = 1)
+fig1abc = plot_grid(ab, fig1b, ncol = 2, align = "v")
+
+ggview::ggview(fig1abc, width = 6.5, height = 5)
+
+ggsave(fig1abc, width = 6.5, height = 5, 
+       file = "plots/fig1abc.jpg", dpi = 600)
+
+ggsave(fig1bc, width = 4.8, height = 5, 
+       file = "plots/fig1bc.svg", dpi = 600)
+
 
 
 # Figure 2 ----------------------------------------------------------------
@@ -90,7 +239,6 @@ fig2a_d = fig2_data %>%
   facet_wrap(~ panel, ncol = 4) +
   scale_y_log10(labels = comma) +
   scale_x_continuous(breaks = c(1975, 1995, 2015)) +
-  theme_default() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) +
@@ -109,7 +257,6 @@ fig2e_h =  fig2_data %>%
   labs(y = "Proportional \nTransport",
        fill = "Species",
        x = "Year") +
-  brms::theme_default()  + 
   theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
         axis.title.x = element_blank(),
         axis.text.x = element_blank())
@@ -129,7 +276,6 @@ fig2i_l = fig2_data %>%
   facet_wrap(~ panel, ncol = 4) +
   scale_y_log10(labels = comma) +
   scale_x_continuous(breaks = c(1975, 1995, 2015)) +
-  theme_default() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) +
@@ -150,7 +296,6 @@ fig2m_p = fig2_data %>%
   labs(y = "Proportional \nTransport",
        fill = "Species",
        x = "Year") +
-  brms::theme_default()  + 
   theme(strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
         axis.title.x = element_blank(),
         axis.text.x = element_blank())
@@ -195,7 +340,6 @@ fig3_plot_a_d = fig3_data %>%
   scale_y_log10(labels = comma) +
   scale_x_continuous(breaks = c(1975, 1995, 2015),
                      limits = c(1975, 2030)) +
-  theme_default() +
   theme(axis.title.x = element_blank(),
         strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
         text = element_text(family = "sans")) +
@@ -219,7 +363,6 @@ fig3_plot_e_h = fig3_data %>%
   scale_y_log10(labels = comma) +
   scale_x_continuous(breaks = c(1975, 1995, 2015),
                      limits = c(1975, 2030)) +
-  theme_default() +
   theme(axis.title.x = element_blank(),
         strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
         text = element_text(family = "sans")) +
@@ -314,17 +457,55 @@ ggsave(fig4_plot, file = "plots/fig4_plot.pdf", dpi = 600, width = 6.5, height =
 # Figure 5 ----------------------------------------------------------------
 # Note: Need to get data for Figure 5a Collin made that panel.
 # 1) load data
-fig5_data = read_csv(file = "plots/fig5_data.csv")
+fig5a_data = read_csv(file = "plots/fig5a_data.csv") %>% filter(!is.na(value)) %>% 
+  mutate(group = rep(1:15, each = 3)) %>% 
+  pivot_wider(names_from = name, values_from = value) %>% 
+  clean_names() %>% 
+  pivot_longer(cols = c(total_hg_accumulation_mg_hg_per_bird, 
+                        whole_body_hg_concentration_mg_kg_ww))
 
-# 2) make plot
-fig5_plot = fig5_data %>%
+fig5b_data = read_csv(file = "plots/fig5_data.csv")
+
+
+# 2) make plots
+a5 = fig5a_data %>% 
+  filter(name == "total_hg_accumulation_mg_hg_per_bird") %>% 
+  ggplot(aes(x = -accumulation_proportion_of_hg_inputs, y = value)) + 
+  geom_point(size = 1) +
+  scale_y_log10() +
+  geom_line(aes(group = name), linetype = "dashed") +
+  labs(x = "",
+       y = "Total Hg accumulation\n(mg Hg per bird)",
+       subtitle = "a)") +
+  theme(axis.text = element_text(size = 7),
+        axis.title = element_text(size = 9),
+        axis.title.x = element_blank()) 
+
+b5 = fig5a_data %>% 
+  filter(name != "total_hg_accumulation_mg_hg_per_bird") %>% 
+  ggplot(aes(x = -accumulation_proportion_of_hg_inputs, y = value)) + 
+  geom_point(size = 1) +
+  scale_y_log10(breaks = c(0.1, 0.3, 1, 3, 10, 30), limits = c(0.1, 30)) +
+  scale_x_continuous(labels = c("1", "0.75", "0.5", "0.25", "0")) +
+  geom_line(aes(group = name), linetype = "dashed") +
+  labs(x = "Accumulated proportion of annual Hg inputs",
+       y = "Whole body Hg\n(mg kg\u207B\u00B9 ww)") +
+  theme(axis.text = element_text(size = 7),
+        axis.title = element_text(size = 9)) 
+
+
+fig5a = plot_grid(a5, b5, ncol = 1, align = "v")
+
+
+fig5b_plot = fig5b_data %>%
   ggplot(aes(x = risk_quotient, y = reorder(species_tl,tl))) +
   geom_density_ridges(scale = 1) +
   geom_boxplot(outlier.shape = NA, width = 0.1, size = 1) +
   scale_color_viridis(option = "E",
                       direction = -1) +
   # geom_vline(xintercept = 1, linetype = "dashed") + 
-  labs(x = "Risk-Benefit Quotient") +
+  labs(x = "Risk-Benefit Quotient",
+       subtitle = "b)") +
   annotate("text", label = "More risk to consumers", x = 0.4, y = 0.8,
            size = 3) +
   annotate("segment", x = 0.1, y = 0.6, xend = 0.5, yend = 0.6,
@@ -332,10 +513,14 @@ fig5_plot = fig5_data %>%
   coord_cartesian(xlim = c(NA, 0.8)) +
   # labs(subtitle = "c) Risk-Benefit Quotient") +
   theme(axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 9)) +
+        axis.title = element_text(size = 9),
+        axis.text = element_text(size = 7)) +
   # scale_x_log10() +
   NULL
 
+fig5_plot = plot_grid(fig5a, fig5b_plot, ncol = 2, align = "v", rel_widths = c(0.5, 0.5))
+
+ggview::ggview(fig5_plot, width = 6.5, height = 3.5)
 saveRDS(fig5_plot, file = "plots/fig5_plot.rds")
 ggsave(fig5_plot, file = "plots/fig5_plot.jpg", width = 5, height = 5, units = "in", dpi = 500 )
 ggsave(fig5_plot, file = "plots/fig5_plot.pdf", width = 5, height = 5, units = "in", dpi = 500 )

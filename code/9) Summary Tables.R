@@ -12,7 +12,7 @@ trophic_levels <- tibble(tl = c(4.3, 3.9, 3.9, 3.6, 3.5),
 #load escapement
 
 # millions
-fish_escapement <- read_csv("data/raw_data/fish_escapement.csv") %>% clean_names() %>% 
+fish_escapement <- read_csv("data/raw_data/fish_escapement_dont_post.csv") %>% clean_names() %>% 
   pivot_longer(cols = c(-year, -metric, -source)) %>% 
   mutate(species = case_when(grepl("pink", name) ~ "Pink",
                              grepl("chum", name) ~ "Chum",
@@ -68,6 +68,13 @@ mean_annual_escapement_millions <- fish_escapement %>%
   summarize(median = median(value)) %>% 
   pivot_wider(names_from = species, values_from = median) 
 
+fish_escapement %>% 
+  filter(year >= 1976) %>% 
+  group_by(year) %>% 
+  reframe(total = sum(value)) %>% 
+  reframe(mean = mean(total))
+
+
 write_csv(mean_annual_escapement_millions, file = "tables/tbl1_mean_annual_escape.csv")
 
 # mean annual metric tons escapement by regions
@@ -115,13 +122,12 @@ salmon_mass %>%
   print(n = Inf)
 
 # Change in mean annual millions escapement
-fish_escapement  %>% 
-  filter(year <= 1981 | year >= 2010) %>% 
-  mutate(year_group = case_when(year <= 1981 ~ "start", 
-                                TRUE ~ 'end')) %>% 
-  group_by(location, species, year_group) %>% 
-  summarize(value = mean(value)) %>% 
-  summarize(total = sum(value, na.rm = T))
+fish_escapement %>% 
+  filter(year >= 1976) %>% 
+  group_by(year) %>% 
+  reframe(total = sum(value)) %>% 
+  filter(year == min(year) | year == max(year))
+
 
 # chemical flux -----------------------------------------------------------
 # load posteriors

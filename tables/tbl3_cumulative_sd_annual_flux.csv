@@ -1,0 +1,9 @@
+chemical,type,Chinook,Chum,Coho,Pink,Sockeye,Total,units,summary
+DHA,Nutrients,4322 ± 2877,19966 ± 20450,3902 ± 3526,26428 ± 12809,30178 ± 13876,90739 ± 32416,MT,Cumulative
+EPA,Nutrients,4224 ± 2752,16446 ± 16708,3533 ± 3135,15156 ± 7880,18366 ± 8117,62530 ± 22948,MT,Cumulative
+P,Nutrients,2312 ± 214,10851 ± 939,2112 ± 185,16615 ± 1459,10651 ± 912,42555 ± 3422,MT,Cumulative
+N,Nutrients,19743 ± 1739,89822 ± 6985,18645 ± 2554,139883 ± 14587,96479 ± 11268,365206 ± 20265,MT,Cumulative
+PBDEs,Contaminants,2 ± 2.79,1.05 ± 1.48,0.25 ± 0.41,3 ± 5,1.62 ± 1.62,9 ± 8,Kg,Cumulative
+DDTs,Contaminants,9 ± 3,8 ± 3,6 ± 2,12 ± 5,29 ± 9,66 ± 17,Kg,Cumulative
+PCBs,Contaminants,11 ± 6,11 ± 8,7 ± 4,13 ± 14,15 ± 8,63 ± 31,Kg,Cumulative
+Hg,Contaminants,31 ± 8,89 ± 26,19 ± 5,51 ± 20,88 ± 25,279 ± 72,Kg,Cumulative

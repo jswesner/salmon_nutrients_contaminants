@@ -1,0 +1,120 @@
+prior,class,coef,group,resp,dpar,nlpar,lb,ub,source,model,bound
+"normal(0, 5)",b,,,,,,,,user,Escapement,NA
+,b,syear:species_locationChinook_BCWC_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationChinook_BeringSea_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationChinook_CentralAK_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationChinook_SEAK_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationChum_BCWC_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationChum_BeringSea_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationChum_CentralAK_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationChum_SEAK_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationCoho_BCWC_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationCoho_BeringSea_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationCoho_CentralAK_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationCoho_SEAK_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationPink_BCWC_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationPink_BeringSea_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationPink_CentralAK_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationPink_SEAK_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationSockeye_BCWC_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationSockeye_BeringSea_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationSockeye_CentralAK_1,,,,,,,default,Escapement,NA
+,b,syear:species_locationSockeye_SEAK_1,,,,,,,default,Escapement,NA
+"normal(2, 3)",Intercept,,,,,,,,user,Escapement,NA
+exponential(1),sd,,,,,,0,,user,Escapement,NA
+,sd,,species_location,,,,,,default,Escapement,NA
+,sd,Intercept,species_location,,,,,,default,Escapement,NA
+"student_t(3, 0, 2.5)",sds,,,,,,0,,default,Escapement,NA
+,sds,"s(year, by = species_location)",,,,,,,default,Escapement,NA
+"gamma(4, 1)",shape,,,,,,0,,user,Escapement,NA
+"normal(-5.5, 2)",b,,,,,,,,user,hg,NA
+,b,speciesChinook,,,,,,,default,hg,NA
+,b,speciesChum,,,,,,,default,hg,NA
+,b,speciesCoho,,,,,,,default,hg,NA
+,b,speciesPink,,,,,,,default,hg,NA
+,b,speciesSockeye,,,,,,,default,hg,NA
+exponential(2),sd,,,,,,0,,user,hg,NA
+,sd,,authors,,,,,,default,hg,NA
+,sd,Intercept,authors,,,,,,default,hg,NA
+,sd,,region,,,,,,default,hg,NA
+,sd,Intercept,region,,,,,,default,hg,NA
+"gamma(5, 3)",shape,,,,,,0,,user,hg,NA
+"normal(-5.5, 1)",b,,,,,,,,user,pcb,NA
+,b,speciesChinook,,,,,,,default,pcb,NA
+,b,speciesChum,,,,,,,default,pcb,NA
+,b,speciesCoho,,,,,,,default,pcb,NA
+,b,speciesPink,,,,,,,default,pcb,NA
+,b,speciesSockeye,,,,,,,default,pcb,NA
+exponential(2),sd,,,,,,0,,user,pcb,NA
+,sd,,authors,,,,,,default,pcb,NA
+,sd,Intercept,authors,,,,,,default,pcb,NA
+,sd,,region,,,,,,default,pcb,NA
+,sd,Intercept,region,,,,,,default,pcb,NA
+"gamma(5, 2)",shape,,,,,,0,,user,pcb,NA
+"normal(-7, 2)",b,,,,,,NA,NA,user,pbde,
+,b,speciesChinook,,,,,NA,NA,default,pbde,
+,b,speciesChum,,,,,NA,NA,default,pbde,
+,b,speciesCoho,,,,,NA,NA,default,pbde,
+,b,speciesPink,,,,,NA,NA,default,pbde,
+,b,speciesSockeye,,,,,NA,NA,default,pbde,
+exponential(3),sd,,,,,,NA,NA,user,pbde,
+,sd,,authors,,,,NA,NA,default,pbde,
+,sd,Intercept,authors,,,,NA,NA,default,pbde,
+,sd,,region,,,,NA,NA,default,pbde,
+,sd,Intercept,region,,,,NA,NA,default,pbde,
+"gamma(5, 1)",shape,,,,,,NA,NA,user,pbde,
+"normal(-7, 2)",b,,,,,,,,user,ddt_model,NA
+,b,speciesChinook,,,,,,,default,ddt_model,NA
+,b,speciesChum,,,,,,,default,ddt_model,NA
+,b,speciesCoho,,,,,,,default,ddt_model,NA
+,b,speciesPink,,,,,,,default,ddt_model,NA
+,b,speciesSockeye,,,,,,,default,ddt_model,NA
+exponential(3),sd,,,,,,0,,user,ddt_model,NA
+,sd,,authors,,,,,,default,ddt_model,NA
+,sd,Intercept,authors,,,,,,default,ddt_model,NA
+,sd,,region,,,,,,default,ddt_model,NA
+,sd,Intercept,region,,,,,,default,ddt_model,NA
+"gamma(5, 1)",shape,,,,,,0,,user,ddt_model,NA
+"normal(0, 0.5)",b,,,,,,,,user,nit_model,NA
+,b,speciesChum,,,,,,,default,nit_model,NA
+,b,speciesCoho,,,,,,,default,nit_model,NA
+,b,speciesPink,,,,,,,default,nit_model,NA
+,b,speciesSockeye,,,,,,,default,nit_model,NA
+"normal(10, 0.5)",Intercept,,,,,,,,user,nit_model,NA
+exponential(5),sd,,,,,,0,,user,nit_model,NA
+,sd,,authors,,,,,,default,nit_model,NA
+,sd,Intercept,authors,,,,,,default,nit_model,NA
+,sd,,region,,,,,,default,nit_model,NA
+,sd,Intercept,region,,,,,,default,nit_model,NA
+"gamma(10, 1)",shape,,,,,,0,,user,nit_model,NA
+"normal(8, 0.5)",Intercept,,,,,,,,user,phos_model,NA
+exponential(8),sd,,,,,,0,,user,phos_model,NA
+,sd,,authors,,,,,,default,phos_model,NA
+,sd,Intercept,authors,,,,,,default,phos_model,NA
+,sd,,region,,,,,,default,phos_model,NA
+,sd,Intercept,region,,,,,,default,phos_model,NA
+"gamma(4, 2)",shape,,,,,,0,,user,phos_model,NA
+"normal(8.5, 1)",b,,,,,,NA,NA,user,dha_model,
+,b,speciesChinook,,,,,NA,NA,default,dha_model,
+,b,speciesChum,,,,,NA,NA,default,dha_model,
+,b,speciesCoho,,,,,NA,NA,default,dha_model,
+,b,speciesPink,,,,,NA,NA,default,dha_model,
+,b,speciesSockeye,,,,,NA,NA,default,dha_model,
+exponential(2),sd,,,,,,NA,NA,user,dha_model,
+,sd,,authors,,,,NA,NA,default,dha_model,
+,sd,Intercept,authors,,,,NA,NA,default,dha_model,
+,sd,,region,,,,NA,NA,default,dha_model,
+,sd,Intercept,region,,,,NA,NA,default,dha_model,
+"gamma(5, 3)",shape,,,,,,NA,NA,user,dha_model,
+"normal(8.5, 1)",b,,,,,,NA,NA,user,epa_model,
+,b,speciesChinook,,,,,NA,NA,default,epa_model,
+,b,speciesChum,,,,,NA,NA,default,epa_model,
+,b,speciesCoho,,,,,NA,NA,default,epa_model,
+,b,speciesPink,,,,,NA,NA,default,epa_model,
+,b,speciesSockeye,,,,,NA,NA,default,epa_model,
+exponential(3),sd,,,,,,NA,NA,user,epa_model,
+,sd,,authors,,,,NA,NA,default,epa_model,
+,sd,Intercept,authors,,,,NA,NA,default,epa_model,
+,sd,,region,,,,NA,NA,default,epa_model,
+,sd,Intercept,region,,,,NA,NA,default,epa_model,
+"gamma(5, 3)",shape,,,,,,NA,NA,user,epa_model,

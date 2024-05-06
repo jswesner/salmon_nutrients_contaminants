@@ -1,0 +1,13 @@
+Species,Ecosystem,Mechanism,N_Flux(annualkg),P_Flux(annualkg),Source,Summary_source,Notes
+Hoverflies,northern Europe,seasonal migration,2599,250,"Wotton et al., 2019",Satterfield et al. (2020),"Ranges provided for N and P, selected upper value here"
+Bogong moths,Australian Alps,seasonal migration,7249,969,"Green, 2011",Satterfield et al. (2020),
+Desert locusts,northern Africa,seasonal migration,2350,225,"Landry and Parrott, 2016",Satterfield et al. (2020),
+Insect community,southern UK,seasonal migration,100000,10000,"Hu et al., 2016",Satterfield et al. (2020),
+Aquatic insects,Lake Myvatn (Iceland),emergence,7600,760,"Dreyer et al., 2015",Subalusky and Post (2019),Contemporary values smaller than historic due to population declines
+Alewife_contemporary,coastal lakes (Connecticut),seasonal migration,252,36,"West et al., 2020, Twining et al., 2013",Subalusky and Post (2019),"Ranges provided for N and P, selected upper value here"
+Geese,Bosque del Apache National Wildlife Refuge (New Mexico),excretion,8780,1090,"Post et al., 1998",Subalusky and Post (2019),
+Loggerhead sea turtles,Melbourne Beach (Florida),egg laying,734.4,56.8,"Bouchard and Bjorndal, 2000",Subalusky and Post (2019),
+Alligators,"Ichauway Reserve, Georgia",excretion,27,9,"Subalusky, Fitzgerald, and Post (2009)",,
+Wildebeest,Savanna rivers,migratory drownings,25000,13000,"Subalusky et al., 2017",Subalusky and Post (2019),
+Hippopotami,Savanna rivers,excretion,179600,17600,"Subalusky et al., 2015",Subalusky and Post (2019),
+Pacific salmon,Continental North America,seasonal migration,9175000,1046000,this paper,,

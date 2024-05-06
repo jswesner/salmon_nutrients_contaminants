@@ -346,8 +346,7 @@ fig3_plot_a_d = fig3_data %>%
        fill = "Region") +
   facet_wrap(~ panel, ncol = 4) +
   scale_y_log10(labels = comma) +
-  scale_x_continuous(breaks = c(1975, 1995, 2015),
-                     limits = c(1975, 2030)) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015)) +
   theme_salmon() +
   theme(axis.title.x = element_blank(),
         strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2),
@@ -370,8 +369,7 @@ fig3_plot_e_h = fig3_data %>%
        fill = "Region") +
   facet_wrap(~ panel, ncol = 4) +
   scale_y_log10(labels = comma) +
-  scale_x_continuous(breaks = c(1975, 1995, 2015),
-                     limits = c(1975, 2030)) +
+  scale_x_continuous(breaks = c(1975, 1995, 2015)) +
   theme(axis.title.x = element_blank(),
         strip.text.x = element_text(angle = 0, hjust = 0, vjust = -1.2)) +
   NULL
@@ -655,7 +653,7 @@ fig_ed2 = fig_ed2_data %>%
     coord_cartesian(ylim = c(0, 1.1)) +
     labs(y = "Median proportional contributions to\nnutrient and contaminant flux",
          fill = "Species",
-         x = "Year") +
+         x = "") +
     theme(panel.spacing = unit(0.2, "lines")) 
 
 saveRDS(fig_ed2, file = "plots/fig_ed2.rds")  
@@ -666,6 +664,168 @@ ggsave(fig_ed2, file = "plots/fig_ed2.pdf",
 
 
 
+# Figure S1 ---------------------------------------------------------------
+
+lmg = readRDS(file = "data/lmg.rds") %>% 
+  group_by(chemical) %>% 
+  mutate(order = max(estimate),
+         term = case_when(term == "conc_c" ~ "Chemical concentration",
+                          term == "kg_ind_c" ~ "Weight",
+                          TRUE ~ "Escapement")) %>% 
+  mutate(term = fct_relevel(term, "Escapement",
+                            "Chemical concentration"))%>% 
+  mutate(chemical = case_when(chemical == "PBDE" ~ "PBDEs",
+                              chemical == "DDT" ~ "DDTs",
+                              TRUE ~ chemical))
+
+rel_importance = lmg %>%
+  ggplot(aes(x = reorder(chemical, order), y = estimate, 
+             color = term)) +
+  geom_pointrange(aes(ymin = 0, 
+                      ymax = estimate, 
+                      y = estimate,
+                      shape = term), position=position_dodge(width = 0.4)) + 
+  coord_flip() + 
+  ylim(0,1) +
+  labs(x = "Chemical",
+       y = expression(paste("Explained variance (", "R"^2,")")),
+       color = "Coefficient",
+       shape = "Coefficient") +
+  scale_color_grey() + 
+  guides(colour = guide_legend(reverse=T),
+         shape = guide_legend(reverse = T)) +
+  # theme(legend.position = "top") +
+  NULL
+
+saveRDS(rel_importance, file = "plots/fig_s1_plot.rds")
+ggsave(rel_importance, file = "plots/fig_s1_plot.jpg", width = 7, height = 3, dpi = 500)
+ggsave(rel_importance, file = "plots/fig_s1_plot.pdf", width = 7, height = 3, dpi = 500)
 
 
+# Figure S2 ---------------------------------------------------------------
 
+fig_s2_data = readRDS(file = "plots/fig_s2_data.rds") %>% 
+  mutate(analyte = as.factor(analyte),
+         analyte = fct_relevel(analyte, "N", "P", "DHA", "EPA",
+                               "Hg", "PCBs", "DDTs"))
+
+prior_post_parameters = fig_s2_data %>% 
+  group_by(analyte, model, name, parameter_type) %>% 
+  median_qi(value) %>% 
+  ggplot(aes(x = name, color = model, y = value)) + 
+  geom_point(size = 0.4, position = position_dodge(width = 0.5)) +
+  geom_linerange(aes(ymin = .lower, ymax = .upper), 
+                 linewidth = 0.1, 
+                 position = position_dodge(width = 0.5)) + 
+  facet_wrap(~analyte, ncol = 2) +
+  coord_flip()  + 
+  scale_color_manual(values = c("#000000", "#e69f00")) +
+  labs(y = "Parameter value",
+       x = "Parameter name",
+       color = "") 
+
+ggview::ggview(prior_post_parameters, width = 6.5, height = 8)
+ggsave(prior_post_parameters, width = 6.5, height = 8,
+       file = "plots/fig_s2_plot.jpg", dpi = 500)
+ggsave(prior_post_parameters, width = 6.5, height = 8,
+       file = "plots/fig_s2_plot.pdf", dpi = 500)
+saveRDS(prior_post_parameters, file = "plots/fig_s2_plot.rds")
+
+
+# Figure S3 ---------------------------------------------------------------
+fig_s3_data = readRDS(file = "plots/fig_s3_data.rds") 
+
+prior_post_parameters_escapement = fig_s3_data %>% 
+  group_by(model, name) %>% 
+  median_qi(value) %>%
+  separate(name, into = c("parameter", "group"), extra = "merge") %>% 
+  mutate(parameter = case_when(parameter == "b" ~ "bs",
+                               TRUE ~ parameter)) %>% 
+  mutate(group = str_remove(group, "syearspecies_location"),
+         group = str_remove(group, "syear:species_location")) %>% 
+  mutate(group = as.factor(group),
+         group = fct_relevel(group, "Intercept"),
+         model = as.factor(model),
+         model = fct_relevel(model, "Prior")
+  ) %>% 
+  ggplot(aes(x = group, color = model, y = value)) + 
+  facet_wrap(~parameter, scales = "free_x") +
+  geom_point(size = 0.4, position = position_dodge(width = 0.5)) +
+  geom_linerange(aes(ymin = .lower, ymax = .upper), 
+                 linewidth = 0.1, 
+                 position = position_dodge(width = 0.5)) + 
+  coord_flip()  + 
+  scale_color_manual(values = c("#000000", "#e69f00")) +
+  labs(y = "Parameter value",
+       x = "Parameter name",
+       color = "")
+
+ggview::ggview(prior_post_parameters_escapement, width = 6.5, height = 5)
+ggsave(prior_post_parameters_escapement, width = 6.5, height = 6,
+       file = "plots/fig_s3_plot.jpg", dpi = 500)
+ggsave(prior_post_parameters_escapement, width = 6.5, height = 6,
+       file = "plots/fig_s3_plot.pdf", dpi = 500)
+saveRDS(prior_post_parameters_escapement, file = "plots/fig_s3_plot.rds")
+
+
+# Figure S4 ---------------------------------------------------------------
+fig_s4_data = readRDS(file = "plots/fig_s4_data.rds")
+
+prior_post_escapement = fig_s4_data %>% 
+  mutate(model = as.factor(model),
+         model = fct_relevel(model, "Prior")) %>%
+  separate(species_location, into = c("species", "location")) %>%
+  mutate(location = as.factor(location),
+         location = fct_relevel(location, "SEAK", "BeringSea", "CentralAK")) %>% 
+  ggplot(aes(x = year, y = estimate__, ymin = lower__, ymax = upper__)) + 
+  geom_ribbon(aes(fill = model, alpha = model)) + 
+  geom_line(aes(group = model), linewidth = 0.1) +
+  facet_grid(species ~ location) + 
+  scale_y_log10(labels = comma) +
+  scale_alpha_manual(values = c(0.3, 0.9)) + 
+  scale_fill_manual(values = c("#000000", "#e69f00")) +
+  guides(alpha = "none",
+         colour = guide_legend(override.aes = list(alpha = .03))) +
+  labs(color = "",
+       fill = "",
+       x = "Year", 
+       y = "Return biomass: metric tons per year") 
+
+ggview::ggview(prior_post_escapement, width = 6.5, height = 6)
+
+ggsave(prior_post_escapement, file = "plots/fig_s4_plot.jpg", 
+       width = 6.5, height = 6, dpi = 500)
+ggsave(prior_post_escapement, file = "plots/fig_s4_plot.pdf", 
+       width = 6.5, height = 6, dpi = 500)
+saveRDS(prior_post_escapement, file = "plots/fig_s4_plot.rds")
+
+
+# Figure S5 ---------------------------------------------------------------
+
+fig_s5_data = readRDS("plots/fig_s5_data.rds") %>% 
+  mutate(analyte = as.factor(analyte),
+         analyte = fct_relevel(analyte, "N", "DHA", "EPA",
+                               "Hg", "PCBs", "DDTs"))
+
+prior_post_analytes = fig_s5_data %>% 
+  mutate(model = as.factor(model),
+         model = fct_relevel(model, "Prior")) %>% 
+  ggplot(aes(x = .epred, y = species, fill = model)) + 
+  stat_slab(alpha = 0.6, scale = 1) +
+  facet_wrap(~analyte, scales = "free_y", ncol = 2) +
+  scale_x_log10(labels = comma) + 
+  scale_fill_manual(values = c("#000000", "#e69f00")) +
+  labs(y = "",
+       color = "",
+       fill = "",
+       x = "Tissue Concentration (mg/kg ww)") +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0))
+
+ggview::ggview(prior_post_analytes, width = 6.5, height = 8)
+
+ggsave(prior_post_analytes, file = "plots/fig_s5_plot.jpg", 
+       width = 6.5, height = 8, dpi = 500)
+ggsave(prior_post_analytes, file = "plots/fig_s5_plot.pdf", 
+       width = 6.5, height = 8, dpi = 500)
+saveRDS(prior_post_analytes, file = "plots/fig_s5_plot.rds")

@@ -131,33 +131,4 @@ lmg <- tibble(chemical = lmg_data_chem,
 saveRDS(lmg, file = "data/lmg.rds")
 
 
-# Make plot ---------------------------------------------------------------
-lmg = readRDS(file = "data/lmg.rds")
 
-rel_importance <- lmg %>% 
-  group_by(chemical) %>% 
-  mutate(order = max(estimate),
-         term = case_when(term == "conc_c" ~ "Chemical Concentration",
-                          term == "kg_ind_c" ~ "Weight",
-                          TRUE ~ "Escapement")) %>% 
-  mutate(term = fct_relevel(term, "Escapement",
-                            "Chemical Concentration")) %>% 
-  ggplot(aes(x = reorder(chemical, order), y = estimate, 
-             color = term)) +
-  geom_pointrange(aes(ymin=0, ymax=estimate, 
-                      y = estimate,
-                      shape = term), position=position_dodge(width = 0.4)) + 
-  coord_flip() + 
-  ylim(0,1) +
-  labs(x = "Chemical",
-       y = expression(paste("Explained Variance (", "R"^2,")")),
-       color = "Coefficient",
-       shape = "Coefficient") +
-  scale_color_grey() + 
-  guides(colour = guide_legend(reverse=T),
-         shape = guide_legend(reverse = T)) +
-  # theme(legend.position = "top") +
-  NULL
-  
-saveRDS(rel_importance, file = "plots/ms_plots/rel_importance.rds")
-ggsave(rel_importance, file = "plots/ms_plots/rel_importance.jpg", width = 7, height = 3)

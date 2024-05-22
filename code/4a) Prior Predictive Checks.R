@@ -76,7 +76,7 @@ prior_samples_temp = NULL
 # Extract samples from each model
 for(i in 1:length(prior_models)){
   prior_samples_temp[[i]] = prior_models[[i]]$data %>% 
-    select(-mean_concentration_standardized, -authors, -region) %>% 
+    dplyr::select(-mean_concentration_standardized, -authors, -region) %>% 
     distinct() %>% 
     add_epred_draws(prior_models[[i]], re_formula = NA) %>% 
     mutate(model = "Prior",
@@ -100,7 +100,7 @@ posterior_samples_temp = NULL
 # Extract samples from each model
 for(i in 1:length(posterior_models)){
   posterior_samples_temp[[i]] = posterior_models[[i]]$data %>% 
-    select(-mean_concentration_standardized, -authors, -region) %>% 
+    dplyr::select(-mean_concentration_standardized, -authors, -region) %>% 
     distinct() %>% 
     add_epred_draws(posterior_models[[i]], re_formula = NA) %>% 
     mutate(model = "Posterior",
@@ -115,7 +115,7 @@ prior_post_samples = bind_rows(prior_samples_temp, posterior_samples_temp)
 prior_post_P = prior_post_samples %>% 
   filter(analyte == "b) P") %>% 
   ungroup %>% 
-  select(-species) %>% 
+  dplyr::select(-species) %>% 
   expand_grid(species = c("Sockeye", "Pink", "Coho", "Chum", "Chinook"))
 
 # combine with species names for N and P
@@ -148,8 +148,8 @@ prior_params_temp = NULL
 for(i in 1:length(prior_models)){
   prior_params_temp[[i]] = prior_models[[i]] %>% 
     as_draws_df()  %>% 
-    select(-lprior, -lp__, -.chain, -.iteration, -.draw) %>% 
-    select(-starts_with("r_")) %>% 
+    dplyr::select(-lprior, -lp__, -.chain, -.iteration, -.draw) %>% 
+    dplyr::select(-starts_with("r_")) %>% 
     mutate(model = "Prior",
            analyte = names(prior_models[i]))
 }
@@ -161,8 +161,8 @@ posterior_params_temp = NULL
 for(i in 1:length(posterior_models)){
   posterior_params_temp[[i]] = posterior_models[[i]] %>% 
     as_draws_df()  %>% 
-    select(-lp__, -.chain, -.iteration, -.draw) %>% 
-    select(-starts_with("r_")) %>% 
+    dplyr::select(-lp__, -.chain, -.iteration, -.draw) %>% 
+    dplyr::select(-starts_with("r_")) %>% 
     mutate(model = "Posterior",
            analyte = names(posterior_models[i]))
 }
@@ -210,7 +210,8 @@ escapement_params_posterior = gam_salmon2 %>% as_draws_df() %>% mutate(model = "
 
 escapement_params = bind_rows(escapement_params_posterior,
           escapement_params_prior) %>% 
-  select(starts_with("bs_syear"), starts_with("sds"),b_Intercept, model) %>% 
+  dplyr::select(starts_with("bs_syear"), starts_with("sds"),b_Intercept, model) %>% 
   pivot_longer(cols = -model)
 
 saveRDS(escapement_params, file = "plots/fig_s3_data.rds")
+

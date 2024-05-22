@@ -32,7 +32,7 @@ nutrient_contaminants_citations <- read_csv("data/raw_data/nutrient_contaminants
   distinct(doi_or_link, .keep_all = T)
 
 
-dois = nutrient_contaminants %>% 
+dois = nutrient_contaminants_citations %>% 
   distinct(doi, type, data_collection_period) %>% 
   filter(!is.na(doi))
 

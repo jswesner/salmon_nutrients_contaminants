@@ -13,8 +13,6 @@ library(broom)
 library(relaimpo)
 
 
-theme_set(theme_default())
-
 # load data
 fish_escapement <- read_csv("data/raw_data/fish_escapement.csv") %>% 
   pivot_longer(cols = -c(Year, metric, source), values_to = "millions_fish") %>% 
@@ -72,23 +70,27 @@ sens_data <- flux_predictions %>%
 # fit linear models with flux estimates as response and mass, escapement abundance, and chem concentration as
 # predictors. Replicates for flux are monte carlo replicates.
 nested_sens <- sens_data %>% 
+  ungroup %>% 
   nest(data = c(-chemical)) %>% 
-  mutate(mg_multivariate = map(data, ~lm(mg_flux_c ~ millions_c*year_c + kg_ind_c*year_c + 
+  mutate(mg_multivariate = purrr::map(data, ~lm(mg_flux_c ~ millions_c*year_c + kg_ind_c*year_c + 
                                            conc_c + location + species, data = .x))) %>% 
   pivot_longer(cols = c(-chemical, -data)) %>% 
-  mutate(tidied = map(value, tidy),
-         glanced = map(value, glance),
-         augmented = map(value, augment),
-         rel_imp = map(value, calc.relimp))
+  mutate(tidied = purrr::map(value, tidy),
+         glanced = purrr::map(value, glance),
+         augmented = purrr::map(value, augment),
+         rel_imp = purrr::map(value, calc.relimp))
 
 detach("package:relaimpo", unload = TRUE)
 detach("package:ggalt", unload = T)
 
 saveRDS(nested_sens, file = "models/nested_sens.rds")
 
+
+# summarize
+library(relaimpo)
 nested_sens <- readRDS(file = "models/nested_sens.rds")
 
-nested_sens$rel_imp
+rel_imp = nested_sens$rel_imp
 
 
 nested_sens %>% unnest(tidied) %>% 
@@ -107,28 +109,24 @@ nested_sens %>% unnest(tidied) %>%
 
 lmg_data_chem = distinct(nested_sens, chemical) %>% pull
 
-nested_sens$rel_imp
+lmg_list = NULL
 
+for(i in 1:length(lmg_data_chem)){
+  lmg_list[[i]] = tibble(estimate = rel_imp[[i]]@lmg) %>% 
+    mutate(term = rel_imp[[i]]@lmg.rank %>% names(),
+           chemical = lmg_data_chem[[i]])
+}
 
-lmg_data_millions = c(0.3, 0.49, 0.54, 0.46,
-                      0.65, 0.62, 0.14, 0.32)
-
-lmg_data_kg_ind = c(0.001, 0.001, 0.002, 0.002,
-                    0.003, 0.002, 0.0004, 0.001)
-
-lmg_data_conc = c(0.36, 0.18, 0.13, 0.21,
-                 0.02, 0.05, 0.53, 0.35)
-
-
-
-lmg <- tibble(chemical = lmg_data_chem,
-              conc_c = lmg_data_conc,
-              kg_ind_c = lmg_data_kg_ind,
-              millions_c = lmg_data_millions) %>% 
-  pivot_longer(cols = -chemical,
-               names_to = "term", values_to = "estimate")
+lmg = bind_rows(lmg_list)
 
 saveRDS(lmg, file = "data/lmg.rds")
 
-
+lmg %>% 
+  group_by(chemical) %>% 
+  mutate(total_weight = sum(estimate),
+         prop_weight = estimate/total_weight) %>% 
+  filter(term %in% c("conc_c", "millions_c", "kg_ind_c")) %>% 
+  dplyr::select(prop_weight, term) %>% 
+  pivot_wider(names_from = term, values_from = prop_weight) %>% 
+  mutate(escape_conc = sum(millions_c, conc_c))
 

@@ -110,7 +110,8 @@ saveRDS(hg_posts, file = "posteriors/hg_posts.rds")
 
 
 # DHA  ----------------------------------------------------------------------
-
+# using Aas et al. 2022, we did not make any corrections for muscle vs whole body fatty acid
+# concentrations.
 #data prep: check for duplicates
 nut_cont %>% 
   filter(grepl("DHA", chemical)) %>% 
@@ -217,13 +218,17 @@ epa_posts <-  epa_data %>% ungroup %>%
 saveRDS(epa_posts, file = "posteriors/epa_posts.rds")
 
 # Nitrogen ----------------------------------------------------------------------
+# According to Aas et al. (2022), salmon concentrations of N are 18.8 fillet vs 16.8 mg/kg in whole body.
+# Therefore, we converted N muscle concentrations to whole body by multiplying them by 16.8/18.8 = 0.89
 
 #check for duplicates
 nit_data <- nut_cont %>% 
   filter(chemical == "N") %>% 
   filter(species != "All") %>%
   mutate(region = case_when(is.na(region) ~ "All",
-                            TRUE ~ region))
+                            TRUE ~ region)) %>% 
+  mutate(mean_concentration_standardized = case_when(tissue == "muscle" ~ 0.89*mean_concentration_standardized,
+                                                     TRUE ~ mean_concentration_standardized))
 
 #check priors
 #plot priors - only for one species, since all will be the same (same prior)
@@ -280,12 +285,17 @@ saveRDS(nit_posts, file = "posteriors/nit_posts.rds")
 
 # Phosphorous ----------------------------------------------------------------------
 
+# Based on Aas et al. 2022 table 2, mean P in fillets was 2406 mg/kg compared to 3137 whole body. 
+# Therefore, we adjusted muscle-based measurements in our data to whole body by multiplying them
+# by 3137/2406 = 1.32
 #check for duplicates
 
 phos_data <- nut_cont %>% 
   filter(chemical == "P") %>% 
   filter(species != "All") %>% 
-  distinct()
+  distinct() %>% 
+  mutate(mean_concentration_standardized = case_when(tissue == "muscle" ~ 1.32*mean_concentration_standardized,
+                                                     TRUE ~ mean_concentration_standardized))
 
 #check priors
 #plot priors - only for a couple species, since all will be the same (same prior)
@@ -307,10 +317,11 @@ sim_gamma_priors(prior_b = prior_b,
 
 
 # fit model
-phos_model <- brm(mean_concentration_standardized ~ 1 + (1|authors) + (1|region),
+phos_model <- brm(mean_concentration_standardized ~ 1 + species + (1|authors) + (1|region),
                   family = Gamma(link = "log"),
                   data = phos_data,
                   prior = c(prior(normal(8, 0.5), class = "Intercept"),
+                            prior(normal(0, 0.5), class = "b"),
                             prior(gamma(4, 2), class = "shape"),
                             prior(exponential(8), class = "sd")),
                   file = "models/phos_model.rds",
@@ -318,13 +329,21 @@ phos_model <- brm(mean_concentration_standardized ~ 1 + (1|authors) + (1|region)
                   cores = 4)
 
 # extract posteriors
-phos_posts = phos_data %>% ungroup %>% 
-  distinct(authors, region, concentration_units_standardized) %>% 
+# phos_posts = phos_data %>% ungroup %>% 
+#   distinct(authors, region, concentration_units_standardized) %>% 
+#   add_epred_draws(phos_model) %>% 
+#   expand_grid(species = phos_data$species) %>% 
+#   group_by(concentration_units_standardized, .draw, species) %>% 
+#   reframe(.epred = mean(.epred)) %>% 
+#   mutate(chemical = "P") 
+
+phos_posts = phos_model$data %>% 
+  distinct(species, authors, region) %>% 
+  mutate(concentration_units_standardized = unique(phos_data$concentration_units_standardized)) %>% 
   add_epred_draws(phos_model) %>% 
-  expand_grid(species = phos_data$species) %>% 
-  group_by(concentration_units_standardized, .draw, species) %>% 
+  group_by(species, concentration_units_standardized, .draw) %>% 
   reframe(.epred = mean(.epred)) %>% 
-  mutate(chemical = "P") 
+  mutate(chemical = "P")
 
 phos_posts %>% 
   ggplot(aes(x = species, y = .epred)) +

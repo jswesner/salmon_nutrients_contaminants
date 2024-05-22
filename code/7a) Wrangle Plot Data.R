@@ -80,13 +80,19 @@ all_nut_cont_flux = bind_rows(total_nut_cont_flux, species_nut_cont_flux) %>%
                            species == "All" & type == "Contaminants" ~ "f) Total contaminants",
                            species != "All" & type == "Nutrients" ~ "e) Species nutrients",
                            TRUE ~ "g) Species contaminants")) %>% 
-  select(species, year, low75, median, high75, low50, high50, panel, units) %>% 
+  dplyr::select(species, year, low75, median, high75, low50, high50, panel, units) %>% 
   mutate(species = case_when(species == "All" ~ "Total",
                              TRUE ~ species)) %>% 
   mutate()
 
 
 # combine escapement and analyte flux
+
+fig1b_colors = readRDS(file = "plots/fig1b_colors.rds") %>%
+  mutate(species = case_when(species == "All" ~ "Total",
+                             TRUE ~ species)) %>%
+  mutate(species = as.factor(species),
+         species = fct_relevel(species, "Total", "Pink", "Sockeye", "Chum", "Chinook", "Coho"))
 
 fig1b_data = bind_rows(all_nut_cont_flux, 
                       salmon_mass_posts) %>% 
@@ -187,7 +193,7 @@ add_fig3_labels = location_chem_nut_cont_flux %>% ungroup %>%
 fig3_data = location_chem_nut_cont_flux %>% 
   ungroup %>% 
   left_join(add_fig3_labels) %>% 
-  select(-location) %>% 
+  dplyr::select(-location) %>% 
   rename(location = location_fixed) %>%
   group_by(year, chemical, type, units, panel, location) %>% 
   summarize(median = median(total),
@@ -238,7 +244,7 @@ trophic_levels <- tibble(tl = c(4.3, 3.9, 3.901, 3.6, 3.5),
 
 diff_props <- species_props %>% 
   left_join(trophic_levels) %>%  
-  # select(-species_flux, -total_flux) %>% 
+  # dplyr::select(-species_flux, -total_flux) %>% 
   pivot_wider(names_from = type, values_from = median_prop) %>% 
   ungroup() %>% 
   mutate(cont_minus_nut = (Nutrients-Contaminants),
@@ -286,7 +292,7 @@ mean_fish_size <- fish_mass_kgww_of_individual_fish %>%
 
 species_ind_average = all_chem_posts %>%
   left_join(mean_fish_size) %>%
-  select(species, .draw, .epred, chemical, mean_size_kg) %>%
+  dplyr::select(species, .draw, .epred, chemical, mean_size_kg) %>%
   pivot_wider(names_from = chemical, values_from = .epred)  %>%
   mutate(cont_total_mgperkg = DDTs + Hg + PCBs + PBDEs,
          nut_total_mgperkg = DHA + N + P + EPA,
@@ -313,7 +319,7 @@ write_csv(fig4_data, file = "plots/fig4_data.csv")
 # Figure 5 ----------------------------------------------------------------
 
 fig5_data = all_chem_posts %>% 
-  select(-type) %>%
+  dplyr::select(-type) %>%
   mutate(.epred = 4*(.epred/1000)) %>% # convert to mg/g dry weight
   pivot_wider(names_from = chemical, values_from = .epred) %>%
   mutate(rfdm_hg = 0.000186,
@@ -347,7 +353,7 @@ chem_order = all_chem_posts %>% ungroup %>% distinct(chemical) %>%
          chem_order = fct_relevel(chem_order, "N", "P", "DHA", "EPA", "Hg", "PCBs", "DDTs"))
 
 fig_ed1b_lines <- gam_salmon_posts %>% 
-  select(-metric_tons) %>% 
+  dplyr::select(-metric_tons) %>% 
   #calculate total Hg and kg 
   pivot_wider(names_from = location, values_from = kg) %>%
   mutate(Total = BCWC + BeringSea + CentralAK + SEAK) %>% 
@@ -357,7 +363,7 @@ fig_ed1b_lines <- gam_salmon_posts %>%
   mutate(panel = "b) Species returns",
          type = "lines")
 
-d_short = d_short %>% mutate(metric_tons = mt_escape)
+d_short = readRDS("data/d_short.rds") %>% mutate(metric_tons = mt_escape)
 
 d_short_totals = d_short %>% group_by(species, year) %>% reframe(metric_tons = sum(metric_tons)) %>% 
   mutate(location = "Total")
@@ -392,14 +398,14 @@ location_fix = fig_ed1a_dots %>% distinct(location) %>%
   mutate(fixed_location = as.factor(fixed_location),
          fixed_location = fct_relevel(fixed_location, "All Regions", "SEAK", "Bering Sea", "BCWC"))
 
-fig_ed1a_data = bind_rows(fig_ed1a_lines, fig_ed1a_dots) %>% left_join(location_fix) %>% select(-location) %>% rename(location = fixed_location)
-fig_ed1b_data = bind_rows(fig_ed1b_lines, fig_ed1b_dots) %>% left_join(location_fix) %>% select(-location) %>% rename(location = fixed_location)
+fig_ed1a_data = bind_rows(fig_ed1a_lines, fig_ed1a_dots) %>% left_join(location_fix) %>% dplyr::select(-location) %>% rename(location = fixed_location)
+fig_ed1b_data = bind_rows(fig_ed1b_lines, fig_ed1b_dots) %>% left_join(location_fix) %>% dplyr::select(-location) %>% rename(location = fixed_location)
 fig_ed1cd_lines = all_chem_posts %>% left_join(species_order) %>% mutate(type = "lines") %>% 
   mutate(chem_type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
                           TRUE ~ "Contaminants")) %>% 
   left_join(chem_order) %>% 
   left_join(species_order)
-fig_ed1cd_dots = read_csv("data/nut_cont.csv") %>% select(species, mean_concentration_standardized, chemical) %>% 
+fig_ed1cd_dots = read_csv("data/nut_cont.csv") %>% dplyr::select(species, mean_concentration_standardized, chemical) %>% 
   mutate(chem_type = case_when(chemical == "N" | chemical == "P" | chemical =="DHA" | chemical == "EPA" ~ "Nutrients",
                           TRUE ~ "Contaminants")) %>% 
   left_join(species_order) %>% 
@@ -420,7 +426,7 @@ flux_predictions <- readRDS(file = "posteriors/flux_predictions.rds") # posterio
 
 chem_species_prop <- flux_predictions %>% 
   # filter(.draw <= 2) %>% 
-  select(species, location, year, .draw, mg_flux, chemical) %>% 
+  dplyr::select(species, location, year, .draw, mg_flux, chemical) %>% 
   pivot_wider(names_from = species, values_from = mg_flux) %>% 
   mutate(All = Chinook + Chum + Coho + Pink + Sockeye) %>% 
   pivot_longer(cols = c(Chinook, Chum, Coho, Pink, Sockeye), names_to = "species") %>% 
@@ -473,3 +479,4 @@ chem_species_location_total_summary <- chem_species_prop %>%
   mutate(species = as.factor(species))
 
 write_csv(chem_species_location_total_summary, file = "plots/fig_ed2_data.csv")
+

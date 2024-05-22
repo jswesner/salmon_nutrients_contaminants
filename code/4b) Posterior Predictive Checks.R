@@ -71,7 +71,7 @@ calculate_p_value <- function(model) {
     mutate(true_value = layer_data(model, 2)[[2]],
            diff = value - true_value) %>% 
     reframe(p_value = sum(diff > 0) / nrow(.)) %>% 
-    select(p_value)  # Selecting only the p_value column
+    dplyr::select(p_value)  # Selecting only the p_value column
 }
 
 models <- list(e_hg_stat = hg_stat, 
@@ -149,9 +149,9 @@ escapement_stat = post_gam_preds %>%
        x = "Escapement metric tons wet mass/yr")
   
 ggview::ggview(escapement_stat, width = 6.5, height = 6.5)
-ggsave(escapement_stat, width = 6.5, height = 6.5, file = "plots/Figure_S6.jpg",
+ggsave(escapement_stat, width = 6.5, height = 6.5, file = "plots/fig_s6.jpg",
        dpi = 500)
-saveRDS(escapement_stat, file =  "plots/Figure_S6.rds")
+saveRDS(escapement_stat, file =  "plots/fig_s6.rds")
 
 # combine
 library(patchwork)
@@ -198,8 +198,8 @@ h = ddt_stat +
 
 postpred_contnut = (a + b + c + d)/(e + f + g + h)
 ggview::ggview(postpred_contnut, width = 6.5, height = 8)
-ggsave(postpred_contnut, width = 6.5, height = 8, file = "plots/Figure_S6.jpg", dpi = 500)
-saveRDS(postpred_contnut, file = "plots/Figure_S6.rds")
+ggsave(postpred_contnut, width = 6.5, height = 8, file = "plots/fig_s7.jpg", dpi = 500)
+saveRDS(postpred_contnut, file = "plots/fig_s7.rds")
 
 ## grouped means
 hg_stat_grouped = pp_check(hg_model, type = "stat_grouped", group = "species", stat = stat)

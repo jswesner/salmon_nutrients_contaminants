@@ -324,7 +324,10 @@ ggsave(fig2_plot, file = "plots/fig2_plot.jpg", dpi = 600, width = 6.5, height =
 # 1) load data
 fig3_data = read_csv(file = "plots/fig3_data.csv") %>% 
   mutate(location = as.factor(location),
-         location = fct_relevel(location, "BCWC", "SEAK", "CAK"))
+         location = fct_relevel(location, "BCWC", "SEAK", "CAK")) %>% 
+  mutate(panel_old = panel) %>% 
+  separate(panel, into = c("order", "panel")) %>% 
+  mutate(panel = fct_relevel(panel, "N", "P", "DHA", "EPA", "Hg", "PCBs", "DDTs", "PBDEs"))
 
 # 2) make plot
 fig3_plot_a_d = fig3_data %>% 
@@ -358,7 +361,7 @@ fig3_plot_e_h = fig3_data %>%
   filter(type != "Nutrients") %>% 
   ggplot(aes(x = year, y = median)) +
   geom_ribbon(aes(ymin = low50, ymax = high50, fill= location), alpha = 0.25) +
-  geom_line(aes(color= location), size = 0.6) +
+  geom_line(aes(color= location), linewidth = 0.6) +
   scale_color_viridis_d(direction = 1, option = "E") +
   scale_fill_viridis_d(direction = 1, option = "E") +
   # scale_color_brewer(type = "qual", palette = 3) +
@@ -380,7 +383,7 @@ fig3_plot_temp = (fig3_plot_a_d + guides(color = "none", fill = "none"))/
 
 fig3_legend = get_legend(fig3_plot_a_d)
 
-fig3_plot = plot_grid(fig3_plot_temp, fig3_legend, ncol = 2, rel_widths = c(1, 0.2))
+fig3_plot = plot_grid(fig3_plot_temp, fig3_legend, ncol = 2, rel_widths = c(0.9, 0.1))
 
 
 # final plot
@@ -388,7 +391,6 @@ saveRDS(fig3_plot, file = "plots/fig3_plot.rds")
 ggview(fig3_plot, width = 6.5, height = 3.5)
 ggsave(fig3_plot, file = "plots/fig3_plot.jpg", dpi = 600, width = 8, height = 4.5)
 ggsave(fig3_plot, file = "plots/fig3_plot.pdf", dpi = 600, width = 8, height = 4.5)
-
 
 
 # Figure 4 ----------------------------------------------------------------
@@ -498,11 +500,10 @@ fig5a = plot_grid(a5, b5, ncol = 1, align = "v")
 
 fig5b_plot = fig5b_data %>%
   ggplot(aes(x = risk_quotient, y = reorder(species_tl,tl))) +
-  geom_density_ridges(scale = 1) +
+  geom_density_ridges(scale = 1, aes(fill = species)) +
   geom_boxplot(outlier.shape = NA, width = 0.1, size = 1, linewidth = 0.2) +
   scale_color_viridis(option = "E",
                       direction = -1) +
-  # geom_vline(xintercept = 1, linetype = "dashed") + 
   labs(x = "Risk-Benefit Quotient",
        subtitle = "b)") +
   annotate("text", label = "More risk to consumers", x = 0.4, y = 0.8,
@@ -510,9 +511,12 @@ fig5b_plot = fig5b_data %>%
   annotate("segment", x = 0.1, y = 0.6, xend = 0.5, yend = 0.6,
            arrow = arrow(type = "closed", length = unit(0.02, "npc"))) +
   coord_cartesian(xlim = c(NA, 0.8)) +
-  # labs(subtitle = "c) Risk-Benefit Quotient") +
   theme(axis.title.y = element_blank()) +
-  # scale_x_log10() +
+  guides(fill = "none") +
+  scale_fill_manual(values = c("#CF406FFF", "#972C80FF", "#F76F5CFF",   
+                               "#251256FF", "#5F187FFF"
+                                
+                               )) +
   NULL
 
 fig5_plot = plot_grid(fig5a, fig5b_plot, ncol = 2, align = "v", rel_widths = c(0.5, 0.5))
@@ -667,6 +671,7 @@ ggsave(fig_ed2, file = "plots/fig_ed2.pdf",
 # Figure S1 ---------------------------------------------------------------
 
 lmg = readRDS(file = "data/lmg.rds") %>% 
+  filter(term %in% c("conc_c", "millions_c", "kg_ind_c")) %>% 
   group_by(chemical) %>% 
   mutate(order = max(estimate),
          term = case_when(term == "conc_c" ~ "Chemical concentration",
@@ -676,7 +681,7 @@ lmg = readRDS(file = "data/lmg.rds") %>%
                             "Chemical concentration"))%>% 
   mutate(chemical = case_when(chemical == "PBDE" ~ "PBDEs",
                               chemical == "DDT" ~ "DDTs",
-                              TRUE ~ chemical))
+                              TRUE ~ chemical)) 
 
 rel_importance = lmg %>%
   ggplot(aes(x = reorder(chemical, order), y = estimate, 
@@ -686,7 +691,6 @@ rel_importance = lmg %>%
                       y = estimate,
                       shape = term), position=position_dodge(width = 0.4)) + 
   coord_flip() + 
-  ylim(0,1) +
   labs(x = "Chemical",
        y = expression(paste("Explained variance (", "R"^2,")")),
        color = "Coefficient",
@@ -829,3 +833,4 @@ ggsave(prior_post_analytes, file = "plots/fig_s5_plot.jpg",
 ggsave(prior_post_analytes, file = "plots/fig_s5_plot.pdf", 
        width = 6.5, height = 8, dpi = 500)
 saveRDS(prior_post_analytes, file = "plots/fig_s5_plot.rds")
+

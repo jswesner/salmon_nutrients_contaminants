@@ -477,6 +477,7 @@ a5 = fig5a_data %>%
   filter(name == "total_hg_accumulation_mg_hg_per_bird") %>% 
   ggplot(aes(x = -accumulation_proportion_of_hg_inputs, y = value)) + 
   geom_point(size = 1) +
+  scale_x_continuous(labels = c("1", "0.75", "0.5", "0.25", "0")) +
   scale_y_log10() +
   geom_line(aes(group = name), linetype = "dashed") +
   labs(x = "",
@@ -833,4 +834,72 @@ ggsave(prior_post_analytes, file = "plots/fig_s5_plot.jpg",
 ggsave(prior_post_analytes, file = "plots/fig_s5_plot.pdf", 
        width = 6.5, height = 8, dpi = 500)
 saveRDS(prior_post_analytes, file = "plots/fig_s5_plot.rds")
+
+
+
+# Figure S8 ---------------------------------------------------------------
+fig_s8_data = read_csv(file = "plots/fig_s8_data.csv")
+
+cutoffs_rhat = tibble(y = c(1.0085, 1.012, 1.102),
+                      text_label = c("good", "potential concern", "poor"))
+
+fig_s8 = fig_s8_data %>% 
+  ggplot(aes(x = panel, y = value)) + 
+  geom_point(aes(shape = over), size = 0.8) +
+  scale_color_grey() +
+  scale_shape_manual(values = c(16, 21)) +
+  guides(color = "none") +
+  geom_hline(yintercept = 1.1, linetype = "dotted") +
+  geom_hline(yintercept = 1.01, linetype = "dashed") +
+  labs(y = "Rhat") +
+  scale_y_continuous(breaks = c(1, 1.01, 1.05, 1.1),
+                     labels = c("1", "1.01", "1.05", "1.1")) +
+  theme(axis.title.x = element_blank()) +
+  guides(shape = "none",
+         color = "none") +
+  geom_text(data = cutoffs_rhat, x = 0.5, aes(y = y, label = text_label), size = 2,
+            hjust = 0) +
+  
+  NULL
+
+ggsave(fig_s8, file = "plots/fig_s8.jpg", width = 5, height = 5,
+       dpi = 400)
+
+# Figure S9 ---------------------------------------------------------------
+fig_s9_data = read_csv(file = "plots/fig_s9_data.csv") %>% 
+  mutate(model_2 = case_when(model == "hg_adapt" ~ "Hg (Adapt Delta = 0.9)",
+                             TRUE ~ "Hg (Adapt Delta = 0.8) (manuscript model)"))
+
+fig_s9 = fig_s9_data %>% 
+  ggplot(aes(x = species, y = .epred, fill = model_2)) +
+  stat_halfeye(position = position_dodge(width = 0.5)) +
+  labs(x = "Species",
+       y = "Hg concentration mg/kg ww") +
+  scale_fill_viridis_d(option = "D") +
+  theme(legend.position = "inside", legend.position.inside = c(0.25, 0.9),
+        legend.title = element_blank()) +
+  NULL
+
+ggsave(fig_s9, file = "plots/fig_s9.jpg", width = 5.5, height = 5.5, dpi = 400)
+
+# Figure S10 -------------position_dodge()# Figure S10 --------------------------------------------------------------
+fig_s10_data = read_csv("plots/fig_s10_data.csv")
+
+fig_s10 = fig_s10_data %>% 
+  ggplot(aes(x = median_original, y = median_weighted, color = panel)) +
+  geom_point() +
+  geom_linerange(aes(xmin = lower_original, xmax = upper_original), linewidth = 0.1) +
+  geom_linerange(aes(ymin = lower_weighted, ymax = upper_weighted), linewidth = 0.1) +
+  geom_abline(linewidth = 0.1, linetype = "dotted") +
+  scale_x_log10() +
+  scale_y_log10() +
+  facet_wrap(~species) +
+  labs(x = "Original modeled concentrations mg/kg ww",
+       y = "Alternate modeled concentraitons mg/kg ww",
+       color = "Chemical") +
+  theme(legend.position = "inside", legend.position.inside = c(0.85, 0.2),
+        text)
+
+ggsave(fig_s10, file = "plots/fig_s10.jpg", width = 6.5, height = 5,
+       dpi = 400)
 

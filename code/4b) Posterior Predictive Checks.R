@@ -17,6 +17,8 @@ dha_model <- readRDS("models/dha_model.rds")
 pbde_model <- readRDS("models/pbde_model.rds")
 ddt_model <- readRDS("models/ddt_model.rds")
 
+gam_salmon2
+
 # 2) Posterior predictive checks
 # pp_check(gam_salmon2) + scale_x_log10()
 pp_check(hg_model) + scale_x_log10()
@@ -94,12 +96,6 @@ combined_pvalues <- bind_rows(processed_data) %>% arrange(dataset) %>%
   mutate(p_value = round(p_value, 2))
 
 combined_pvalues
-
-
-
-
-
-
 
 
 
@@ -212,5 +208,103 @@ ddt_stat_grouped = pp_check(ddt_model, type = "stat_grouped", group = "species",
 pbde_stat_grouped = pp_check(pbde_model, type = "stat_grouped", group = "species", stat = stat)
 
 
+# divergence --------------------------------------------------------------
+mod_div = list(ddt_model,
+                    pbde_model,
+                    pcb_model,
+                    hg_model,
+                    # hg_model_adapt,
+                    nit_model,
+                    phos_model,
+                    dha_model,
+                    epa_model,
+                    gam_salmon2)
+
+cont_list = c("ddt", "pbde", "pcb", "hg",
+              "nit", "phos", "dha", "epa",
+              "salmon_abundance")
+
+# extract the number of divergent transitions
+
+divergence_list = NULL
+
+for(i in 1:length(mod_div)){
+  np = nuts_params(mod_div[[i]])
+  divergence_list[[i]] = tibble(divergences = sum(subset(np, Parameter == "divergent__")$Value),
+                                model = cont_list[[i]])
+}
+
+bind_rows(divergence_list)
+
+
+
+# rhats -------------------------------------------------------------------
+# load hg model with looser priors (see code below for fitting this model)
+hg_model_adapt = readRDS(file = "models/hg_model_adapt.rds")
+
+hg_model = update(hg_model)
+
+mod_original = list(ddt_model,
+                    pbde_model,
+                    pcb_model,
+                    hg_model,
+                    hg_model_adapt,
+                    nit_model,
+                    phos_model,
+                    dha_model,
+                    epa_model)
+
+cont_list = c("ddt", "pbde", "pcb", "hg", "hg_adapt", "nit", "phos", "dha", "epa")
+
+rhat_list = NULL
+
+for(i in 1:length(mod_original)){
+  rhat_list[[i]] = brms::rhat(mod_original[[i]]) %>% as.list() %>% 
+    as_tibble() %>% pivot_longer(cols = everything()) %>% 
+    mutate(chemical = cont_list[i])
+}
+
+# check if rhats are >1.01. 
+fig_s8_data = bind_rows(rhat_list) %>% 
+  mutate(over = case_when(value > 1.01 ~ "too high",
+                          TRUE ~ "good"),
+         label = case_when(value > 1.01 ~ name)) %>%
+  mutate(panel = case_when(chemical == "nit" ~ "N",
+                           chemical == "phos" ~ "P",
+                           chemical == "dha" ~ "DHA",
+                           chemical == "epa" ~ "EPA",
+                           chemical == "hg" ~ "Hg",
+                           chemical == "hg_adapt" ~ "Hg_adapt",
+                           chemical == "pcb" ~ "PCBs",
+                           chemical == "ddt" ~ "DDTs",
+                           chemical == "pbde" ~ "PBDEs")) %>% 
+  mutate(panel = as.factor(panel),
+         panel = fct_relevel(panel, "N", "P", "DHA", "EPA", "Hg", "Hg_adapt", "PCBs", "DDTs"))
+
+
+write_csv(fig_s8_data, file = "plots/fig_s8_data.csv")
+
+# there are some high rhats at all parameter levels for the hg model (beta, sd, varying intercepts). Try increasing adapt_delta
+hg_model_adapt = update(hg_model,
+                        control = list(adapt_delta = 0.9))
+
+saveRDS(hg_model_adapt, file = "models/hg_model_adapt.rds")
+
+# compare inferences from original `hg_model` to `hg_adapt`
+
+hg_posts = hg_model$data %>% 
+  distinct(species) %>% 
+  add_epred_draws(hg_model, re_formula = NA) %>% 
+  mutate(model = "hg_original")
+
+hg_adapt_posts = hg_model$data %>% 
+  distinct(species) %>% 
+  add_epred_draws(hg_model_adapt, re_formula = NA) %>% 
+  mutate(model = "hg_adapt")
+
+fig_s9_data = bind_rows(hg_adapt_posts,
+          hg_posts) 
+
+write_csv(fig_s9_data, file = "plots/fig_s9_data.csv")
 
 

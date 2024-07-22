@@ -54,7 +54,7 @@ generate a distribution of contaminant and nutrient escapement.
 
 **7a) Wrangle Plot Data.R**: Wrangles the posteriors to make underlying data for the figures in the main text and in the Extended Data.
 
-**7b) Make Plots.R** Uses the wrangled data from 7a to make the figures in the main text and in the Extended Data.
+**7b) Make Plots.R**: Uses the wrangled data from 7a to make the figures in the main text and in the Extended Data.
 
 **8) Sensitivity Analysis.R**: Conducts a sensitivity analysis to
 determine the relative contributions of salmon abundance, salmon
@@ -68,15 +68,17 @@ Extended Data, and Supplementary Information
 salmon escapement models that include or don’t include 1980 data on
 Bering Sockeye to check for influence of large escapement in that year.
 
-**11) data release.R**. Wrangles data for USGS data release.
+**11) data release.R**: Wrangles data for USGS data release.
 
-**12) sanity checks.R**. Various checks of the data compared to models.
+**12) sanity checks.R**: Various checks of the data compared to models.
 e.g., checks that the modeled escapement overlaps with raw data, and
 that raw estimates of contaminant/nutrient transport also match with
 modeled estimates, etc.
 
-**13) Biotransport per fish.R.** Computes biotransport per individual
+**13) Biotransport per fish.R**: Computes biotransport per individual
 fish.
+
+**14) re-run code 2) with weighted regression.R**: Compare contaminant and nutrient models that account for variance/mean relationship with the main models from code 2.
 
 Two additional scripts are included:
 

@@ -25,10 +25,7 @@ predictive simulation is also conducted and justified.
 escapement abundance and salmon individual mass. Multiplies
 mass\*abundance for each collection to generate salmon escapement
 biomass. Fits Bayesian Generalized Additive Models to estimate the
-escapement of salmon biomass across time, species, and regions. NOTE:
-The data included here are NOT the raw data. Instead, the data are
-simulated and to be used for example code only. For the correct raw
-data, contact Dr. Greg Ruggerone: <gruggerone@nrccorp.com>.
+escapement of salmon biomass across time, species, and regions.
 
 **4a) Prior Predictive Checks.R**: Conducts prior predictive checks on
 the models fit in steps 2 and 3.
@@ -80,6 +77,6 @@ Two additional scripts are included:
 data for this release.
 
 # Software
-R version 4.4.0 (2024-04-24 ucrt) -- "Puppy Cup"
-Copyright (C) 2024 The R Foundation for Statistical Computing
-Platform: x86_64-w64-mingw32/x64
+
+R version 4.4.0 (2024-04-24 ucrt) – “Puppy Cup” Copyright (C) 2024 The R
+Foundation for Statistical Computing Platform: x86_64-w64-mingw32/x64

@@ -19,7 +19,7 @@ rstan_options(auto_write = TRUE)
 ## ensuring that the code runs.
 #####################
 
-millions_fish = fish_escapement <- read_csv("data/raw_data/fish_escapement.csv") %>% clean_names() %>% 
+millions_fish = read_csv("data/raw_data/fish_escapement.csv") %>% clean_names() %>% 
   pivot_longer(cols = c(-year, -metric, -source)) %>% 
   mutate(species = case_when(grepl("pink", name) ~ "Pink",
                              grepl("chum", name) ~ "Chum",

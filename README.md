@@ -78,3 +78,8 @@ Two additional scripts are included:
 
 **simulate_salmon_data.R**. Demonstrates method to randomize the salmon
 data for this release.
+
+# Software
+R version 4.4.0 (2024-04-24 ucrt) -- "Puppy Cup"
+Copyright (C) 2024 The R Foundation for Statistical Computing
+Platform: x86_64-w64-mingw32/x64

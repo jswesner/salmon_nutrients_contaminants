@@ -263,7 +263,7 @@ species_props_mean <- diff_props %>%
 fish_mass_kgww_of_individual_fish <- read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.csv")
 
 mean_kg_per_species = fish_mass_kgww_of_individual_fish %>% pivot_longer(cols = c(-Year, -units, -Source)) %>% 
-  filter(Year >= 1975) %>%
+  filter(Year >= 1976) %>%
   mutate(name = str_remove(name, " salmon")) %>% 
   separate(name, c("location", "species"), sep = "_") %>% 
   group_by(species) %>% 
@@ -340,7 +340,7 @@ fig5_data = all_chem_posts %>%
 write_csv(fig5_data, file = "plots/fig5_data.csv")
 
 # Figure ED1 --------------------------------------------------------------
-# data for panel b (Do b first becase a can be added from b)
+# data for panel b (Do b first because a can be added from b)
 gam_salmon_posts <- readRDS(file = "posteriors/gam_salmon_posts.rds")
 all_chem_posts <- readRDS("posteriors/all_chem_posts.rds") 
 

@@ -31,14 +31,19 @@ millions_fish = fish_escapement <- read_csv("data/raw_data/fish_escapement.csv")
                               grepl("seak", name) ~ "SEAK",
                               grepl("bc_wc", name) ~ "BCWC")) %>% 
   select(year, name, value) %>% 
-  rename(millions_of_fish = value)
+  rename(millions_of_fish = value) %>% 
+  mutate(source = "For details of collection, contact Dr. Greg Ruggerone")
+
+write_csv(millions_fish, file = "data/millions_fish.csv")
 
 kg_ind_fish = read_csv("data/raw_data/fish_mass_kgww_of_individual_fish.csv") %>% 
   clean_names() %>% 
   pivot_longer(cols = -c(year, units, source)) %>% 
   select(year, name, value) %>% 
-  rename(kg_ind = value)
+  rename(kg_ind = value) %>% 
+  mutate(source = "For details of collection, contact Dr. Greg Ruggerone")
 
+write_csv(kg_ind_fish, file = "data/kg_ind_fish.csv")
 
 escapement_mt = left_join(millions_fish, kg_ind_fish) %>% 
   mutate(kg_escape = kg_ind*millions_of_fish*1e6,
@@ -64,9 +69,7 @@ d = escapement_mt %>%
   ungroup() %>% 
   mutate(y_10000 = y/10000)
 
-
 write_csv(d, file = "data/raw_data/salmon_metric_tons.csv")
-
 
 d_short <- d %>% filter(year >= 1976) %>% 
   mutate(species_location = paste(species,"_",location))
@@ -87,7 +90,7 @@ gam_salmon1 <- brm(y_10000 ~ s(year, by = species_location) + (1|species_locatio
                              prior(normal(2, 10), class = "Intercept"),
                              prior(normal(0, 20), class = "b"),   # prior is posterior from gam_salmon1
                              prior(gamma(4,1), class = "shape")), # prior is posterior from gam_salmon1)
-                   file = "models/gam_salmon1.rds",
+                   file = "models/dont_post/gam_salmon1.rds",
                    file_refit = "on_change",
                    cores = 4)
 
@@ -103,20 +106,22 @@ gam_salmon2 <- brm(y_10000 ~ s(year, by = species_location) + (1|species_locatio
                              prior(normal(2, 3), class = "Intercept"),
                              prior(normal(0, 5), class = "b"),   # prior is posterior from gam_salmon1
                              prior(gamma(4,1), class = "shape")), # prior is posterior from gam_salmon1
-                   file = "models/gam_salmon2.rds",
+                   file = "models/dont_post/gam_salmon2.rds",
                    file_refit = "on_change",
                    cores = 4)
 
-# # extract posteriors
-# gam_salmon_posts <- gam_salmon2$data %>% 
-#   data_grid(species_location, year) %>% 
-#   add_epred_draws(gam_salmon2, re_formula = NULL, ndraws = 1000) %>% 
-#   mutate(metric_tons = .epred*10000,
-#          kg = metric_tons*1000) %>% 
-#   separate(species_location, c("species", "location")) %>%  
-#   select(species, location, year, .draw, kg, metric_tons) %>% ungroup() %>% select(-.row)
-#   
-# saveRDS(gam_salmon_posts, file = "posteriors/gam_salmon_posts.rds")
+saveRDS(gam_salmon2, file = "models/gam_salmon2.rds")
+
+# extract posteriors
+gam_salmon_posts <- gam_salmon2$data %>% 
+  data_grid(species_location, year) %>% 
+  add_epred_draws(gam_salmon2, re_formula = NULL, ndraws = 1000) %>% 
+  mutate(metric_tons = .epred*10000,
+         kg = metric_tons*1000) %>% 
+  separate(species_location, c("species", "location")) %>%  
+  select(species, location, year, .draw, kg, metric_tons) %>% ungroup() %>% select(-.row)
+  
+saveRDS(gam_salmon_posts, file = "posteriors/gam_salmon_posts.rds")
 
 
 # re-run without outlier of 1980

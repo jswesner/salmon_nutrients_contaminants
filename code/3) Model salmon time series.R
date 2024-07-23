@@ -12,12 +12,7 @@ source("code/functions.R")
 rstan_options(auto_write = TRUE)
 
 # Load data ----------------------------------------------------------------
-#####################
-#####################
-## These are not the original data!! For the original data, contact Dr. Greg Ruggerone.
-## The data loaded below are modified from the original and should be used only for 
-## ensuring that the code runs.
-#####################
+
 
 millions_fish = read_csv("data/raw_data/fish_escapement.csv") %>% clean_names() %>% 
   pivot_longer(cols = c(-year, -metric, -source)) %>% 
@@ -67,7 +62,8 @@ d = escapement_mt %>%
   group_by(species, location) %>% 
   mutate(time = year - min(year) + 1) %>% 
   ungroup() %>% 
-  mutate(y_10000 = y/10000)
+  mutate(y_10000 = y/10000) %>% 
+  mutate(source = "For details of collection, contact Dr. Greg Ruggerone")
 
 write_csv(d, file = "data/raw_data/salmon_metric_tons.csv")
 

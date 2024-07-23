@@ -1,11 +1,10 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Shifts in Pacific salmon community alter continental-scale nutrient and contaminant delivery
+# Continental-scale nutrient and contaminant delivery by Pacific salmon
 
-This page provides data and code for *Brandt et al. Shifts in Pacific
-salmon community alter continental-scale nutrient and contaminant
-delivery*.
+This page provides data and code for *Brandt et al. Continental-scale
+nutrient and contaminant delivery by Pacific salmon*.
 
 All figures and tables in the manuscript can be recreated by running the
 R scripts in the `code` folder. The scripts are named in order (e.g., 1,

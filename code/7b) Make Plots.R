@@ -13,6 +13,7 @@ library(rnaturalearth)
 library(maps)
 library(ggh4x)
 library(ggview)
+
 theme_salmon = function () { 
   theme_default(base_family = "sans") +
     theme(axis.text=element_text(color="black", size = 5),
@@ -332,10 +333,10 @@ fig3_data = read_csv(file = "plots/fig3_data.csv") %>%
 # 2) make plot
 fig3_plot_a_d = fig3_data %>% 
   filter(type == "Nutrients") %>% 
-  ggplot(aes(x = year, y = median/1000)) +
+  ggplot(aes(x = year, y = median)) +
   # geom_linerange(aes(ymin = low75, ymax = high75), alpha = 1,
   #                size = .5) +
-  geom_ribbon(aes(ymin = low50/1000, ymax = high50/1000, fill= location), alpha = 0.25) +
+  geom_ribbon(aes(ymin = low50, ymax = high50, fill= location), alpha = 0.25) +
   geom_line(aes(color= location), linewidth = 0.5) +
   # scale_color_colorblind() +
   # scale_color_brewer(type = "qual", palette = 3) +
